@@ -1,0 +1,304 @@
+#compdef pkg_deinstall pkg_fetch pkg_glob pkg_sort pkg_which pkgdb portcvsweb portinstall ports_glob portsclean portsdb portupgrade portversion
+
+(( $+functions[_freebsd_pkgtools_load_bsd_pkg] )) ||
+_freebsd_pkgtools_load_bsd_pkg() {
+  local service
+  service=''
+  _bsd_pkg
+}
+
+(( $+functions[_freebsd_pkgtools_pkg_names] )) ||
+_freebsd_pkgtools_pkg_names() {
+  local ret=1 l
+
+  l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )
+
+  compadd "$@" - ${l[@]%-*} && ret=0
+
+  return ret
+}
+
+(( $+functions[_freebsd_pkgtools_ports] )) ||
+_freebsd_pkgtools_ports() {
+  local ret=1
+
+  _files "$@" -W ${PORTSDIR:-/usr/ports} && ret=0
+
+  return ret
+}
+
+(( $+functions[_freebsd_pkgtools_which_files] )) ||
+_freebsd_pkgtools_which_files() {
+  local ret=1
+
+  _files "$@" && ret=0
+  _command_names -e "$@" && ret=0
+
+  return ret
+}
+
+(( $+functions[_freebsd_pkgtools_pkgs_or_ports] )) ||
+_freebsd_pkgtools_pkgs_or_ports() {
+    local ret=1
+
+    _bsd_pkg_pkgs && ret=0
+
+    if [ X"$service" = X"portinstall" ] || (( $words[(I)-*N*] )); then
+	_freebsd_pkgtools_ports && ret=0
+    fi
+
+    return ret
+}
+
+(( $+functions[_freebsd_pkgtools_cvsweb_files] )) ||
+_freebsd_pkgtools_cvsweb_files() {
+    local ret=1
+
+    _bsd_pkg_pkgs && ret=0
+
+    _freebsd_pkgtools_ports && ret=0
+
+    _files && ret=0
+
+    return ret
+}
+
+(( $+functions[_freebsd_pkgtools_pkgdb_origin] )) ||
+_freebsd_pkgtools_pkgdb_origin() {
+  local ret=1
+
+  if compset -P 1 "*="; then
+    _freebsd_pkgtools_ports -/ && ret=0
+  else
+    _bsd_pkg_pkgs -qS = && ret=0
+  fi
+
+  return ret
+}
+
+(( $+functions[_freebsd_pkgtools_pkgdb_subst] )) ||
+_freebsd_pkgtools_pkgdb_subst() {
+  local ret=1
+
+  if compset -p 1; then
+    case $PREFIX in
+    *$IPREFIX[0]*)
+      compset -P 1 "*$IPREFIX[0]"
+      _bsd_pkg_pkgs -S "$IPREFIX[0] " && ret=0
+      ;;
+    *)
+      _bsd_pkg_pkgs -S "$IPREFIX[0]" && ret=0
+      ;;
+    esac
+  else
+    compadd -S '/' '' && ret=0
+  fi
+
+  return ret
+}
+
+(( $+functions[_freebsd_pkgtools] )) ||
+_freebsd_pkgtools() {
+  local flags
+
+  case "$service" in
+  pkg_deinstall)
+    flags=(
+      '(* -r -R)-a[all packages]'
+      '(-f)-c[check for overwritten files and do not deinstall it if any]'
+      '-d[remove empty directories created by file cleanup]'
+      '-D[do not execute deinstallation scripts]'
+      '(-c)-f[force revoval]'
+      '-i[request confirmation for each package removal]'
+      '-n[no execute]'
+      '(-r -R)-O[omit sanity check]'
+      '-p[set prefix]:prefix directory:_files -/'
+      '-P[preserve FreeBSD shared libraries (*.so.n)]'
+      '-q[do not read pkgtools.conf]'
+      '(-a -O)-r[deinstall recursively]'
+      '(-a -O)-R[deinstall upward recursively]'
+      '-v[turn on verbose output]'
+      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '(-a)*:package to deinstall:_bsd_pkg_pkgs'
+
+    ;;
+
+  pkg_fetch)
+    flags=(
+      '-f[force; download a package even if already installed, etc.]'
+      '-q[do not read pkgtools.conf]'
+      '-R[download recursively]'
+      '-v[be verbose]'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '*:package to download:_freebsd_pkgtools_pkg_names'
+
+    ;;
+
+  pkg_glob)
+    flags=(
+      '(* -r -R)-a[all packages]'
+      '(-r -R)-O[omit sanity check]'
+      '-q[do not read pkgtools.conf]'
+      '(-a -O)-r[list recursively]'
+      '(-a -O)-R[list upward recursively]'
+      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '(-a)*:package to list:_bsd_pkg_pkgs'
+
+    ;;
+
+  pkg_sort)
+    flags=(
+      '-q[do not read pkgtools.conf]'
+    )
+
+    _arguments -s \
+      $flags[@]
+
+    ;;
+
+  pkgdb|pkg_which)
+    flags=(
+      '-a[turn on automatic mode when -F is also specified]'
+      '*-c[pkgname to collate the installed files of]:package name:_bsd_pkg_pkgs'
+      '-f[force to update database regardless of timestamps]'
+      '-F[interactively fix package registry]'
+      '*-o[look up or change a package'\''s origin]:package[=origin]:_freebsd_pkgtools_pkgdb_origin'
+      '*-Q[do not write anything to stdout (specified twice, stderr neither)]'
+      '-q[do not read pkgtools.conf]'
+      '*-s[substitute dependency]:/from/to/:_freebsd_pkgtools_pkgdb_subst'
+      '-u[update packages database]'
+      '-v[be verbose]'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '*:file or command:_freebsd_pkgtools_which_files'
+
+    ;;
+
+  portcvsweb)
+    flags=(
+      '-q[do not read pkgtools.conf]'
+      '-v[be verbose]'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '*:file or command:_freebsd_pkgtools_cvsweb_files'
+
+    ;;
+
+  portsclean)
+    flags=(
+      '-C[clean all the working directories]'
+      '*-D[clean all the unreferenced distfiles; -DD to check for installed ports only]'
+      '-i[be interactive]'
+      '-L[clean orphaned libraries]'
+      '-n[no execute]'
+      '*-P[clean outdated package tarballs; -PP to clean all the package tarballs]'
+      '*-Q[do not write anything to stdout (specified twice, stderr neither)]'
+      '-q[do not read pkgtools.conf]'
+    )
+
+    _arguments -s \
+      $flags[@]
+
+    ;;
+
+  ports_glob|portsdb)
+    flags=(
+      '-f[force to update database regardless of timestamps]'
+      '-M[list master ports]'
+      '-q[do not read pkgtools.conf]'
+      '-r[list recursively]'
+      '-R[list upward recursively]'
+      '-u[update binary database]'
+      '-U[update INDEX]'
+      '*-x[exclude ports]:exclude pattern:_freebsd_pkgtools_ports -/'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '*:ports to list:_freebsd_pkgtools_ports -/'
+
+    ;;
+
+  portinstall|portupgrade)
+    flags=(
+      '(* -r -R)-a[all packages]'
+      '-b[keep backup packages of the old versions'\'']'
+      '-A[run a command after each installation]:command to run after each installation:_command_names'
+      '-B[run a command before each build]:command to run before each build:_command_names'
+      '(-w)-c[clean before each build (default)]'
+      '(-W)-C[clean after each install (default)]'
+      '-D[distclean before each fetch or build]'
+      '-f[force upgrade even if it is to be a downgrade or just a reinstall]'
+      '-F[fetch only]'
+      '-i[be interactive]'
+      '-k[force upgrade even if some of the requisite ports have failed]'
+      '-l[output result to a file]:save the results as..:_files'
+      '-L[output build/install log to files]:save each port'\''s log with a prefix..:_files'
+      '*-m[specify make(1) after-arguments]:arguments to append to each make(1) command line:'
+      '*-M[specify make(1) before-arguments]:arguments to prepend to each make(1) command line:'
+      '(-y)-n[do not execute any installation or upgrade]'
+      '-N[install a new one when no installed package is found]'
+      '*-o[specify the follwing package'\''s origin]:origin:_files -W ${PORTSDIR\:-/usr/ports} -/'
+      '(-r -R)-O[omit sanity check]'
+      '-p[make package]'
+      '*-P[use packages (specified twice, use packages only)]'
+      '-q[do not read pkgtools.conf]'
+      '(-a -O)-r[do recursively]'
+      '(-a -O)-R[do upward recursively]'
+      '-s[run commands under sudo(8) where needed]'
+      '-S[specify alternative command to sudo(8)]:the alternative to sudo(8):_command_names'
+      '-u[do not preserve old shared libraries]'
+      '-v[be verbose]'
+      '(-c)-w[do not clean before each build]'
+      '(-C)-W[do not clean after each install]'
+      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+      '(-n)-y[answer yes to all the questions]'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '*:package to upgrade or install:_freebsd_pkgtools_pkgs_or_ports'
+
+    ;;
+
+  portversion)
+    flags=(
+      '-c[enable command output]'
+      '-C[portupgrade flags for command output]'
+      '-l[specify limit chars]:limit chars:'
+      '-L[specify inverse limit chars]:inverse limit chars:'
+      '(-r -R)-O[omit sanity check]'
+      '-q[do not read pkgtools.conf]'
+      '(-O)-r[check recursively]'
+      '(-O)-R[check upward recursively]'
+      '-v[be verbose]'
+      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+    )
+
+    _arguments -s \
+      $flags[@] \
+      '*:package to check:_bsd_pkg_pkgs'
+
+    ;;
+
+  esac
+}
+
+_freebsd_pkgtools_load_bsd_pkg
+
+_freebsd_pkgtools "$@"

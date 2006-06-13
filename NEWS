@@ -1,0 +1,130 @@
+                           ======================
+                            NEWS for portupgrade
+                           ======================
+
+------------------------------------------------------------------------
+
+portupgrade 2.1.3 (released 2006-06-11):
+
+* Add ALT_INDEX array to pkgtools.conf. The array holds additional
+  INDEX files. It's useful for local categories.
+
+* Add to pkgtools.conf a new dirrective: include_hash('glob').
+  It downloads keys and values from files coincided with 'glob'
+  and returns a filled hash. The glob is related to PREFIX.
+
+* Add a summary messages on each upgrade/install transaction:
+  how many tasks and how many task done.
+
+portupgrade 2.1.2 (released 2006-06-07):
+
+* Set both make argument and environment variable to PORT_UPGRADE=yes.
+  It makes possible a port or a package (via install/deinstall scripts)
+  to detect if it builds/installs/deinstalls under portupgrade(1)
+
+* Add to pkgtools.conf a new directive: include_eval('file')
+  The file will included and evaluated in the place where encountered.
+  The file path looking inside of PREFIX.
+
+* Add ALT_MOVED array to pkgtools.conf. The array holds alternate MOVED file.
+  E.g. for files in EXTRA_CATEGORIES.
+
+* Make pkgdb offer install a stale dependency before selecting it from
+  installed.
+
+portupgrade 2.1.1 (released 2006-06-04):
+
+* Allow set MAKE_ENV in pkgtools.conf. It works like MAKE_ARGS but sets
+  environment variables.
+
+* Add firefox in a browser list in portcvsweb(1)
+
+* Add PKG_BACKUP_DIR environment variable to set a directory where
+  old package will keep (when '-b' specified). Default: PKG_PATH
+
+* Other bugs fixes.
+
+portupgrade 2.1.0 (released 2006-06-01):
+
+* Rewrite version checking. Now it's complete compliant with pkg_version(1)
+  Add mode test in tests/test_pkgversion.rb
+
+* Make tests/test_pkgdb.rb does not depend on libtool with specific version.
+  Make it depends on ruby port with dynamicaly getting of its full package name.
+
+* Fix a pointyhat URL. Get rid on bento.freebsd.org URL and alpha platform.
+
+* Other bugs fixes.
+
+portupgrade 2.0.1 (released 2006-01-03):
+
+* portversion(1) also reads MOVED and trace origin change,
+  and, when invoked with "-v", displays the new origin.
+
+  Example:
+
+      % portversion -v screen
+      screen-4.0.2_2   <  needs updating (port has 4.0.2_3) (=> 'sysutils/screen')
+
+* Add "--ignore-moved" to portupgrade(1) and portversion(1).
+  When invoked with this option, both programs totally ignore MOVED.
+  If you encounter strange behaviour of these programs, try this out.
+
+* Add IGNORE_MOVED option to pkgtools.conf.
+  This can be used to selectively ignore MOVED by pkgs.
+  See pkgtools.conf.sample for details.
+
+* Keep the order of MOVED entries, and do not trace back to old entries.
+  Previously, when encounters the following entries,
+
+	editors/emacs|editors/emacs19|2004-03-20|emacs 19.x moved to a non-default port location
+	editors/emacs21|editors/emacs|2004-03-20|emacs 21.x moved to default port location
+
+  portupgrade traces as "editors/emacs21" -> "editors/emacs" -> "editors/emacs19".
+  I thought this behavior should not be what we want to, so added this change.
+
+
+------------------------------------------------------------------------
+
+portupgrade 2.0.0 (released 2006-01-01):
+
+* Change the versioning scheme of portupgrade.
+  portupgrade now becomes 2.0.0!
+
+* Add FreshPorts support to portcvsweb(1).
+  You can view CVS history via FreshPorts instead of CVSweb
+  by using "portcvsweb -F". See the man page of portcvsweb(1) for details.
+
+* If the change of the origin is written in MOVED,
+  portupgrade reads and chases it.
+  You no longer need to supply the origin of the new pkg by "-o" option.
+
+  Example:
+
+      When ftp/wget-devel is moved to ftp/wget, previously you had to run,
+	  % portupgrade -o ftp/wget wget
+
+      Now, just run
+
+	  % portupgrade wget
+
+      and portupgrade will do what you want to do.
+
+* Try to guess the pkg to be upgraded, when no pkgname is supplied
+  as a command line argument.
+  This can be done only when the current directory is under $PORTSDIR.
+
+  Example:
+
+      Running
+
+	  % cd /usr/ports/ftp/wget
+	  % portupgrade
+
+      will upgrade ftp/wget.
+
+* The frequency of INDEX generation on official site is now sufficient,
+  recommend to run "portsdb -F" (fetch INDEX from official site)
+  instead of "portsdb -U" (make INDEX by yourself) in portsdb(1). [1]
+
+  Pointed out by: Enrique Matias <cronopios at gmail dot com> [1]

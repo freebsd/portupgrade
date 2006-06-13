@@ -1,0 +1,234 @@
+.\" $Id: portversion.1 71 2006-01-03 16:25:27Z koma2 $
+.\"
+.Dd June 15, 2001
+.Dt PORTVERSION 1
+.Os FreeBSD
+.Sh NAME
+.Nm portversion
+.Nd a tool to compare the versions of installed packages with the ones in the ports tree
+.Sh SYNOPSIS
+.Nm
+.Op Fl hrOqRv
+.Op Fl l Ar limit_chars
+.Op Fl L Ar inv_limit_chars
+.Op Fl x Ar pkgname_glob
+.Op Ar pkgname_glob
+.Nm
+.Op Fl v
+.Fl t
+.Ar ver0 ver1
+.Op Ar ver2 ...
+.Sh DESCRIPTION
+.Nm
+is used to produce a report of installed ports/packages.
+.Pp
+Each package's version number is checked against the corresponding
+entry in the ports database to see if a newer version is available for
+upgrade.  If a package is not found in the database,
+.Nm
+inspects the origin port to get the version.
+.Pp
+.Nm
+is very similar to
+.Xr pkg_version 1 ,
+but is optimized for
+.Xr portupgrade 1
+and runs much faster than
+.Xr pkg_version 1
+thanks to the ports database generated from the INDEX file.  See
+.Xr portsdb 1
+for details.
+.Pp
+Each package name is printed, along with a one-character status flag:
+.Bl -tag -width indent
+.It Li =
+The installed version of the package is current.
+.It Li \&<
+The installed version of the package is older than the current
+version.
+.It Li \&>
+The installed version of the package is newer than the current
+version.  This situation can arise with using an out-of-date INDEX
+file, or when testing new ports.
+.It Li \&?
+The installed package does not appear in the database nor does the
+port directory exist.  This could be because the port has been removed
+from the official ports tree, or because the package was installed
+from an unofficial (or not yet committed) port, or because the INDEX
+file has not been synchronized (updated) with the ports tree yet.
+.It Li \&!
+The installed package does not appear in the database, the port
+directory actually exists, the port's Makefile is broken and the
+latest version number cannot be obtained.
+.It Li \&#
+The installed package does not have an origin recorded.  This could be
+because the package was installed before the concept of
+.Sq origin
+was introduced.  You can run
+.Dq Nm pkgdb -F
+to complete missing origins.
+.El
+.Pp
+You can resolve most out-of-date situations by updating the ports tree
+and running
+.Dq Nm portsdb Fl U .
+(See
+.Xr portsdb 1
+for details)
+.Pp
+Before reading these instructions, you must understand that a
+port/package can have the following two types of related
+ports/packages:
+.Bl -tag -width "dependent" -compact
+.It required
+Ports/packages that a port/package needs for it to be built and/or
+run.  Port Makefiles refer to this type of ports/packages using the
+.Dv BUILD_DEPENDS
+and 
+.Dv RUN_DEPENDS
+macros, respectively.
+.It dependent
+Ports/packages that need this port/package.
+.El
+.Sh OPTIONS
+The following command line arguments are supported:
+.Pp
+.Bl -tag -width "--command-args ARGS" -compact
+.It Ar pkgname_glob
+Specify one of these: a full pkgname, a pkgname without version, a
+shell glob pattern in which you can use wildcards
+.Sq * ,
+.Sq \&? ,
+and
+.Sq [..] ,
+an extended regular expression preceded by a colon
+.Sq \&: ,
+or a date range specification preceded by either
+.Sq <
+or
+.Sq > .
+See
+.Xr pkg_glob 1
+for details and concrete examples.
+.Pp
+If none is specified,
+.Nm
+checks all the installed packages.
+.Pp
+In any case, the results will be listed in alphabetical order, not in
+dependency order as with other tools.
+.Pp
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl c
+.It Fl -command-output
+Enable command output.  Command output includes a command of
+.Xr portupgrade 1
+you should run to upgrade your installed packages to the latest
+versions in the ports system.  This feature does not constitute an
+automated packages upgrading system.  Edit the list of packages to
+upgrade and the options for
+.Xr portupgrade 1
+and run it to perform the upgrade.
+.Pp
+.It Fl C Ar ARGS
+.It Fl -command-args Ar ARGS
+Specify options to pass to
+.Xr portupgrade 1
+to be used in the command output.
+.Pp
+.It Fl -ignore-moved
+Do not read MOVED file.
+.Pp
+.It Fl l Ar CHARS
+.It Fl -limit Ar CHARS
+Only include the packages with the specified status flags.
+.Pp
+.It Fl L Ar CHARS
+.It Fl -inv-limit Ar CHARS
+Exclude the packages with the specified status flags.
+.Pp
+.It Fl O
+.It Fl -omit-check
+Omit sanity checks for dependencies.  By default,
+.Nm
+checks whether all packages it is to check have consistent
+dependencies, though it takes extra time to calculate dependencies.
+If you are sure you have run
+.Dq Li "pkgdb -F"
+in advance, you can specify this option to omit the sanity checks.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file. ($PREFIX/etc/pkgtools.conf)
+.Pp
+.It Fl r
+.It Fl -recursive
+Check all packages depending on the given packages as well.
+.Pp
+.It Fl R
+.It Fl -upward-recursive
+Check all packages required by the given packages as well.
+.Pp
+.It Fl t
+.It Fl -test
+Compare the version with the following one(s), and print the result(s).
+.Pp
+.It Fl v
+.It Fl -verbose
+Turn on verbose output.
+.Pp
+.It Fl x Ar GLOB
+.It Fl -exclude Ar GLOB
+Exclude packages matching the specified glob pattern.  Exclusion is
+performed after recursing dependency in response to
+.Fl r
+and/or
+.Fl R ,
+which means, for example, the following command will check for all the
+packages depending on XFree86 but not for XFree86:
+.Pp
+.Nm portupgrade
+.Fl rx
+.Ar XFree86 XFree86
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PKG_DBDIR
+Alternative location for the installed package database.  The default
+is
+.Dq Pa /var/db/pkg .
+.Pp
+.It Ev PORTSDIR
+Alternative location for the ports tree and the ports database files.
+The default is
+.Dq Pa /usr/ports .
+.Pp
+.It Ev PKGTOOLS_CONF
+Configuration file for the pkgtools suite.  The default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf"
+.It Pa /var/db/pkg
+Default location of the installed package database.
+.It Pa /usr/ports
+Default location of the ports tree and the ports database files.
+.Pp
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr pkg_glob 1 ,
+.Xr pkg_info 1 ,
+.Xr pkg_sort 1 ,
+.Xr pkg_version 1 ,
+.Xr pkgdb 1 ,
+.Xr portsdb 1 ,
+.Xr portupgrade 1 ,
+.Xr pkgtools.conf 5 ,
+.Xr ports 7
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org

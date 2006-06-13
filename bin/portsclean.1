@@ -1,0 +1,124 @@
+.\" $Id: portsclean.1 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd August 11, 2001
+.Dt PORTSCLEAN 1
+.Os FreeBSD
+.Sh NAME
+.Nm portsclean
+.Nd a tool to clean ports/packages garbage
+.Sh SYNOPSIS
+.Nm
+.Op Fl hCDDiLnPPQQq
+.Sh DESCRIPTION
+.Nm
+is a tool to help users clean out the working directories of their ports
+tree, no longer referenced distfiles, outdated package files, and obsolete
+or orphaned shared libraries that were possibly left by
+.Xr pkg_deinstall 1 's
+.Fl P
+option.
+.Sh OPTIONS
+The following command line arguments are supported:
+.Pp
+.Bl -tag -width "--interactive" -compact
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl C
+.It Fl -workclean
+Clean out all the working directories of the ports tree. (cf.
+.Ev WRKDIRPREFIX )
+.Pp
+.It Fl D
+.It Fl -distclean
+Clean out all the distfiles that are not referenced by any port in the
+ports tree.  Specified twice (i.e.
+.Fl DD ) ,
+clean out all the distfiles that are not referenced by any port that is
+currently installed. (cf.
+.Ev DISTDIR )
+.Pp
+.It Fl i
+.It Fl -interactive
+Turn on interactive mode.  The user is asked for approval before each
+suggested file/directory is removed.
+.Pp
+.It Fl L
+.It Fl -libclean
+Clean out old, duplicate and/or orphaned shared libraries.
+.Pp
+.Nm
+first deletes duplicate shared libraries where appropriate, then puts
+away old and orphaned shared libaries to
+.Pa /usr/local/lib/compat/pkg
+updating symlinks properly.  To keep binaries working,
+.Xr ldconfig 8
+is run after each library deletion or move.
+.Pp
+.Nm
+is so wise you can safely run it without turning
+.Fl i
+on.  However, if you want to do further cleanup, specify the flag to
+be asked on possibly unneeded libraries too.
+.Pp
+You can use the
+.Pa sysutils/libchk
+port to check which library is linked with which binaries.
+.Pp
+.It Fl n
+.It Fl -noexecute
+Do not actually delete any files.
+.Pp
+.It Fl P
+.It Fl -pkgclean
+Clean up outdated package tarballs and dead symlinks in the packages
+directory. (cf.
+.Ev PACKAGES )
+Specified twice (i.e.
+.Fl PP ) ,
+delete all the package tarballs in the directory.
+.Pp
+.It Fl Q
+.It Fl -quiet
+Do not write anything to stdout.  Specified twice (i.e.
+.Fl QQ ) ,
+do not write
+anything to stderr either.  This is for internal use.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file -
+.Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PORTSDIR
+.It Ev DISTDIR
+.It Ev WRKDIRPREFIX
+.It Ev PACKAGES
+.Nm
+detects these variables defined in the configuration file
+.Pa $PREFIX/etc/pkgtools.conf ,
+.Pa /etc/make.conf
+or environment variables to clean files properly.  See
+.Xr portupgrade 1
+for details of these variables.
+.Pp
+.It Ev PKGTOOLS_CONF
+Configuration file for the pkgtools suite.  Default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf"
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr libchk 1 ,
+.Xr pkg_deinstall 1 ,
+.Xr pkgdb 1 ,
+.Xr pkgtools.conf 5 ,
+.Xr ports 7
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org

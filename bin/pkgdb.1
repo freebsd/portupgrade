@@ -1,0 +1,210 @@
+.\" $Id: pkgdb.1 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd September 22, 2001
+.Dt PKGDB 1
+.Os FreeBSD
+.Sh NAME
+.Nm pkgdb ,
+.Nm pkg_which
+.Nd tools to manage and search the package database
+.Sh SYNOPSIS
+.Nm
+.Op Fl ahfFQQquv
+.Op Fl o Ar pkgname
+.Op Fl s Ar /old/new/
+.Nm pkg_which
+.Op Fl hQQq
+.Op Fl c Ar pkgname
+.Op Ar file
+.Ar ...
+.Sh DESCRIPTION
+The
+.Nm
+command is a tool to create or update the system package database which is
+used by the
+.Xr portupgrade 1
+tool suite.  It maintains a hash that maps an
+installed file to a package name, a hash that maps a package to an
+origin, and a list of installed packages.
+.Pp
+.Nm pkg_which
+looks in the package database to tell which package each specified
+file came from.  If the database is outdated but you do not have permission to update it, it delegates tasks to
+.Xr pkg_info 1 .
+.Pp
+Actually,
+.Nm
+and
+.Nm pkg_which
+are the same command, and are equivalent.
+.Pp
+The
+.Nm
+command also works as an interactive tool for fixing the package
+registry database when
+.Fl F
+is specified.  It helps you resolve stale dependencies, unlink cyclic
+dependencies, complete stale or missing origins and remove duplicates.
+You should run this command periodically so
+.Xr portupgrade 1
+and other
+.Li "pkg_*"
+tools can work effectively and reliably.
+.Sh OPTIONS
+The following command line arguments are supported:
+.Pp
+.Bl -tag -width "--substitute" -compact
+.It Ar file
+Inquire which package
+.Ar file
+came from.  If the
+.Ar file
+is not present,
+.Nm pkg_which
+calls
+.Xr which 1
+to search
+.Ev PATH
+for the
+.Ar file .
+.Pp
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl a
+.It Fl -auto
+Turn on automatic mode when
+.Fl F
+is also specified.
+.Nm
+only fixes discrepancies that can be fixed securely and leaves the
+others.
+.Pp
+.It Fl -autofix
+Shorthand of
+.Fl -auto
+.Fl -fix ( Fl aF ) .
+.Pp
+.It Fl c Ar PKGNAME
+.It Fl -collate Ar PKGNAME
+Show files installed by the given package that have been overwritten by
+other packages.
+.Pp
+.It Fl f
+.It Fl -force
+Force; Specified with
+.Fl u ,
+update database regardless of timestamps.  Specified with
+.Fl F ,
+fix "held" packages too.
+.Pp
+.It Fl F
+.It Fl -fix
+Interactively fix the package registry database.
+.Pp
+.It Fl o Ar PKGNAME
+.It Fl -origin Ar PKGNAME
+Look up the origin of the given package in the package database.
+.Pp
+.It Fl Q
+.It Fl -quiet
+Do not write anything to stdout.  Specified twice, do not write
+anything to stderr either.  This is for internal use.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file -
+.Pa $PREFIX/etc/pkgtools.conf .
+.Pp
+.It Fl s Ar /OLD/NEW/
+.It Fl -substitute Ar /OLD/NEW/
+Substitute all the dependencies recorded as
+.Ar OLD
+with
+.Ar NEW
+and exit.
+.Pp
+.It Fl u
+.It Fl -update
+Update or create the package database file
+.Pa pkgdb.db
+in
+.Pa $PKG_DBDIR ,
+which is
+.Pa /var/db/pkg
+by default.
+.Pp
+Note: if the ports database files are stale, pkgdb will automatically update them before proceeding, so manual updating is not mandatory.
+.Pp
+.It Fl v
+.It Fl -verbose
+Turn on verbose output.
+.El
+.Sh EXAMPLES
+.Bl -bullet
+.It
+Get a list of files under
+.Pa /usr/local
+and
+.Pa /usr/X11R6
+that do not belong to any package:
+.Pp
+.Dl find /usr/local /usr/X11R6 -type f | xargs pkg_which -v | fgrep '?'
+.Pp
+As you see, you can omit version numbers.  If multiple versions are
+installed, each of them is upgraded unless they share a port origin.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PKG_DBDIR
+Alternative location for the installed package database.  Default is
+.Dq Pa /var/db/pkg .
+.Pp
+.It Ev PORTSDIR
+Alternative location for the ports tree.  Default is
+.Dq Pa /usr/ports .
+.Pp
+.It Ev PORTS_INDEX
+Alternative location for the ports INDEX file.  Default is
+.Dq Pa $PORTSDIR/INDEX .
+.Pp
+.It Ev PORTS_DBDIR
+Alternative location for the ports database files.  Default is
+.Dq Pa $PORTSDIR .
+The database files in the directory are automatically created or
+updated as necessary.  See
+.Xr portsdb 1
+for details.
+.Pp
+.It Ev PKGTOOLS_CONF
+Configuration file for the pkgtools suite.  Default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf" -compact
+.It Pa /var/db/pkg
+Default location of the package database.
+.Pp
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr portsclean 1 ,
+.Xr portsdb 1 ,
+.Xr portupgrade 1 ,
+.Xr pkgtools.conf 5 ,
+.Xr ports 7
+.Sh HISTORY
+The idea of
+.Pa pkgdb.db
+was taken from
+.Nx .
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org
+.Sh BUGS
+.Pp
+Sometimes a database may get corrupt, and the pkgtools commands may
+abort with a segmentation fault.  In such cases, run
+.Dq Li "pkgdb -fu"
+to rebuild the database, and the problems should go away.

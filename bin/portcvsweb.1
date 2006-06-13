@@ -1,0 +1,213 @@
+.\" $Id: portcvsweb.1 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd August 11, 2001
+.Dt PORTCVSWEB 1
+.Os FreeBSD
+.Sh NAME
+.Nm portcvsweb
+.Nd a tool to instantly browse a history via CVSweb or FreshPorts.org
+.Sh SYNOPSIS
+.Nm
+.Op Fl qv
+.Op Ar pkgname_glob
+|
+.Op Ar ports_glob
+|
+.Op Ar file
+|
+.Op Ar directory
+|
+.Op Ar cvs_module_alias
+|
+.Op Ar dead port
+.Nm
+.Fl F
+.Op Fl qv
+.Oo
+.Fl -datespec Ns
+.Op = Ns Ar DATESPEC
+.Oc
+.Op Ar pkgname_glob
+|
+.Op Ar ports_glob
+|
+.Op Ar file
+|
+.Op Ar directory
+|
+.Op Ar cvs_module_alias
+|
+.Op Ar dead port
+.Nm
+.Fl h | -help
+.Sh DESCRIPTION
+The
+.Nm
+command invokes the first available web browser in
+.Nm w3m ,
+.Nm lynx ,
+.Nm links ,
+.Nm firefox ,
+.Nm mozilla
+and
+.Nm netscape
+(or the ones listed in
+.Ev BROWSER
+if set) to view the CVS history of a given port, file, directory, or
+module via the CVSweb or FreshPorts.org.  If no file is given, the current directory is
+assumed.
+.Pp
+To detect which repository the file/directory belongs and what
+revision it is,
+.Nm
+reads the
+.Pa CVS/*
+files if found, or scans the given file for a CVS tag.  If the file
+does not contain a CVS tag, it scans the
+.Pa Makefile
+in the directory.  If yet there is no
+.Pa Makefile
+in the directory, it moves up through the directory hierarchy until it
+finds one.
+.Pp
+If the given path doesn't exist in the first place,
+.Nm
+assumes it should be under the ports tree, which assumption allows
+specifying a deleted ports directory/file.
+.Pp
+Currently
+.Nm
+recognizes
+.Fx ,
+.Nx
+and
+.Ox
+tags, and the one whichever comes first is used.
+.Sh OPTIONS
+The following command line arguments are supported:
+.Pp
+.Bl -tag -width "--use-remote-packages" -compact
+.It Ar pkgname_glob
+.It Ar portorigin_glob
+Pick the first port that matched the given pattern.  See
+.Xr pkg_glob 1
+and 
+.Xr portorigin_glob 1
+for details and concrete examples.
+.Pp
+.It Ar file
+.It Ar directory
+Pick the file or the directory if it exists.
+.It Ar cvs_module_alias
+.It Ar dead port
+.Nm recognizes these too.
+.Pp
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl F
+.It Fl -freshports
+FreshPorts mode. View CVS history via FreshPorts.org instead of CVSweb.
+.Pp
+.It Fl -datespec Ns Xo
+.Op Ar =DATESPEC
+.Xc
+(FreshPorts mode only) View the commit of the day specified by
+.Ar DATESPEC
+via FreshPorts. When
+.Ar DATESPEC
+is omittied, view the commits of today. When
+.Ar DATESPEC
+is a negative value, view the commits of
+.Ar DATESPEC
+days before.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file -
+.Pa $PREFIX/etc/pkgtools.conf .
+.Pp
+.It Fl v
+.It Fl -verbose
+Turn on verbose output.
+.El
+.Sh EXAMPLES OF FRESHPORTS MODE
+When invoked with
+.Fl F
+option, view CVS history via FreshPorts.org instead of CVSweb.
+.Pp
+.Dl % portcvsweb -F
+.Dl => http://www.FreshPorts.org/
+.Pp
+.Pp
+.Dl % portcvsweb -F japanese/kterm
+.Dl => http://www.FreshPorts.org/japanese/kterm
+.Pp
+When
+.Fl -datespec
+is also supplied, view the commits of specified day.
+.Pp
+.Dl % portcvsweb -F --datespec=0405
+.Dl => http://www.FreshPorts.org/date.php?date=2005/04/05
+.Pp
+.Dl % portcvsweb -F --datespec=04/05
+.Dl => http://www.FreshPorts.org/date.php?date=2005/04/05
+.Pp
+.Dl % portcvsweb -F --datespec=20030405
+.Dl => http://www.FreshPorts.org/date.php?date=2003/04/05
+.Pp
+.Dl % portcvsweb -F --datespec=2003/04/05
+.Dl => http://www.FreshPorts.org/date.php?date=2003/04/05
+.Pp
+.Dl % portcvsweb -F --datespec=2003-04-05
+.Dl => http://www.FreshPorts.org/date.php?date=2003/04/05
+.Pp
+Without
+.Ar DATESPEC
+, view the commits of today.
+.Pp
+.Dl % date -u
+.Dl Sun Jan  1 03:47:59 UTC 2006
+.Dl % portcvsweb -F --datespec
+.Dl => http://www.FreshPorts.org/date.php?date=2006/01/01
+.Pp
+When
+.Ar DATESPEC
+is a negative value, view the commits of
+.Ar DATESPEC
+days before.
+.Pp
+.Dl % portcvsweb -F --datespec=-3
+.Dl => http://www.FreshPorts.org/date.php?date=2005/12/29
+
+.Sh ENVIRONMENT
+.Bl -tag -width "BROWSER" -compact
+.It Ev BROWSER
+Alternative WWW browser.  Default is
+.Dq w3m:lynx:links:firefox:mozilla:netscape .
+.El
+.Sh SEE ALSO
+.Xr pkgtools.conf 5 ,
+.Xr ports 7
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org
+.Sh BUGS
+Since a
+.Nx
+or
+.Ox
+tag does not contain a path component, when
+.Nm
+detects a
+.Nx
+or
+.Ox
+tag but there is no
+.Pa CVS/*
+files in the directory, it assumes that it belongs to
+.Nx
+pkgsrc
+or
+.Ox
+ports.

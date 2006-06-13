@@ -1,0 +1,192 @@
+.\" $Id: pkg_glob.1 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd July 27, 2001
+.Dt PKG_GLOB 1
+.Os FreeBSD
+.Sh NAME
+.Nm pkg_glob
+.Nd a package glob expander with wildcards and dependency recursion support 
+.Sh SYNOPSIS
+.Nm
+.Op Fl haOqrR
+.Op Fl x Ar pkgname_glob
+.Op Ar pkgname_glob ...
+.Sh DESCRIPTION
+The
+.Nm
+command lists the installed packages matching given package globs,
+optionally recursing through dependencies.  The output list is sorted
+in alphabetical order.  Use
+.Xr pkg_sort 1
+to sort them in dependency order. (e.g.
+.Li "pkg_glob -a | pkg_sort" )
+.Pp
+Before reading these instructions, you must understand that a
+port/package can have the following two types of related
+ports/packages:
+.Bl -tag -width "dependent" -compact
+.It required
+Ports/packages that a port/package needs for it to be built and/or
+run.  Port Makefiles refer to this type of ports/packages using the
+.Dv BUILD_DEPENDS
+and 
+.Dv RUN_DEPENDS
+macros, respectively.
+.It dependent
+Ports/packages that need this port/package.
+.El 
+.Sh OPTIONS
+The following command line arguments are supported:
+.Pp
+.Bl -tag -width "--upward-recursive" -compact
+.It Ar pkgname_glob
+Specify one of these: a full pkgname, a pkgname without version, or a
+shell glob pattern to match against pkgnames or their origins in which
+you can use wildcards
+.Sq * ,
+.Sq \&? ,
+and
+.Sq [..] ,
+an extended regular expression preceded by a colon
+.Sq \&:
+to match against pkgnames or their origins, or a date range
+specification preceded by either
+.Sq <
+or
+.Sq > .
+.Pp
+A date range specification must be in the following form:
+.Pp
+.D1 {<|<=|>=|>}{date|pkgname_glob}
+.Pp
+Which selects packages that had been installed before or after the
+date or the package specified.  It is recommended to use the ISO 8601
+format to specify a date, while various formats are accepted.
+.Pp
+Here are some pattern examples:
+.Pp
+.Bl -tag -width "':sh-[^-]+$'" -compact -nested
+.It tcl-8.2.3
+Specifically
+.Sq tcl-8.2.3 .
+.Pp
+.It tcl
+Whatever versions of
+.Sq tcl
+installed.  This would not match
+.Sq tcl-sql
+or
+.Sq tcl-thread .
+.Pp
+.It 'ja-*'
+Everything with a
+.Sq ja-
+prefix.
+.Pp
+.It '*gnome*'
+Everything having
+.Sq gnome
+in the name.
+.Pp
+.It '*sh'
+This would not match anything since the version part cannot be omitted
+if a pattern contains wildcards.
+.Pp
+.It 'lang/*
+Everything installed from the category
+.Sq lang .
+.Pp
+.It :'sh-[^-]+$'
+Everything which name ends with
+.Sq sh .
+.Pp
+.It :'(?i)sql'
+Everything having
+.Sq sql
+in the name, ignoring the case.
+.Pp
+.It '>=2001-09-20 08:00'
+Everything that was installed after 2001-09-20 08:00:00 (local time).
+.Pp
+.It '<png'
+Everything that was installed prior to
+.Sq png .
+.El
+.Pp
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl a
+.It Fl -all
+List all the installed packages.  Equivalent to specify
+.Ar '*'
+as
+.Ar pkgname_glob .
+.Pp
+.It Fl O
+.It Fl -omit-check
+Omit sanity checks for dependencies.  By default,
+.Nm
+checks if all the packages to list have consistent dependencies,
+though it takes extra time to calculate dependencies.  If you are sure
+you have run
+.Dq Li "pkgdb -F"
+in advance, you can specify this option to omit the sanity checks.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file. ($PREFIX/etc/pkgtools.conf)
+.Pp
+.It Fl r
+.It Fl -recursive
+List all those packages depending on the given packages as well.
+.Pp
+.It Fl R
+.It Fl -upward-recursive
+List all those packages required by the given packages as well.
+.Pp
+.It Fl x Ar pkgname_glob
+.It Fl -exclude Ar pkgname_glob
+Exclude packages matching the specified glob pattern.  Exclusion is
+performed after recursing dependency in response to
+.Fl r
+and/or
+.Fl R ,
+which means, for example, the following command will list all the
+packages depending on XFree86 but XFree86 will be excluded:
+.Pp
+.Nm
+.Fl rx
+.Ar XFree86 XFree86
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PKG_DBDIR
+Alternative location for the installed package database.  Default is
+.Dq Pa /var/db/pkg .
+.Pp
+.It Ev PKGTOOLS_CONF
+Configuration file for the pkgtools suite.  Default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf"
+.It Pa /var/db/pkg
+Default location of the installed package database.
+.Pp
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr pkg_deinstall 1 ,
+.Xr pkg_sort 1 ,
+.Xr pkgdb 1 ,
+.Xr portinstall 1 ,
+.Xr ports_glob 1 ,
+.Xr portupgrade 1 ,
+.Xr portversion 1 ,
+.Xr pkgtools.conf 5 ,
+.Xr ports 7
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org

@@ -1,0 +1,101 @@
+# $Id: Makefile.compat 52 2006-01-01 06:26:59Z koma2 $
+
+.if defined(SCRIPTS) && !empty(SCRIPTS) && !target(_scriptsinstall)
+
+all: ${SCRIPTS}
+
+realinstall: _scriptsinstall
+
+SCRIPTSDIR?=	${BINDIR}
+SCRIPTSOWN?=	${BINOWN}
+SCRIPTSGRP?=	${BINGRP}
+SCRIPTSMODE?=	${BINMODE}
+
+.for script in ${SCRIPTS}
+.if defined(SCRIPTSNAME)
+SCRIPTSNAME_${script:T}?=	${SCRIPTSNAME}
+.else
+SCRIPTSNAME_${script:T}?=	${script:T:R}
+.endif
+SCRIPTSDIR_${script:T}?=	${SCRIPTSDIR}
+SCRIPTSOWN_${script:T}?=	${SCRIPTSOWN}
+SCRIPTSGRP_${script:T}?=	${SCRIPTSGRP}
+SCRIPTSMODE_${script:T}?=	${SCRIPTSMODE}
+_scriptsinstall: _SCRIPTSINS_${script:T}
+_SCRIPTSINS_${script:T}: ${script}
+	${INSTALL} ${COPY} -o ${SCRIPTSOWN_${.ALLSRC:T}} \
+	    -g ${SCRIPTSGRP_${.ALLSRC:T}} -m ${SCRIPTSMODE_${.ALLSRC:T}} \
+	    ${_INSTALLFLAGS} ${.ALLSRC} \
+	    ${DESTDIR}${SCRIPTSDIR_${.ALLSRC:T}}/${SCRIPTSNAME_${.ALLSRC:T}}
+.endfor
+
+.endif
+
+.if !defined(FILESGROUPS)
+
+FILESGROUPS?=	FILES
+
+.if !target(buildfiles)
+.for group in ${FILESGROUPS}
+buildfiles: ${${group}}
+.endfor
+.endif
+
+all: buildfiles
+
+.if !target(installfiles)
+.for group in ${FILESGROUPS}
+.if defined(${group}) && !empty(${group})
+
+${group}OWN?=	${SHAREOWN}
+${group}GRP?=	${SHAREGRP}
+${group}MODE?=	${SHAREMODE}
+${group}DIR?=	${BINDIR}
+
+_${group}FILES=
+.for file in ${${group}}
+.if defined(${group}OWN_${file:T}) || defined(${group}GRP_${file:T}) || \
+    defined(${group}MODE_${file:T}) || defined(${group}DIR_${file:T}) || \
+    defined(${group}NAME_${file:T})
+${group}OWN_${file:T}?=	${${group}OWN}
+${group}GRP_${file:T}?=	${${group}GRP}
+${group}MODE_${file:T}?=	${${group}MODE}
+${group}DIR_${file:T}?=	${${group}DIR}
+.if defined(${group}NAME)
+${group}NAME_${file:T}?=	${${group}NAME}
+.else
+${group}NAME_${file:T}?=	${file:T}
+.endif
+installfiles: _${group}INS_${file:T}
+_${group}INS_${file:T}: ${file}
+	${INSTALL} ${COPY} -o ${${group}OWN_${.ALLSRC:T}} \
+	    -g ${${group}GRP_${.ALLSRC:T}} -m ${${group}MODE_${.ALLSRC:T}} \
+	    ${.ALLSRC} \
+	    ${DESTDIR}${${group}DIR_${.ALLSRC:T}}/${${group}NAME_${.ALLSRC:T}}
+.else
+_${group}FILES+= ${file}
+.endif
+.endfor
+.if !empty(_${group}FILES)
+installfiles: _${group}INS
+_${group}INS: ${_${group}FILES}
+.if defined(${group}NAME)
+	${INSTALL} ${COPY} -o ${${group}OWN} -g ${${group}GRP} \
+	    -m ${${group}MODE} ${.ALLSRC} \
+	    ${DESTDIR}${${group}DIR}/${${group}NAME}
+.else
+	${INSTALL} ${COPY} -o ${${group}OWN} -g ${${group}GRP} \
+	    -m ${${group}MODE} ${.ALLSRC} ${DESTDIR}${${group}DIR}
+.endif
+.endif
+
+.endif # defined(${group}) && !empty(${group})
+.endfor
+
+.endif
+
+.if target(installfiles)
+realinstall: installfiles
+.endif
+
+.endif

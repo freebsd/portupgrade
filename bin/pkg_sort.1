@@ -1,0 +1,51 @@
+.\" $Id: pkg_sort.1 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd November 6, 2001
+.Dt PKG_SORT 1
+.Os FreeBSD
+.Sh NAME
+.Nm pkg_sort
+.Nd sort lines of package names in dependency order
+.Sh SYNOPSIS
+.Nm
+.Op Fl hq
+.Sh DESCRIPTION
+The
+.Nm
+command reads lines of package names from the standard input and sorts
+them in dependency order.  For every combination of packages A and B
+where the former is required by the latter, A will appear prior to B.
+.Sh OPTIONS
+The following command line arguments are supported:
+.Pp
+.Bl -tag -width "--noconfig" -compact
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file. ($PREFIX/etc/pkgtools.conf)
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PKG_DBDIR
+Alternative location for the installed package database.  Default is
+.Dq Pa /var/db/pkg .
+.Pp
+.It Ev PKGTOOLS_CONF
+Configuration file for the pkgtools suite.  Default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf"
+.It Pa /var/db/pkg
+Default location of the installed package database.
+.Pp
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr pkg_glob 1
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org

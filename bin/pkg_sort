@@ -1,0 +1,118 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 52 $[1]
+MYDATE = %w$Date: 2006-01-01 15:26:59 +0900 (Sun, 01 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require "pkgtools"
+
+COLUMNSIZE = 22
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+def init_global
+  $noconfig = false
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-hq]
+  EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_tail_option '
+Environment Variables [default]:
+    PKGTOOLS_CONF            configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_DBDIR                packages DB directory [/var/db/pkg]'
+
+    tasks = []
+
+    begin
+      init_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+
+    pkgs = []
+
+    STDIN.each { |line|
+      pkg = line.chomp
+
+      if $pkgdb.installed?(pkg)
+	pkgs << pkg
+      else
+	STDERR.puts "No such package is installed: #{pkg}"
+      end
+    }
+
+    list = $pkgdb.sort_build!(pkgs) 
+
+    puts(*list) unless list.empty?
+
+    return 0
+  end
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end

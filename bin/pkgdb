@@ -1,0 +1,1055 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+# All rights reserved.
+# Copyright (c) 2005, 2006 KOMATSU Shinichiro
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 52 $[1]
+MYDATE = %w$Date: 2006-01-01 15:26:59 +0900 (Sun, 01 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require "pkgtools"
+
+COLUMNSIZE = 30
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+def init_global
+  $fix_db = false
+  $force = false
+  $automatic = false
+  $noconfig = false
+  $quiet = false
+  $quieter = false
+  #$sanity_check = true
+  $update_db = false
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-hafFQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_pkgname/] [file ...]
+    EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-c", "--collate=PKGNAME", "Show files installed by the given packge#{NEXTLINE}that have been overwritten by other packages") {
+      |pkgname|
+      pkgname = $pkgdb.strip(pkgname, true)
+
+      begin
+	pkg = PkgInfo.new(pkgname)
+
+	pkg.files.each do |path|
+	  owners = $pkgdb.which_m(path) or
+	    raise PkgDB::DBError, "The file #{path} is not properly recorded as installed"
+
+	  i = owners.index(pkgname) or
+	    raise PkgDB::DBError, "The file #{path} is not properly recorded as installed by #{pkgname}"
+
+	  if i != owners.size - 1
+	    print "#{path}: "
+	    print "overwritten by: " if $verbose
+	    puts owners[(i + 1)..-1].join(' ')
+	  end
+	end
+      rescue => e
+	STDERR.puts e.message
+      end unless dry_parse
+    }
+
+    opts.def_option("-f", "--force", "Force;#{NEXTLINE}Specified with -u, update database#{NEXTLINE}regardless of timestamps#{NEXTLINE}Specified with -F, fix held packages too") {
+      |$force|
+    }
+
+    opts.def_option("-F", "--fix", "Fix the package database interactively") {
+      |$fix_db|
+    }
+
+    opts.def_option("-a", "--auto", "Turn on automatic mode when -F is also specified") {
+      |$automatic|
+    }
+
+    opts.def_option("--autofix", "Shorthand of --auto --fix (-aF)") {
+      $automatic = $fix_db = true
+    }
+
+    opts.def_option("-o", "--origin=PKGNAME[=ORIGIN]", "Look up or change the origin of the given#{NEXTLINE}package") {
+      |arg|
+      pkgname, origin = arg.split('=', 2)
+      spkgname = $pkgdb.strip(pkgname, true)
+      unless dry_parse
+	if spkgname
+	  print spkgname, ": " if $verbose
+	  print $pkgdb.origin(spkgname) || '?'
+
+	  if origin
+	    print " -> #{origin}\n"
+
+	    modify_origin(spkgname, origin)
+	  else
+	    print "\n"
+	  end
+	else
+	  print pkgname, ": " if $verbose
+	  puts '?'
+	end
+      end
+    }
+
+#    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
+#      $sanity_check = false
+#    }
+
+    opts.def_option("-Q", "--quiet", "Do not write anything to stdout;#{NEXTLINE}Specified twice, stderr neither") {
+      if !$quiet
+	STDOUT.reopen(open('/dev/null', 'w')) unless dry_parse
+	$quiet = true
+      elsif !$quieter
+	STDERR.reopen(open('/dev/null', 'w')) unless dry_parse
+	$quieter = true
+      end
+    }
+
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_option("-s", "--substitute=/OLD/NEW/", "Substitute all the dependencies recorded#{NEXTLINE}as OLD with NEW") {
+      |expr|
+      if expr.empty?
+	warning_message "Illegal expression: " + expr
+	print opts
+	exit 64
+      end
+
+      break if dry_parse
+
+      sep = expr.slice!(0,1)
+
+      oldpkgname, newpkgname = expr.split(sep)
+
+      if $verbose
+	progress_message "Replacing dependencies: #{oldpkgname} -> #{newpkgname}"
+      end
+
+      if newpkgname.nil? || newpkgname.empty? ||
+	  oldpkgname.nil? || oldpkgname.empty?
+	raise OptionParser::ParseError, "requires non-empty pkgnames"
+      end
+
+      update_pkgdep(oldpkgname, newpkgname)
+
+      automatic = $automatic
+      $automatic = true
+
+      fix_db_init()
+      fix_db_phase2()
+
+      $automatic = automatic
+    }
+
+    opts.def_option("-u", "--update", "Update the package database") {
+      |$update_db|
+    }
+
+    opts.def_option("-v", "--verbose", "Be verbose") {
+      |$verbose|
+    }
+
+    opts.def_tail_option '
+Environment Variables [default]:
+    PKGTOOLS_CONF            configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_DBDIR                packages DB directory [/var/db/pkg]
+    PORTSDIR                 ports directory [/usr/ports]
+    PORTS_DBDIR              ports db directory [$PORTSDIR]
+    PORTS_INDEX              ports index file [$PORTSDIR/INDEX]'
+
+    if argv.empty?
+      print opts
+      return 0
+    end
+
+    begin
+      init_global
+
+      dry_parse = false
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      opts.order!(argv)
+
+      if $update_db
+	progress_message "Updating the pkgdb"
+
+	$pkgdb.update_db($force)
+	$pkgdb.open_db	# let it check the DB version
+      end
+
+      if $fix_db
+	fix_db()
+      end
+
+      list = []
+      
+      opts.order(*argv) do |arg|
+	if File.exist?(arg)
+	  path = arg
+	else
+	  path = `which #{arg}`.chomp
+
+	  if not File.exist?(path)
+	    STDERR.puts "#{arg}: not found"
+	    next
+	  end
+	end
+
+	print "#{path}: " if $verbose
+
+	if owners = $pkgdb.which_m(path)
+	  puts owners.join(' ')
+	else
+	  puts '?'
+	end
+      end
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    rescue => e
+      STDERR.puts e.message
+      exit 1
+    end
+  end
+
+  0
+end
+
+def fix_db
+  progress_message "Checking the package registry database"
+
+  if not File.owned?($pkgdb_dir)
+    if $force
+      warning_message "You do not own #{$pkgdb_dir}. (proceeding anyway)"
+    else
+      warning_message "You do not own #{$pkgdb_dir}. (use -f to force or run as root)"
+      exit 1
+    end
+  end
+
+  if $interactive
+    stty_sane
+  end
+
+  fix_db_init()
+  fix_db_phase1()
+  fix_db_phase2()
+
+  $pkgdb.unmark_fixme
+end
+
+def fix_db_init()
+  $pkgnames = $pkgdb.installed_pkgs
+
+  $req_hash = {}	# a hash of pkgname => { dependent1 => true , ... } pairs
+  $fix_hash = {}	# a hash of pkgname => ans pairs
+  $all_list = []	# an array of pkgnames, with which a user answered "all"
+end
+
+def fix_db_phase1()
+  # fix missing or stale origins
+  org_hash = {}		# a hash of origin => [pkg1, pkg2, ...] pairs
+
+  deleted = []
+
+  $pkgnames.each do |pkgname|
+    puts "Checking the origin of #{pkgname}" if $verbose
+
+    pkg = PkgInfo.new(pkgname)
+
+    case origin = fix_origin(pkg)
+    when nil
+      deleted << pkgname
+    when false
+      # skipped
+    else
+      if org_hash.key?(origin)
+	org_hash[origin] << pkg
+      else
+	org_hash[origin] = [pkg]
+      end
+    end
+  end
+
+  $pkgnames -= deleted
+
+  unless $automatic
+    # fix origin duplicates
+    puts "Checking for origin duplicates" if $verbose
+
+    fix_duplicates(org_hash).each do |pkg|
+      $pkgnames.delete(pkg.fullname)
+    end
+  end
+
+  $pkgnames.each do |pkgname|
+    puts "Checking #{pkgname}" if $verbose
+
+    # check and fix dependencies
+    fix_dependencies(pkgname)
+  end
+end
+
+def fix_db_phase2()
+  # reconstruct all the +REQUIRED_BY files
+  puts "Regenerating +REQUIRED_BY files" if $verbose
+
+  tsort = TSort.new
+  indep_pkgnames = []
+
+  $pkgnames.each do |pkgname|
+    req_file = $pkgdb.pkg_required_by(pkgname)
+
+    if $req_hash.key?(pkgname)
+      req_by = $req_hash[pkgname].keys
+
+      req_by.each { |req|
+	tsort.add(req, pkgname)
+      }
+
+      File.open(req_file, "w") do |f|
+	f.puts(*req_by.sort)
+      end
+    else
+      indep_pkgnames << pkgname
+
+      File.unlink(req_file) if File.exist?(req_file)
+    end
+  end
+
+  # unlink cyclic dependencies
+  puts "Checking for cyclic dependencies" if $verbose
+
+  fix_cycles(tsort)
+end
+
+def fix_origin(pkg)
+  pkgname = pkg.fullname
+  origin = pkg.origin
+
+  if origin
+    if $portsdb.exist?(origin, true)
+      return origin
+    end
+
+    puts "Stale origin: '#{origin}': perhaps moved or obsoleted."
+  else
+    puts "Missing origin: #{pkgname}"
+  end
+
+  special_guess = nil
+
+  if !origin && /^bsdpan-(.*)/ =~ pkg.name and
+      ports = $portsdb.glob("p5-#{$1}") and !ports.empty?
+    special_guess = ports.first.origin
+  end
+
+  if origin and trace = $portsdb.moved.trace(origin)
+    trace_element = trace.shift
+
+    printf "-> The port '%s' was %s on %s because:\n\t\"%s\"\n",
+      origin,
+      trace_element.to ? "moved to '#{trace_element.to}'" : "removed",
+      trace_element.date,
+      trace_element.why
+
+    trace.each do |trace_element|
+      printf "  then %s on %s because:\n\t\"%s\"\n",
+	trace_element.to ? "to '#{trace_element.to}'" : "removed",
+	trace_element.date,
+	trace_element.why
+    end
+
+    special_guess = trace_element.to || :delete
+  end
+
+  if special_guess
+    origin = special_guess
+  else
+    if config_held?(pkg) && !$force
+      puts "-> Ignored. (the package is held; specify -f to force)"
+      return false
+    end
+
+    if prompt_yesno("Skip this for now?", true)
+      if !$automatic || $verbose
+	puts "To skip it without asking in future, please list it in HOLD_PKGS."
+      end
+
+      return false
+    end
+
+    if origin && prompt_yesno("Browse CVSweb for the port's history?", false)
+      Dir.chdir($ports_dir) {
+	system(PkgDB::command(:portcvsweb), File.join(origin, "Makefile"))
+      }
+    end
+
+    guess = guess_origin(pkg)
+
+    confirm_port(guess) and origin = guess
+  end
+
+  origin ||= input_port('New origin?')
+
+  case origin
+  when :abort
+    puts "Abort."
+    exit
+  when :skip
+    puts "Skipped."
+    return false
+  when :delete
+    if $automatic
+      puts "Skipped. (running in non-interactive mode; specify -i to ask)"    
+      return false
+    end
+
+    if pkg.required?
+      puts "-> Hint:  #{pkgname} is required by the following package(s):"
+
+      pkg.required_by.each do |req|
+	puts "\t#{req}"
+      end
+    else
+      puts "-> Hint: #{pkgname} is not required by any other package"
+    end
+
+    puts "-> Hint: checking for overwritten files..."
+
+    possible_successors = []
+
+    pkg.files.each do |path|
+      owners = $pkgdb.which_m(path) or
+	raise PkgDB::DBError, "#{path} is not properly recorded as installed - please run pkgdb -fu"
+
+      i = owners.index(pkgname) or
+	raise PkgDB::DBError, "#{path} is not properly recorded as installed by #{pkgname} - please run pkgdb -fu"
+
+      if i != owners.size - 1
+	overwriters = owners[(i + 1)..-1]
+
+	puts "\t#{path}: overwritten by: #{overwriters.join(' ')}"	#
+
+	possible_successors |= overwriters
+      end
+    end
+
+    if possible_successors.empty?
+      puts " -> No files installed by #{pkgname} have been overwritten by other packages."
+    else
+      puts " -> The package may have been succeeded by some of the following package(s):"
+      possible_successors.each do |s|
+	puts "\t#{s}"
+      end
+
+      if prompt_yesno("Unregister #{pkgname} keeping the installed files intact?", false)
+	puts "--> Unregistering #{pkgname}"
+
+	if system('/bin/rm', '-rf', pkg.pkgdir)
+	  $pkgdb.update_db
+
+	  puts "--> Done."
+	  return nil
+	else
+	  puts "--> Failed."
+	  return false
+	end
+      end
+    end
+
+    if prompt_yesno("Deinstall #{pkgname} ?", false)
+      # pkg_deinstall will update the pkgdb
+      $pkgdb.close_db
+
+      if system(PkgDB::command(:pkg_deinstall), pkgname)
+	puts "--> Done."
+	return nil
+      else
+	puts "--> Failed."
+	return false
+      end
+    end
+  else
+    begin
+      modify_origin(pkgname, origin)
+
+      puts "Fixed. (-> #{origin})"
+    rescue => e
+      puts e.message
+    end
+  end
+
+  origin
+end
+
+def guess_origin(pkg)
+  pkgname = pkg.fullname
+
+  print "Guessing... "
+  STDOUT.flush
+
+  guess = $portsdb.glob(pkg.name).max { |a, b|
+    matchlen(pkgname, a.pkgname.to_s) <=> matchlen(pkgname, b.pkgname.to_s)
+  }
+
+  if guess
+    puts ''
+
+    return guess.origin
+  else
+    puts "no idea."
+  end
+
+  nil
+rescue => e
+  puts e.message
+
+  nil
+end
+
+def fix_dependencies(pkgname)
+  deps = $pkgdb.pkgdep(pkgname, true) or return
+
+  deps.each do |dep, origin|
+    unless $pkgnames.include?(dep)
+      puts "Stale dependency: #{pkgname} -> #{dep} (#{origin}):"
+
+      if config_held?(pkgname) && !$force
+	puts "-> Ignored. (the package is held; specify -f to force)"
+	next
+      end
+
+      fix = $fix_hash[dep]
+      fix_score = nil
+
+      if fix.nil?
+	fix, fix_score = guess_dep(dep, origin)
+      end
+
+      fix = query_dep_fix(dep, fix, fix_score)
+
+      next if fix == :skip
+
+      if fix == :install
+	system(PkgDB::command(:portinstall), origin)
+	fix = dep
+      end
+
+      begin
+	modify_pkgdep(pkgname, dep, fix)
+
+	case fix
+	when :delete
+	  puts "Deleted."
+	else
+	  puts "Fixed. (-> #{fix})"
+	end
+
+	$fix_hash[dep] = fix unless fix_score == 100
+	dep = fix
+      rescue => e
+	puts e.message
+      end
+    end
+
+    if fix != :delete
+      ($req_hash[dep] ||= {})[pkgname] = true
+    end
+  end
+end
+
+def alt_dep(dep)
+  hash = config_value(:ALT_PKGDEP) or return nil
+
+  hash.each do |pat, alt|
+    begin
+      pat = parse_pattern(pat)
+    rescue RegexpError => e
+      warning_message e.message.capitalize
+      next
+    end
+
+    if File.fnmatch?(pat, dep)
+      case alt
+      when :delete, :skip
+	return [alt]
+      else
+	begin
+	  alt = parse_pattern(alt)
+	rescue RegexpError => e
+	  warning_message e.message.capitalize
+	  next
+	end
+
+	pkgnames = $pkgdb.glob(alt, false)
+
+	if pkgnames.empty?
+	  return nil
+	else
+	  return pkgnames
+	end
+      end
+    end
+  end
+
+  nil
+end
+
+def tracing_deorigin(origin)
+  total = $pkgdb.deorigin(origin) || []
+
+  if trace = $portsdb.moved.trace(origin)
+    trace.each do |trace_element|
+      pkgnames = $pkgdb.deorigin(trace_element.to) and total |= pkgnames
+    end
+  end
+
+  if total.empty?
+    nil
+  else
+    total
+  end
+end
+
+def guess_dep(dep, origin)
+  if origin
+    pkgnames = tracing_deorigin(origin) || alt_dep(dep) || $pkgnames
+  else
+    pkgnames = alt_dep(dep) || $pkgnames
+  end
+
+  if pkgnames.size == 1
+    return pkgnames.first, 100
+  end
+
+  pkg = PkgInfo.new(dep)
+  pkgname = pkg.fullname
+
+  prefixes = PortsDB::LANGUAGE_SPECIFIC_CATEGORIES.values
+  prefix_re = prefixes.join('|')
+  pkgname_re = /^(#{prefix_re})?(.+?)((?:\+[^+\-]+)+)?(-[^\-]+)$/
+
+  pkg_prefix, pkg_base, pkg_suffix, pkg_version =
+    pkgname_re.match(pkgname)[1..-1]
+
+  calc_score = proc { |name|
+    score = 0
+
+    name_prefix, name_base, name_suffix, name_version =
+      pkgname_re.match(name)[1..-1]
+
+    if name_prefix != pkg_prefix
+      score -= 1
+    elsif pkg_prefix
+      score += 5
+    end
+
+    if name_suffix != pkg_suffix
+      score -= 1
+
+      if name_suffix && pkg_suffix
+	n = [pkg_suffix.size, name_suffix.size].max
+
+	score += 20 * matchlen(name_suffix, pkg_suffix) / n
+      end
+    elsif pkg_suffix
+      score += 20
+    end
+
+    if name_base == pkg_base
+      score += 50
+
+      score += 5 * matchlen(name_version, pkg_version)
+    else
+      n = matchlen(name_base, pkg_base)
+
+      if n >= 3
+	score += 5 * n
+      else
+	score = 0
+      end
+    end
+
+    if score < 0
+      score = 0
+    end
+
+    score
+  }
+
+  full = calc_score.call(pkgname)
+
+  score, name = pkgnames.map { |name|
+    score = calc_score.call(name) * 100 / full
+
+    [score, name]
+  }.max
+
+  if score.nonzero?
+    return name, score
+  else
+    return nil, nil
+  end
+rescue => e
+  puts e.message
+
+  return nil, nil
+end
+
+def query_dep_fix(dep, fix, fix_score)
+  if fix
+    if fix_score && fix_score >= 100
+      return fix
+    end
+
+    if $automatic
+      puts "Skipped. (running in non-interactive mode; specify -i to ask)"    
+      return :skip
+    end
+
+    skip = (fix == :skip)
+
+    if $all_list.include?(dep)
+      if skip
+	puts "Skipped."
+	return :skip
+      else
+	return fix
+      end
+    end
+
+    default_ans = true
+
+    case fix
+    when :skip
+      prompt = "Skip this?"
+    when :delete
+      prompt = "Delete this?"
+    else
+      if fix_score
+	prompt = "#{fix} (score:#{fix_score}%) ?"
+	default_ans = fix_score >= 80
+      else
+	prompt = "#{fix} ?"
+      end
+    end
+
+    ans = prompt_yesnoall(prompt, default_ans)
+
+    if ans == :all
+      $all_list << dep
+    end
+
+    if ans
+      if skip
+	return :skip
+      else
+	return fix
+      end
+    end
+  else
+    if $automatic
+      puts "Skipped. (running in non-interactive mode; specify -i to ask)"    
+      return :skip
+    end
+  end
+
+  install_stale = prompt_yesnoall('Install stale dependency?', true)
+  if install_stale
+    return :install
+  end
+
+  fix = input_pkg('New dependency?', true)
+
+  case fix
+  when :abort
+    puts "Abort."
+    exit
+  when :skip
+    puts "Skipped."
+    $fix_hash[dep] = :skip
+    return :skip
+  when :skip_all
+    $fix_hash[dep] = :skip
+    $all_list << dep
+    return :skip
+  when :delete_all
+    $all_list << dep
+    return :delete
+  end
+
+  return fix
+end
+
+def fix_cycles(tsort)
+  skip_all = false
+
+  tsort.tsort! do |cycle|
+    puts "Cyclic dependencies: #{cycle.join(' -> ')} -> (#{cycle[0]})"
+
+    if $automatic
+      puts "Skipped. (running in non-interactive mode; specify -i to ask)"    
+      next
+    end
+
+    i = nil
+
+    loop do
+      ans = skip_all || \
+	cycle.size == 1 ? cycle[0] : input_pkg('Unlink which dependency?', false, cycle)
+
+      case ans
+      when :abort
+	puts "Abort."
+	exit
+      else
+	i = cycle.index(ans)
+
+	if cycle[i + 1].nil?
+	  a, b = cycle.last, cycle.first
+	else
+	  a, b = cycle[i], cycle[i + 1]
+	end
+
+	if prompt_yesno("Unlink #{a} -> #{b} ?", true)
+	  file = $pkgdb.pkg_contents(a)
+
+	  File.open(file, "r+") do |f|
+	    lines = []
+	    pkgdeps = { b => true }
+	    deporigin = nil
+
+	    f.each do |line|
+	      case line
+	      when /^@pkgdep\s+(\S+)/
+		deporigin = :keep
+
+		pkgdep = $1
+
+		if pkgdeps.key?(pkgdep)	# remove duplicates
+		  deporigin = :delete
+		  next
+		end
+
+		pkgdeps[pkgdep] = true
+
+		lines << line
+	      when /^@comment\s+DEPORIGIN:(\S+)/
+		case deporigin
+		when :keep
+		  lines << line
+		else # :delete, nil
+		  # no output
+		end
+		
+		deporigin = nil
+	      else
+		lines << line
+
+		deporigin = nil
+	      end
+	    end
+
+	    f.rewind
+	    f.print(*lines)
+	    f.truncate f.pos
+	  end
+
+	  file = $pkgdb.pkg_required_by(b)
+
+	  filter_file(shelljoin('grep', '-v', "^#{Regexp.quote(a)}$"), file)
+
+	  if File.zero?(file)
+	    File.unlink(file)
+	  end
+
+	  puts 'Done.'
+	  break
+	end
+      end
+    end
+
+    i
+  end
+end
+
+def fix_duplicates(org_hash)
+  all_deleted = []
+
+  $pkgdb.close_db
+
+  org_hash.each do |origin, pkgs|
+    next if pkgs.size < 2
+
+    pkgs.sort!
+    n = pkgs.size
+
+    puts "Duplicated origin: #{origin} - " + pkgs.collect { |pkg| pkg.fullname }.join(' ')
+
+    prompt_yesno("Unregister any of them?", false) or next
+
+    deleted = []
+
+    pkgs.each do |pkg|
+      pkgname = pkg.fullname
+
+      if n == 1
+	# automatically keep one package record at least
+	puts "  -> #{pkgname} is kept."
+	break
+      end
+
+      prompt_yesno("  Unregister #{pkgname} keeping the installed files intact?", false) or next
+
+      deleted << pkg
+
+      n -= 1
+    end
+
+    unless deleted.empty?
+      biggest = (pkgs - deleted)[-1]
+
+      deleted.each do |pkg|
+	oldpkgdir = pkg.pkgdir
+	oldpkgname = pkg.fullname
+
+	newpkgdir = biggest.pkgdir
+	newpkgname = biggest.fullname
+
+	contents = $pkgdb.pkg_contents(oldpkgname)
+	backup = $pkgdb.pkg_contents(newpkgname) + '.' + oldpkgname
+
+	puts "  --> Saving the #{oldpkgname}'s +CONTENTS file as #{backup}"
+	system('/bin/cp', '-pf', contents, backup) or next
+
+	puts "  --> Unregistering #{oldpkgname}"
+	system('/bin/rm', '-rf', oldpkgdir) or next
+
+	puts "  --> Done."
+
+	all_deleted << pkg
+      end
+    end
+  end
+
+  $pkgdb.update_db unless all_deleted.empty?
+
+  all_deleted
+end
+
+def input_pkg(message = 'Which package?', fullspec = false, pkgnames = $pkgnames)
+  flags = OPTIONS_HISTORY |
+    (fullspec ? OPTIONS_SKIP | OPTIONS_DELETE | OPTIONS_ALL : OPTIONS_NONE)
+
+  choose_from_options(message, pkgnames, flags)
+end
+
+def input_port(message = 'Which port?')
+  loop do
+    input = input_file(message + ' (? to help): ', $ports_dir, true)
+
+    if input.nil?
+      print "\n"
+      return :delete
+    end
+
+    input.strip!
+
+    case input
+    when '.'
+      return :abort
+    when '?'
+      print <<-EOF
+[Enter] to skip, [Ctrl]+[D] to unregister or deinstall,
+[.][Enter] to abort, [Tab] to complete
+      EOF
+      next
+    when ''
+      if prompt_yesno("Skip this?", true)
+	return :skip
+      end
+
+      next
+    else
+      input = $portsdb.strip(input)
+
+      confirm_port(input) and return input
+    end
+  end
+
+  # not reached
+end
+
+def confirm_port(origin)
+  if origin
+    pkgname = $portsdb.exist?(origin)
+
+    if !pkgname
+      return prompt_yesno("#{origin}: Not found.  Force it?", false)
+    end
+
+    return prompt_yesno("#{origin} (#{pkgname}): Change the origin to this?", true)
+  end
+
+  puts "Not in due form <category/portname>: #{origin}"
+
+  false
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end

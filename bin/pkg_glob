@@ -1,0 +1,429 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 52 $[1]
+MYDATE = %w$Date: 2006-01-01 15:26:59 +0900 (Sun, 01 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require "pkgtools"
+
+case MYNAME
+when 'pkg_deinstall'
+  $service = :deinstall
+else
+  $service = :list
+end
+$service_verb = $service.to_s
+
+COLUMNSIZE = 22
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+def init_global
+  $all = false
+  $collate = false
+  $exclude_packages = []
+  $force = false
+  $interactive = false
+  $noconfig = false
+  $noexecute = false
+  $pkg_delete_args = []
+  $preserve_shlib = false
+  $recursive = false
+  $sanity_check = true
+  $upward_recursive = false
+  $verbose = false
+end
+
+def main(argv)
+  case $service
+  when :deinstall
+    usage = <<-"EOF"
+usage: #{MYNAME} [-hacdDfinOPqrRv] [-e args] [-p prefix] [-x pkgname_glob]
+        [pkgname_glob ...]
+  EOF
+  else
+    usage = <<-"EOF"
+usage: #{MYNAME} [-haOqrR] [-x pkgname_glob] [pkgname_glob ...]
+  EOF
+  end
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-a", "--all", "#{$service_verb.capitalize} all the installed packages") {
+      |$all|
+      $recursive = false
+      $upward_recursive = false
+    }
+
+    opts.def_option("-c", "--collate", "Check if any of the installed files of each package#{NEXTLINE}has been overwritten by other packages, and do not#{NEXTLINE}deinstall if any") {
+      $collate = true unless $force
+    } if $service == :deinstall
+
+    opts.def_option("-d", "--rmdir", "Remove empty directories created by file cleanup [*]") {
+      $pkg_delete_args.push '-d'
+    } if $service == :deinstall
+
+    opts.def_option("-D", "--noscripts", "Do not execute deinstallation scripts [*]") {
+      $pkg_delete_args.push '-D'
+    } if $service == :deinstall
+
+    opts.def_option("-f", "--force", "Force removal of the packages [*]") {
+      |$force|
+      $pkg_delete_args.push '-f'
+      $collate = false
+    } if $service == :deinstall
+
+    opts.def_option("-i", "--interactive", "Request confirmation for each package removal [*]") {
+      |$interactive|
+      if $interactive
+	$verbose = true
+      end
+
+      $pkg_delete_args.push '-i'
+    } if $service == :deinstall
+
+    opts.def_option("-n", "--noexecute", "Do not actually deinstall a package, just report the#{NEXTLINE}steps that would be taken if it were [*]") {
+      |$noexecute|
+      if $noexecute
+	$verbose = true
+	$interactive = false
+      end
+
+      $pkg_delete_args.push '-n'
+    } if $service == :deinstall
+
+    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
+      $sanity_check = false
+    }
+
+    opts.def_option("-p", "--prefix=PREFIX", "Set prefix [*]") {
+      |prefix|
+      $pkg_delete_args.push '-p', prefix
+    } if $service == :deinstall
+
+    opts.def_option("-P", "--preserve", "Preserve shared libraries (Save *.so.n)") {
+      |$preserve_shlib|
+    } if $service == :deinstall
+
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_option("-r", "--recursive", "#{$service_verb.capitalize} all those depending on the given#{NEXTLINE}packages as well") {
+      $recursive = true unless $all
+    }
+
+    opts.def_option("-R", "--upward-recursive", "#{$service_verb.capitalize} all those required by the given#{NEXTLINE}packages as well") {
+      $upward_recursive = true unless $all
+    }
+
+    opts.def_option("-v", "--verbose", "Turn on verbose output [*]") {
+      |$verbose|
+      $pkg_delete_args.push '-v'
+    } if $service == :deinstall
+
+    opts.def_tail_option <<-"EOF".chomp if $service == :deinstall
+
+[*] These options are transparently passed to pkg_delete(1).
+      EOF
+
+    opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") {
+      |arg|
+      begin
+	pattern = parse_pattern(arg)
+      rescue RegexpError => e
+	warning_message e.message.capitalize
+	break
+      end
+
+      $exclude_packages |= $pkgdb.glob(pattern, false) unless dry_parse
+    }
+
+    opts.def_tail_option '
+pkgname_glob is one of these: a full pkgname, a pkgname w/o version,
+a shell glob pattern in which you can use wildcards *, ?, and [..],
+an extended regular expression preceded by a colon (:), or a date range
+specification preceded by either < or >.  See pkg_glob(1) for details.
+
+Environment Variables [default]:
+    PKGTOOLS_CONF            configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_DBDIR                packages DB directory [/var/db/pkg]'
+
+    tasks = []
+
+    begin
+      init_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+
+      if argv.empty? && !$all
+	print opts
+	return 0
+      end
+
+      all = '*'
+      argv << all
+
+      opts.order(*argv) do |arg|
+	if arg.equal? all
+	  next unless $all
+
+	  pattern = arg
+	else
+	  pattern = $pkgdb.strip(arg)
+
+	  next if pattern.nil?
+
+	  begin
+	    pattern = parse_pattern(pattern)
+	  rescue RegexpError => e
+	    warning_message e.message.capitalize
+	    next
+	  end
+	end
+
+	begin
+	  $pkgdb.glob(pattern, false).each do |pkgname|
+	    tasks |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
+	  end
+	rescue => e
+	  STDERR.puts e.message
+	  exit 1
+	end
+      end
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+
+    tasks -= $exclude_packages
+
+    case $service
+    when :deinstall
+      if tasks.empty?
+	warning_message "No matching package found."
+	exit 255
+      end
+
+      $pkgdb.sort!(tasks)
+
+      results = PkgResultSet.new
+
+      result_proc = proc {
+	$pkgdb.update_db
+
+	results.show('deinstalled')
+      }
+
+      $interrupt_proc = result_proc
+
+      $compatlibdir = File.join($portsdb.localbase, 'lib/compat/pkg')
+
+      tasks.reverse_each do |pkgname|
+	begin
+	  if deinstall_pkg(pkgname)
+	    results << PkgResult.new(pkgname, :done)
+	  else
+	    results << PkgResult.new(pkgname, :skipped)
+	  end
+	rescue => e
+	  results << PkgResult.new(pkgname, e)
+	end
+      end
+
+      return result_proc.call
+    else
+      puts(*tasks) unless tasks.empty?
+    end
+
+    return 0
+  end
+end
+
+def get_beforedeinstall_command(origin)
+  commands = []
+
+  commands[commands.size, 0] = config_beforedeinstall(origin)	# maybe nil
+
+  commands.uniq!
+  commands.each { |cmd| cmd.sub!(/^[;\s]+/, '') }
+  commands.reject! { |cmd| cmd.empty? }
+
+  if commands.empty?
+    nil
+  else
+    commands.join('; ')
+  end
+end
+
+def deinstall_pkg(pkgname)
+  preserved_files = []
+
+  progress_message "Deinstalling '#{pkgname}'"
+
+  pkg = PkgInfo.new(pkgname)
+
+  filelist = pkg.files
+
+  if $collate
+    progress_message "Checking for overwritten files"
+
+    possible_successors = []
+
+    begin
+      filelist.each do |path|
+	owners = $pkgdb.which_m(path) or
+	  raise PkgDB::DBError, "The file #{path} is not properly recorded as installed"
+
+	i = owners.index(pkgname) or
+	  raise PkgDB::DBError, "The file #{path} is not properly recorded as installed by #{pkgname}"
+
+	if i != owners.size - 1
+	  overwriters = owners[(i + 1)..-1]
+
+	  puts "\t#{path}: overwritten by: #{overwriters.join(' ')}"	#
+
+	  possible_successors |= overwriters
+	end
+      end
+    rescue => e
+      STDERR.puts e.message
+    end
+
+    if possible_successors.empty?
+      puts " -> None."
+    else
+      puts " -> The package may have been succeeded by some of the following package(s)."
+      possible_successors.each do |s|
+	puts "\t#{s}"
+      end
+
+      progress_message "Skipping '#{pkgname}'"
+      return nil
+    end
+  end
+
+  contents_file = $pkgdb.pkg_contents(pkgname)
+
+  if $preserve_shlib
+    unless $noexecute
+      if !system('/bin/mkdir', '-p', $compatlibdir)
+	STDERR.puts "Cannot create directory: #{$compatlibdir}"
+	raise "mkdir failed"
+      end
+    end
+
+    IO.popen("/usr/bin/file -bnf-", "r+") do |pipe|
+      filelist.each do |file|
+	%r"^[^@\s]\S*/([^/\s]+\.so(?:\.\d+)+)$" =~ file or next
+
+	base = $1
+
+	pipe.puts(file)
+
+	next if /\bELF\b.*\bshared object\b.*\bFreeBSD\b/ !~ pipe.gets
+
+	dest = File.join($compatlibdir, base)
+
+	progress_message "Preserving #{file} as #{dest}"
+
+	next if $noexecute
+
+	if system('/bin/cp', '-pf', file, dest)
+	  preserved_files << dest
+	else
+	  STDERR.puts "Copy failed!"
+	  raise "copy failed"
+	end
+      end
+    end
+  end
+
+  if origin = $pkgdb.origin(pkgname) and
+      command = get_beforedeinstall_command(origin)
+    progress_message "Executing a command before deinstalling '#{origin}': " + command
+
+    unless $noexecute
+      system('/bin/sh', '-c', command)
+    end
+  end
+
+  return true if $noexecute
+
+  cmdargs = [PkgDB::command(:pkg_delete), *$pkg_delete_args] << pkgname
+
+  $pkgdb.close_db
+
+  sleep 1	# timestamp hack - let PkgDB detect the update
+
+  if !system(*cmdargs)
+    preserved_files.each do |file|
+      progress_message "Removing #{file}"
+      system('/bin/rm', '-f', file)
+    end
+
+    raise "pkg_delete failed"
+  end
+
+  true
+ensure
+  if !preserved_files.empty?
+    system('/sbin/ldconfig', '-m', $compatlibdir)
+  end
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end

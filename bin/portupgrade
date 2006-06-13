@@ -1,0 +1,1979 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+# All rights reserved.
+# Copyright (c) 2005, 2006 KOMATSU Shinichiro
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 71 $[1]
+MYDATE = %w$Date: 2006-01-04 01:25:27 +0900 (Wed, 04 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require "pkgtools"
+
+REASON_COMMENT = {
+  :badcpp => "bad C++ code",
+  :bison => "bison error",
+  :categories => "invalid category",
+  :cc => "compiler error",
+  :checksum => "checksum mismatch",
+  :chown => "chown error",
+  :configure => "configure error",
+  :coredump => "coredump",
+  :dependobj => "depend object",
+#  :dependpkg => "depend package",
+#  :diskfull => "disk full",
+  :display => "X DISPLAY error",
+  :distinfo => "distinfo incorrect",
+  :elf => "ELF",
+#  :extra => 'extra files',
+#  :fetch_timeout => "fetch timeout",
+  :fetch => "fetch error",
+  :gcc_bug => "gcc bug",
+  :header => "missing header",
+  :install => "install error",
+  :interrupt => "interrupted by user",
+  :ld => "linker error",
+  :libdepends => "dependent libraries",
+  :malloc_h => "reference to malloc.h",
+  :manpage => "manpage error",
+  :motif => "Motif error",
+  :motiflib => "Motif libraries error",
+  :newgcc => "new compiler error",
+#  :nfs => "NFS error",
+  :patch => "patch error",
+  :perm => "permission denied",
+  :perl => "perl missing",
+  :perl5 => "Perl5 error (h2ph)",
+  :plist => "package error",
+#  :runaway => "runaway process",
+  :segfault => "segmentation fault",
+  :soundcard_h => "reference to soundcard.h",
+  :stdio => "stdio compatibility",
+  :struct => "struct changes",
+  :texinfo => "texinfo error",
+  :union => "union wait error",
+  :unknown => "unknown build error",
+  :usexlib => "X libraries missing",
+#  :wrkdir => "WRKDIR error",
+  :values_h => "reference to values.h",
+  :xfree4man => "X manpage error",
+}
+
+class OriginMissingError < StandardError
+  def message
+    "missing origin"
+  end
+end
+class PortDirError < StandardError
+  def message
+    "port directory error"
+  end
+end
+class MakefileBrokenError < StandardError
+  def message
+    "Makefile broken"
+  end
+end
+class IgnoreMarkError < StandardError
+  def message
+    "marked as IGNORE"
+  end
+end
+class InvalidPkgNameError < StandardError
+  def message
+    "invalid package name"
+  end
+end
+class BackupError < StandardError
+  def message
+    "backup error"
+  end
+end
+class UninstallError < StandardError
+#  def message
+#    "uninstall error"
+#  end
+end
+class FetchError < StandardError
+  def message
+    "fetch error"
+  end
+end
+class BuildError < StandardError
+#  def message
+#    "build error"
+#  end
+end
+class InstallError < StandardError
+#  def message
+#    "install error"
+#  end
+end
+class PkgNotFoundError < StandardError
+  def message
+    "package not found"
+  end
+end
+
+begin
+  $initial_pwd = Dir.pwd
+
+  if $initial_pwd.empty?
+    raise Errno::ENOENT, 'No such file or directory'
+  end
+rescue => e
+  # XXX: the .sub(/ - .*/, '') part should be removed later
+  STDERR.puts "Cannot locate current working directory: #{e.message.sub(/ - .*/, '')}"
+  exit 1
+end
+
+COLUMNSIZE = 24
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+def init_global
+  $afterinstall = ''
+  $all = false
+  $backup_packages = false
+  $beforebuild = ''
+  $clean = true			# now cleaned by default
+  $cleanup = true		# not cleaned up by default
+  $distclean = 0
+  $exclude_packages = []
+  $fetch_only = false
+  $fetch_recursive = false
+  $force = false
+  $keep_going = false
+  $ignore_moved = false
+  $interactive = false
+  $logfilename_format = nil
+  $make_args = ""
+  $make_env = []
+  $new = MYNAME == 'portinstall'
+  $noexecute = false
+  $noconfig = false
+  $origin = nil
+  $package = false
+  $pkg_cache = {}
+  $pkgdb_update = false
+  $recursive = false
+  $resultsfile = nil
+  $sanity_check = true
+  $uninstall_extra_flags = 'P'
+  $upward_recursive = false
+  $use_packages = false
+  $use_packages_only = false
+  $yestoall = false
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-habcCDDfFiklnOpPPqrRsuvwWy] [-A command] [-B command]
+        [-L format] [-S command] [-x pkgname_glob]
+        [[-o origin] [-m make_args] [-M make_env] pkgname_glob ...]
+  EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+  $results = PkgResultSet.new
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help",
+		    "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-a", "--all",
+		    "Do with all the installed packages") {
+      |$all|
+      $recursive = false
+      $upward_recursive = false
+    }
+
+    opts.def_option("-A", "--afterinstall=CMD",
+		    "Run the command after each installation") {
+      |$afterinstall|
+      $afterinstall.strip!
+    }
+
+    opts.def_option("-b", "--backup-packages",
+		    "Keep backup packages of the old versions'") {
+      |$backup_packages|
+    }
+
+    opts.def_option("-B", "--beforebuild=CMD",
+		    "Run the command before each build; If the command" << NEXTLINE <<
+		    "exits in failure, then the port will be skipped") {
+      |$beforebuild|
+      $beforebuild.strip!
+    }
+
+    opts.def_option("-c", "--clean",
+		    "Do \"make clean\" before each build [default]") {
+      |$clean|
+    }
+
+    opts.def_option("-C", "--cleanup",
+		    "Do \"make clean\" after each installation [default]") {
+      |$cleanup|
+    }
+
+    opts.def_option("-D", "--distclean",
+		    "Delete failed distfiles and retry if checksum fails" << NEXTLINE <<
+		    "Specified twice, do \"make distclean\" before each" << NEXTLINE <<
+		    "fetch or build") {
+      $distclean += 1
+    }
+
+    opts.def_option("-f", "--force",
+		    "Force the upgrade of a port even if it is to be a" << NEXTLINE <<
+		    "downgrade or just a reinstall, or the port is held") {
+      |$force|
+    }
+
+    opts.def_option("-F", "--fetch-only",
+		    "Only fetch distfiles or packages (if -P is given);" << NEXTLINE <<
+		    "Do not build or install anything") {
+      |$fetch_only|
+    }
+
+    opts.def_option("--ignore-moved",
+		    "Ignore MOVED file") {
+      |$ignore_moved|
+    }
+
+    opts.def_option("-i", "--interactive",
+		    "Turn on interactive mode") {
+      |$interactive|
+      $verbose = true
+    }
+
+    opts.def_option("-k", "--keep-going",
+		    "Force the upgrade of a port even if some of the" << NEXTLINE <<
+		    "requisite ports have failed to upgrade") {
+      |$keep_going|
+    }
+
+    opts.def_option("-l", "--results-file=FILE",
+		    "Specify a file name to save the results to" << NEXTLINE <<
+		    "(default: do not save results)") {
+      |resultsfile|
+      $resultsfile = File.expand_path(resultsfile)
+    }
+
+    opts.def_option("-L", "--log-file=FORMAT",
+		    "Specify a printf(3) style format to determine the" << NEXTLINE <<
+		    "log file name for each port; '%s::%s' is appended" << NEXTLINE <<
+		    "if it does not contain a %; category and portname" << NEXTLINE <<
+		    "are given as arguments (default: do not save logs)") {
+      |fmt|
+      fmt.include?(?%) or fmt << '%s::%s'
+
+      $logfilename_format = File.expand_path(fmt)
+    }
+
+    opts.def_option("-m", "--make-args=ARGS",
+		    "Specify arguments to append to each make(1)" << NEXTLINE <<
+		    "command line") {
+      |$make_args|
+    }
+
+    opts.def_option("-M", "--make-env=ARGS",
+		    "Specify arguments to prepend to each make(1)" << NEXTLINE <<
+		    "command line") {
+      |make_env|
+      $make_env = shellwords(make_env) unless make_env.empty?
+
+      if $make_env[0].include?('=')
+	$make_env.unshift('env')
+      end
+    }
+
+    opts.def_option("-n", "--noexecute",
+		    "Do not upgrade any ports, but just show what would" << NEXTLINE <<
+		    "be done") {
+      |$noexecute|
+      $verbose = true
+      $interactive = true
+      $yestoall = false
+    }
+
+    opts.def_option("-N", "--new",
+		    "Install a new one when a specified package is" << NEXTLINE <<
+		    "not installed, after upgrading all the dependent" << NEXTLINE <<
+		    "packages (default: #{MYNAME == 'portinstall' ? 'on' : 'off'})") {
+      |$new|
+    }
+
+    opts.def_option("-o", "--origin=ORIGIN",
+		    "Specify a port to upgrade the following pkg with") {
+      |origin|
+      $origin = $portsdb.strip(origin) || origin
+    }
+
+    opts.def_option("-O", "--omit-check",
+		    "Omit sanity checks for dependencies.") {
+      $sanity_check = false
+      $uninstall_extra_flags << 'O'
+    }
+
+    opts.def_option("-p", "--package",
+		    "Build package when each port is installed") {
+      |$package|
+    }
+
+    opts.def_option("-P", "--use-packages",
+		    "Use packages instead of ports whenever available;" << NEXTLINE <<
+		    "Specified twice, --use-packages-only is implied") {
+      if $use_packages
+	$use_packages_only = true
+      else
+	$use_packages = true
+      end
+    }
+
+    opts.def_option("--use-packages-only",
+		    "Or -PP; Use no ports but packages only") {
+      |$use_packages_only|
+      $use_packages = true
+    }
+
+    opts.def_option("-q", "--noconfig",
+		    "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_option("-r", "--recursive",
+		    "Do with all those depending on the given packages" << NEXTLINE <<
+		    "as well") {
+      $recursive = true unless $all
+    }
+
+    opts.def_option("-R", "--upward-recursive",
+		    "Do with all those required by the given packages" << NEXTLINE <<
+		    "as well / Fetch recursively if -F is specified") {
+      $upward_recursive = true unless $all
+      $fetch_recursive = true
+    }
+
+    opts.def_option("-s", "--sudo",
+		    "Run commands under sudo(8) where needed") {
+      |$sudo|
+    }
+
+    opts.def_option("-S", "--sudo-command=CMD",
+		    "Specify an alternative to sudo(8)" << NEXTLINE <<
+		    "e.g. 'su root -c \"%s\"' (default: sudo)") {
+      |sudo_command|
+      $sudo_args = shellwords(sudo_command)
+    }
+
+    opts.def_option("-u", "--uninstall-shlibs",
+		    "Do not preserve old shared libraries") {
+      $uninstall_extra_flags.sub!(/P/, '');
+    }
+
+    opts.def_option("-v", "--verbose",
+		    "Be verbose") {
+      |$verbose|
+    }
+
+    opts.def_option("-w", "--noclean",
+		    "Do not \"make clean\" before each build") {
+      |noclean|
+      $clean = false
+    }
+
+    opts.def_option("-W", "--nocleanup",
+		    "Do not \"make clean\" after each installation") {
+      |nocleanup|
+      $cleanup = false
+    }
+
+    opts.def_option("-x", "--exclude=GLOB",
+		    "Exclude packages matching the specified glob" << NEXTLINE <<
+		    "pattern") {
+      |arg|
+      begin
+	pattern = parse_pattern(arg)
+      rescue RegexpError => e
+	warning_message e.message.capitalize
+	break
+      end
+
+      $exclude_packages |= $pkgdb.glob(pattern, false) unless dry_parse
+    }
+
+    opts.def_option("-y", "--yes",
+		    "Answer yes to all the questions") {
+      |$yestoall|
+      $verbose = true
+      $noexecute = false
+    }
+
+    opts.def_tail_option '
+pkgname_glob is one of these: a full pkgname, a pkgname w/o version,
+a shell glob pattern in which you can use wildcards *, ?, and [..],
+an extended regular expression preceded by a colon (:), or a date range
+specification preceded by either < or >.  See pkg_glob(1) for details.
+The package list is automatically sorted in dependency order.
+
+Environment Variables [default]:
+    PACKAGES         packages directory [$PORTSDIR/packages]
+    PKGTOOLS_CONF    configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_BACKUP_DIR   directory for keeping old packages [$PKG_PATH]
+    PKG_DBDIR        packages DB directory [/var/db/pkg]
+    PKG_PATH         packages search path [$PACKAGES/All]
+    PKG_TMPDIR       temporary directory for backup etc. [$TMPDIR]
+    (Note: This must have enough free space when upgrading a big package)
+    PORTSDIR         ports directory [/usr/ports]
+    PORTS_DBDIR      ports db directory [$PORTSDIR]
+    PORTS_INDEX      ports index file [$PORTSDIR/INDEX]
+    PORTUPGRADE      default options (e.g. -v) [none]
+    TMPDIR           temporary directory [/var/tmp]'
+
+    upgrade_tasks = []
+    install_tasks = []
+    $package_tasks = []
+    $dep_hash = {}
+    $task_options = Hash.new({})
+
+    result_proc = proc {
+      if $pkgdb_update
+	$pkgdb.close_db
+
+	$pkgdb.autofix(true)
+      end
+
+      ret = $results.show($fetch_only ? 'fetched' : 'installed or upgraded')
+      $results.save($resultsfile) if $resultsfile
+      ret
+    }
+
+    $interrupt_proc = result_proc
+
+    begin
+      init_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+
+      if envopt = config_value(:PORTUPGRADE_ARGS)
+	progress_message "Reading default options: " + envopt if $verbose
+
+	opts.parse(*shellwords(envopt))
+      end
+
+      if argv.empty? && !$all
+	if o = guess_missing_origin
+	  argv << o
+	else
+	  print opts, "\n"
+	  warning_message "No package names given."
+	  return 0
+	end
+      end
+
+      all = '*'
+      argv << all
+
+      timer_start("Session")
+
+      opts.order(*argv) do |arg|
+	first = nil
+
+	if arg.equal? all
+	  next unless $all
+
+	  pattern = arg
+	else
+	  pattern = $pkgdb.strip(arg) || arg
+
+	  begin
+	    pattern = parse_pattern(pattern)
+	  rescue RegexpError => e
+	    warning_message e.message.capitalize
+	    next
+	  end
+	end
+
+	list = []
+
+	found = false
+
+	catch(:pkg) {
+	  begin
+	    $pkgdb.glob(pattern, false).each do |pkgname|
+	      first ||= pkgname
+
+	      list |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
+	    end
+	  rescue => e
+	    STDERR.puts e.message
+	    exit 1
+	  end
+
+	  if list.empty?
+	    throw :pkg
+	  end
+
+	  list -= $exclude_packages
+
+	  if list.empty?
+	    warning_message "No matching packages left after exclusion: #{arg}"
+	    throw :pkg
+	  end
+
+	  list.each do |i|
+	    $task_options[i] = {
+	      :make_args => $make_args
+	    }
+
+	    if i == first
+	      $task_options[i][:origin] = $origin
+	    end
+	  end
+
+	  upgrade_tasks |= list
+
+	  $origin = nil
+
+	  found = true
+	}
+
+	next if found
+
+	unless $new
+	  warning_message "No such installed package: #{arg}"
+	  next
+	end
+
+	pattern = $portsdb.strip(arg) || arg	# allow pkgname_glob
+
+	begin
+	  pattern = parse_pattern(pattern)
+	rescue RegexpError => e
+	  warning_message e.message.capitalize
+	  next
+	end
+
+	stty_sane
+
+	ports = $portsdb.glob(pattern).map { |i| i.origin }
+
+	unique = false
+
+	case ports.size
+	when 0
+	  if $portsdb.exist?(arg)
+	    # The specified port does not have an entry in the INDEX but
+	    # the port directory actually exists.
+
+	    unique = true
+
+	    ports << arg
+	  else
+	    warning_message "No such installed package or port: #{arg}"
+	    next
+	  end
+	when 1
+	  unique = true
+	else
+	  progress_message "Found #{ports.size} ports matching '#{arg}':"
+	  ports.each { |origin| puts "\t#{origin}" }
+	end
+
+	ports.each do |origin|
+	  if pkgnames = $pkgdb.deorigin(origin)
+	    warning_message "Found already installed package(s) of '#{origin}': " + pkgnames.join(' ')
+	    interactive = true
+	    yes_by_default = false
+	  else
+	    interactive = $interactive || !unique
+	    yes_by_default = true
+	  end
+
+	  if $noexecute
+	    puts "Install '#{origin}'? [no]" if interactive
+	    next
+	  elsif $yestoall
+	    puts "Install '#{origin}'? [yes]" if interactive
+	  elsif interactive
+	    prompt_yesno("Install '#{origin}'?", yes_by_default) or next	# "
+	  end
+
+	  make_args = get_make_args(origin)
+	  make_env = get_make_env(origin)
+
+	  install_tasks << origin
+	  $task_options[origin] = {
+	    :make_args => make_args
+	  }
+
+	  if $upward_recursive
+	    $portsdb.all_depends_list!(origin, shelljoin(*make_env), make_args).each do |o|
+	      make_args = get_make_args(o)
+
+	      if pkgnames = $pkgdb.deorigin(o)
+		pkgnames.each do |p|
+		  upgrade_tasks << p
+		  $task_options[p] = {
+		    :make_args => make_args,
+		    :origin => o,
+		    :dependency => origin
+		  } unless $task_options.include?(p)
+		end
+	      else
+		# XXX: needs to be aware of :extract, :patch, :configure, etc. before enabling this.
+		# install_tasks << o
+		# $task_options[o] = {
+		#   :make_args => make_args
+		#   :origin => o,
+		#   :dependency => origin
+		# } unless $task_options.include?(o)
+	      end
+	    end
+	  end
+	end
+      end
+
+      if $package && !$fetch_only
+	t = $pkgdb.tsort(upgrade_tasks)
+	h = t.dump
+	upgrade_tasks.each do |k|
+	  $dep_hash[k] = h[k] & upgrade_tasks
+	end
+	upgrade_tasks = t.tsort! & upgrade_tasks
+      else
+	$pkgdb.sort_build!(upgrade_tasks)
+      end
+
+      $portsdb.sort!(install_tasks)
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+
+    upgrade_tasks -= $exclude_packages
+
+    ntasks = upgrade_tasks.size + install_tasks.size
+    ctask = 0
+
+    upgrade_tasks.each do |pkgname|
+      ctask += 1
+      setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
+      do_upgrade(pkgname)
+      progress_message "Upgrade tasks: #{upgrade_tasks.length}"
+      progress_message "Summary: #{$results.summary}"
+    end
+
+    install_tasks.each do |origin| 
+      ctask += 1
+      setproctitle('[%d/%d] %s', ctask, ntasks, origin)
+      do_install(origin)
+      progress_message "Install tasks: #{install_tasks.length}"
+      progress_message "Summary: #{$results.summary}"
+    end
+
+    return result_proc.call
+  end
+ensure
+  stty_sane unless $results.empty?
+
+  timer_end("Session")
+end
+
+def do_upgrade(pkgname)
+  pkg = PkgInfo.new(pkgname)
+
+  options = $task_options[pkgname]
+  $origin = options[:origin]
+  $make_args = options[:make_args]
+  dependency = options[:dependency]
+
+  origin = $origin
+  if !origin
+    if !$ignore_moved and \
+       !config_ignore_moved?(pkg) and \
+       (moved = $portsdb.moved.trace(pkg.origin))
+      if origin = moved.last.to
+	if pkg.origin != origin
+	  warning_message "Package origin of '#{pkg.name}' has been changed: '#{pkg.origin}' -> '#{origin}'"
+	end
+      else
+	warning_message "Package '#{pkg.name}' has been removed from ports tree."
+      end
+    else
+      origin = pkg.origin
+    end
+  end
+
+  if origin
+    $make_args = options[:make_args] = get_make_args(origin, pkgname)
+
+    if result = $results[origin]
+      progress_message "Skipping '#{origin}' (#{pkgname}) because it has already #{result.phrase(true)}"
+
+      $results << PkgResult.new(origin, :skipped, pkgname)
+      return
+    elsif !$keep_going
+      deps = pkg.pkgdep || []
+
+      deps.each do |dep|
+	o = $pkgdb.origin(dep)	# perhaps nil
+
+	result = $results[o]
+
+	if result && result.failed?
+	  progress_message "Skipping '#{origin}' (#{pkgname}) because a requisite package '#{dep}' (#{o}) failed (specify -k to force)"
+	  $results << PkgResult.new(origin, :skipped, pkgname)
+	  return
+	end
+      end
+    end
+  end
+
+  stty_sane
+
+  upgraded = false
+
+  use_packages, use_packages_only = $use_packages, $use_packages_only
+
+  if (origin && config_use_packages_only?(origin)) || config_use_packages_only?(pkgname)
+    $use_packages = $use_packages_only = true
+  elsif (origin && config_use_packages?(origin)) || config_use_packages?(pkgname)
+    $use_packages = true
+  end
+
+  begin
+    if result = upgrade_pkg(pkg, origin)
+      upgraded = true
+
+      if $package && !$fetch_only
+	$dep_hash.each do |key, deps|
+	  $package_tasks << key if deps.include?(pkgname)
+	end
+      end
+    end
+
+    $results << PkgResult.new(origin, result ? :done : :ignored, pkgname)
+  rescue IgnoreMarkError => e
+    $results << PkgResult.new(origin, :ignored, pkgname)
+  rescue => e
+    $results << PkgResult.new(origin, e, pkgname)
+  ensure
+    $use_packages, $use_packages_only = use_packages, use_packages_only
+  end
+
+  if !upgraded && $package_tasks.include?(pkgname)
+    $pkgdb.close_db
+
+    progress_message "Fixing up dependencies before creating a package" if $verbose
+
+    $pkgdb.autofix
+
+    progress_message "Packaging '#{pkgname}' as dependency"
+
+    if $noexecute
+      puts "OK? [no]" if $interactive
+      return
+    elsif $yestoall
+      puts "OK? [yes]" if $interactive
+    elsif $interactive
+      prompt_yesno('OK?', true) or return
+    end
+
+    system!(PkgDB::command(:pkg_create), '-vb', pkgname,
+	    File.join($packages_dir, pkgname + $portsdb.pkg_sufx))
+  end
+end
+
+def do_install(origin)
+  if result = $results[origin]
+    progress_message "Skipping '#{origin}' because it has already #{result.phrase(true)}"
+
+    $results << PkgResult.new(origin, :skipped)
+    return
+  else
+    unless $keep_going
+      make_args = get_make_args(origin)
+      make_env = get_make_env(origin, true)
+
+      $portsdb.all_depends_list!(origin, shelljoin(*make_env), make_args).each do |o|
+	result = $results[o]
+
+	if result && result.failed?
+	  progress_message "Skipping '#{origin}' because a requisite port '#{o}' failed (specify -k to force)"
+	  $results << PkgResult.new(origin, :skipped)
+	  return
+	end
+      end
+    end
+  end
+
+  stty_sane
+
+  if !$task_options.key?(origin)
+    # When the port to install is not given from the command line
+    $task_options[origin] = {
+      :make_args => get_make_args(origin)
+    }
+  end
+
+  $make_args = $task_options[origin][:make_args]
+
+  use_packages, use_packages_only = $use_packages, $use_packages_only
+
+  if config_use_packages_only?(origin)
+    $use_packages = $use_packages_only = true
+  elsif config_use_packages?(origin)
+    $use_packages = true
+  end
+
+  begin
+    if install_new_port(origin, false)	# confirmed in advance
+      $results << PkgResult.new(origin, :done)
+    else
+      $results << PkgResult.new(origin, :skipped)
+    end
+  rescue IgnoreMarkError => e
+    $results << PkgResult.new(origin, :ignored)
+  rescue => e
+    $results << PkgResult.new(origin, e)
+  ensure
+    $use_packages, $use_packages_only = use_packages, use_packages_only
+  end
+end
+
+def get_make_args(origin, pkgname = nil)
+  if args = config_make_args(origin, pkgname)
+    args + ' ' + $make_args
+  else
+    $make_args
+  end
+end
+
+def get_make_env(origin, is_new = false)
+  $make_env_table ||= compile_config_table(config_value(:MAKE_ENV))
+
+  envset = lookup_config_table($make_env_table, origin, nil) or
+    return Array.new
+
+  make_env = $make_env.dup
+  if make_env.empty?
+    make_env << 'env'
+  end
+
+  make_env << 'PORT_UPGRADE=yes' unless is_new
+
+  envset.each do |envs|
+    if envs.is_a?(Proc)
+      make_env << String.new(envs.call(origin)) rescue nil
+    elsif envs.is_a?(Array)
+      envs.each do |entry|
+	make_env << entry
+      end
+    else
+      make_env << envs
+    end
+  end
+  make_env
+end
+
+def get_beforebuild_command(origin)
+  commands = if $beforebuild.empty? then [] else [$beforebuild] end
+
+  commands[commands.size, 0] = config_beforebuild(origin)	# maybe nil
+
+  commands.uniq!
+  commands.each { |cmd| cmd.sub!(/^[;\s]+/, '') }
+  commands.reject! { |cmd| cmd.empty? }
+
+  if commands.empty?
+    nil
+  else
+    commands.join('; ')
+  end
+end
+
+def get_afterinstall_command(origin)
+  commands = if $afterinstall.empty? then [] else [$afterinstall] end
+
+  commands[0, 0] = config_afterinstall(origin)	# maybe nil
+
+  commands.uniq!
+  commands.each { |cmd| cmd.sub!(/^[;\s]+/, '') }
+  commands.reject! { |cmd| cmd.empty? }
+
+  if commands.empty?
+    nil
+  else
+    commands.join('; ')
+  end
+end
+
+def process_old_package(pkgfile)
+  pkg_backup_dir = ENV['PKG_BACKUP_DIR']
+  pkg_backup_dir ||= ENV['PKG_PATH']
+
+  if $backup_packages
+    progress_message "Keeping old package in '#{pkg_backup_dir}'" if $verbose
+    unless File.directory?(pkg_backup_dir)
+      xsystem! '/bin/mkdir', '-p', pkg_backup_dir
+    end
+    xsystem! '/bin/mv', '-f', pkgfile, pkg_backup_dir
+  else
+    progress_message "Removing old package'" if $verbose
+    xsystem! '/bin/rm', '-f', pkgfile
+  end
+end
+
+# raises:
+#   OriginMissingError, InvalidPkgNameError,
+#   InstallError
+#   (BuildError - build_port)
+#   (StandardError - update_pkgdep)
+#   (PortDirError, MakefileBrokenError, IgnoreMarkError - check_pkgname, find_pkg)
+#   (BackupError, UninstallError) - uninstall_pkg)
+def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
+  logfile = nil
+  f = Tempfile.new(MYNAME)
+  f.close
+
+  oldpkgname = oldpkg.fullname
+  origin ||= oldpkg.origin
+
+  if origin && config_held?(origin)
+    if $force
+      warning_message "Forcing upgrade of a held package: #{origin}"
+    else
+      progress_message "Skipping '#{origin}' because it is held by user (specify -f to force)"
+      return false
+    end
+  elsif config_held?(oldpkgname)
+    if $force
+      warning_message "Forcing upgrade of a held package: #{oldpkgname}"
+    else
+      progress_message "Skipping '#{oldpkgname}' because it is held by user (specify -f to force)"
+      return false
+    end
+  end
+
+  if origin.nil?
+    warning_message "No origin recorded: #{oldpkgname}"
+    warning_message "Specify one with -o option, or run 'pkgdb -F' to interactively fix it."
+    raise OriginMissingError
+  end
+
+  logfile = f.path
+
+  portpkgname = check_pkgname(origin, logfile)	# raises CommandFailedError
+
+  begin
+    portpkg = PkgInfo.new(portpkgname)
+  rescue ArgumentError => e
+    warning_message "Invalid package name: #{origin}: #{e}"
+    raise InvalidPkgNameError
+  end
+
+  have_package = false
+  newpkg = nil
+
+  if (oldpkg.version < portpkg.version || $force) && $use_packages
+    newpkg = catch(:newpkg) {
+      make_args = shellwords($make_args)
+
+      if !make_args.empty?
+        warning_message "Custom MAKE_ARGS or -m option is specified (#{$make_args})"
+
+        unless $use_packages_only
+          warning_message "Skipping package"
+          throw :newpkg, nil
+        end
+
+        warning_message "Trying package anyway, since -PP/--use-packages-only is specified"
+      end
+
+      progress_message "Checking for the latest package of '#{origin}'"
+
+      pkg, pkgfile = find_pkg(origin)
+
+      if !pkg || pkg.version < oldpkg.version || pkg.version < portpkg.version
+        if fetch_pkg(origin, logfile)
+          pkg, pkgfile = find_pkg(origin)
+        end
+
+        if !pkg
+          warning_message "Could not find the latest version (#{portpkg.version})"
+          throw :newpkg, nil
+        end
+
+        progress_message "Located a package version #{pkg.version} (#{pkgfile})"
+
+        throw :newpkg, pkg if $force
+
+        if pkg.version < oldpkg.version
+          warning_message "Ignoring the package, which is older than what is installed (#{oldpkg.version})"
+          throw :newpkg, nil
+        end
+
+        if pkg.version == oldpkg.version
+          warning_message "Ignoring the package, which is the same version as is installed (#{oldpkg.version})"
+          throw :newpkg, nil
+        end
+
+        if pkg.version < portpkg.version
+          unless $use_packages_only
+            warning_message "Ignoring the package which is not the latest version (#{portpkg.version})"
+            throw :newpkg, nil
+          end
+
+          progress_message "Using it anyway although it is not the latest version (#{portpkg.version}), since -PP/--use-packages-only is specified"
+	end
+      end
+
+      pkg
+    }
+
+    if $fetch_only
+      return newpkg ? true : false
+    end
+
+    if newpkg
+      have_package = true
+    elsif $use_packages_only
+      warning_message "No package available: #{origin}"
+      raise PkgNotFoundError
+    else
+      progress_message "Using the port instead of a package"
+    end
+  end
+
+  if newpkg
+    newpkgname = newpkg.fullname
+  else
+    newpkgname = portpkgname
+
+    begin
+      newpkg = PkgInfo.new(newpkgname)
+    rescue ArgumentError => e
+      warning_message "Invalid package name: #{origin}: #{e}"
+      raise InvalidPkgNameError
+    end
+  end
+
+  cmp = newpkg.version <=> oldpkg.version
+
+  if cmp > 0
+    service = :upgrade
+  elsif cmp == 0
+    service = :reinstall
+  else
+    service = :downgrade
+  end
+
+  if newpkg.name != oldpkg.name
+    warning_message "Detected a package name change: #{oldpkg.name} (#{oldpkg.origin || 'unknown'}) -> '#{newpkg.name}' (#{origin})"
+  end
+
+  if service != :upgrade && !$force
+    if $verbose || oldpkgname != newpkgname
+      warning_message "No need to upgrade '#{oldpkgname}' (>= #{newpkgname}). (specify -f to force)"
+    end
+
+    return false
+  end
+
+  if $fetch_only
+    timer_start(time_key = "Fetch for #{origin}")
+    progress_message "Fetching the distfile(s) for '#{newpkgname}' (#{origin})"
+  else
+    case service
+    when :upgrade
+      time_key = "Upgrade of #{origin}"
+      msg = "Upgrading '#{oldpkgname}' to '#{newpkgname}' (#{origin})"
+    when :downgrade
+      time_key = "Downgrade of #{origin}"
+      msg = "Downgrading '#{oldpkgname}' to '#{newpkgname}' (#{origin})"
+    when :reinstall
+      time_key = "Reinstallation of #{origin}"
+      msg = "Reinstalling '#{oldpkgname}' (#{origin})"
+    end
+
+    if have_package
+      msg << " using a package"
+    end
+
+    timer_start(time_key)
+    progress_message msg
+  end
+
+  if $noexecute
+    puts "OK? [no]" if interactive
+    return true
+  elsif $yestoall
+    puts "OK? [yes]" if interactive
+  elsif interactive
+    prompt_yesno('OK?', true) or return false
+  end
+
+  unless have_package
+    build_port(origin, logfile)
+
+    return true if $fetch_only
+  end
+
+  update_pkgdep(oldpkgname, newpkgname, origin)
+
+  teardown_proc1 = proc { |behavior|
+    if behavior == :restore
+      update_pkgdep(newpkgname, oldpkgname, origin)
+    end
+  }
+
+  teardown_proc2 = uninstall_pkg(oldpkgname, logfile, $uninstall_extra_flags)
+
+  if have_package
+    install_pkg(newpkgname, origin, logfile, false, teardown_proc1, teardown_proc2)
+  else
+    install_port(origin, logfile, false, teardown_proc1, teardown_proc2)
+  end
+
+  progress_message "Cleaning out obsolete shared libraries"
+  system!(PkgDB::command(:portsclean), '-QL')
+
+  true
+rescue CommandFailedError => e
+  warning_message e.message
+  progress_message "Skipping '#{origin}'"
+  return false
+ensure
+  if $logfilename_format && logfile &&
+      File.exist?(logfile) && !File.zero?(logfile)
+    file = $logfilename_format % origin.split('/')
+
+    progress_message "Saving the log as '#{file}'" if $verbose
+
+    begin
+      install_data(logfile, file)
+    rescue => e
+      warning_message "Failed to save the log file: #{e.message}"
+    end
+  end
+
+  timer_end(time_key)
+end
+
+# raises:
+#   PortDirError, CommandFailedError
+#   (CommandFailedError - xscript)
+#   (PortDirError, MakefileBrokenError, IgnoreMarkError - get_pkgname)
+def check_pkgname(origin, logfile = nil)
+  portdir = $portsdb.portdir(origin)
+
+  if command = get_beforebuild_command(origin)
+    progress_message "Executing a pre-build command for '#{origin}': " + command
+
+    unless $noexecute
+      Dir.chdir(portdir) {
+	xscript(logfile, '/bin/sh', '-c', command)	# raises CommandFailedError
+      }
+    end
+  end
+
+  get_pkgname(origin)
+end
+
+# raises:
+#   PortDirError, MakefileBrokenError, IgnoreMarkError
+def get_pkgname(origin)
+  portdir = $portsdb.portdir(origin)
+
+  if not File.directory?(portdir)
+    warning_message "Port directory not found: #{origin}"
+    raise PortDirError
+  end
+
+  make_env = get_make_env(origin)
+  cmdargs = make_env << 'make'
+
+  cmdargs.concat(shellwords($make_args))
+
+  output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE 2>&1`.to_a
+
+  if output.size != 3
+    warning_message "Makefile possibly broken: #{origin}:"
+    output.each { |line| STDERR.print "\t" + line }
+    raise MakefileBrokenError
+  end
+
+  ignore = output[1].chomp
+  no_ignore = !output[2].chomp.empty?
+
+  if not ignore.empty?
+    warning_message "Port marked as IGNORE: #{origin}:"
+    STDERR.puts "\t" + ignore
+    raise IgnoreMarkError unless no_ignore
+
+    warning_message "Proceeding anyway since NO_IGNORE is defined"
+  end
+
+  output[0].chomp
+end
+
+def fetch_pkg(origin, logfile = nil)
+  cmdargs = [PkgDB::command(:pkg_fetch)]
+
+  cmdargs << '-f' if $force
+  cmdargs << '-R' if $fetch_recursive
+  cmdargs << '-v' if $verbose
+
+  newpkgname = check_pkgname(origin, logfile)	# raises CommandFailedError
+
+  cmdargs << newpkgname
+
+  progress_message "Fetching the package(s) for '#{newpkgname}' (#{origin})"
+
+  if not script(logfile, *cmdargs)
+    unless $use_packages_only
+      return false
+    end
+
+    if latest_link = $portsdb.latest_link(origin)
+      progress_message "Fetching the latest package(s) for '#{latest_link}' (#{origin})"
+
+      cmdargs[-1] = latest_link + '@'
+
+      script(logfile, *cmdargs) or return false
+    else
+      warning_message "No latest link for '#{latest_link}' (#{origin}) -- giving up"
+    end
+  end
+
+  $pkg_cache.delete(origin)
+
+  return true
+rescue CommandFailedError => e
+  warning_message e.message
+  progress_message "Skipping '#{origin}'"
+  return false
+end
+
+# raises:
+#   PkgNotFoundError, InvalidPkgNameError
+#   (PortDirError, MakefileBrokenError, IgnoreMarkError - check_pkgname)
+#   (BuildError - build_port)
+#   (InstallError - install_port, install_pkg)
+def install_new_port(origin, interactive = $interactive)
+  timer_start(time_key = "Fresh installation of #{origin}")
+
+  logfile = nil
+  f = Tempfile.new(MYNAME)
+  f.close
+
+  if config_held?(origin)
+    if $force
+      warning_message "Forcing installation of a held package: #{origin}"
+    else
+      progress_message "Skipping '#{origin}' because it is held by user (specify -f to force)"
+      return false
+    end
+  end
+
+  logfile = f.path
+
+  portpkgname = check_pkgname(origin, logfile)	# raises CommandFailedError
+
+  begin
+    portpkg = PkgInfo.new(portpkgname)
+  rescue ArgumentError => e
+    warning_message "Invalid package name: #{origin}: #{e}"
+    raise InvalidPkgNameError
+  end
+
+  have_package = false
+  newpkg = newpkgname = nil
+
+  if $use_packages
+    progress_message "Checking for the latest package of '#{origin}'"
+
+    newpkg, pkgfile = find_pkg(origin)
+
+    if !newpkg || newpkg < portpkg
+      if fetch_pkg(origin, logfile)
+	newpkg, pkgfile = find_pkg(origin)
+      end
+
+      if !newpkg
+	warning_message "Could not find the latest version (#{portpkg.version})"
+      else
+        progress_message "Located a package version #{newpkg.version} (#{pkgfile})"
+
+        if newpkg < portpkg
+          if $use_packages_only
+            progress_message "Using it anyway although it is not the latest version (#{portpkg.version}), since -PP/--use-packages-only is specified"
+          else
+            warning_message "Ignoring the package which is not the latest version (#{portpkg.version})"
+            newpkg = nil
+          end
+	end
+      end
+    end
+
+    if $fetch_only
+      return newpkg ? true : false
+    end
+
+    if newpkg
+      have_package = true
+    elsif $use_packages_only
+      warning_message "No package available: #{origin}"
+      raise PkgNotFoundError
+    else
+      progress_message "Using the port instead of a package"
+    end
+  end
+
+  if newpkg
+    newpkgname = newpkg.fullname
+  else
+    newpkgname ||= portpkgname
+
+    begin
+      newpkg = PkgInfo.new(newpkgname)
+    rescue ArgumentError => e
+      warning_message "Invalid package name: #{origin}: #{e}"
+      raise InvalidPkgNameError
+    end
+  end
+
+  if have_package
+    progress_message "Installing '#{newpkgname}' from a package"
+  else
+    progress_message "Installing '#{newpkgname}' from a port (#{origin})"
+  end
+
+  if $noexecute
+    puts "OK? [no]" if interactive
+    return true
+  elsif $yestoall
+    puts "OK? [yes]" if interactive
+  elsif interactive
+    prompt_yesno or return false
+  end
+
+  if have_package
+    return true if $fetch_only
+
+    install_pkg(newpkgname, origin, logfile, true)
+  else
+    build_port(origin, logfile, false, true)
+
+    return true if $fetch_only
+
+    install_port(origin, logfile, true)
+  end
+rescue CommandFailedError => e
+  warning_message e.message
+  progress_message "Skipping '#{origin}'"
+  return false
+ensure
+  if $logfilename_format && logfile &&
+      File.exist?(logfile) && !File.zero?(logfile)
+    file = $logfilename_format % origin.split('/')
+
+    progress_message "Saving the log as '#{file}'" if $verbose
+
+    begin
+      install_data(logfile, file)
+    rescue => e
+      warning_message "Failed to save the log file: #{e.message}"
+    end
+  end
+
+  timer_end(time_key)
+end
+
+# raises:
+#   BuildError
+def build_port(origin, logfile = nil, retried = false, is_new = false)
+  timer_start(time_key = "Build of #{origin}") unless retried
+
+  portdir = $portsdb.portdir(origin)
+
+  distclean_mismatched(logfile) if retried
+
+  msg = $fetch_only ? 'Fetching' : 'Building'
+  msg << " '#{portdir}'"
+
+  make_env = get_make_env(origin, is_new)
+  cmdargs = make_env << 'make'
+
+  make_args = shellwords($make_args)
+
+  unless make_args.empty?
+    cmdargs.concat(make_args)
+
+    msg << ' with make flags: ' << shelljoin(*make_args)
+  end
+
+  progress_message msg
+
+  cmdargs << 'PORT_UPGRADE=yes' unless $is_new
+
+  cmdargs << 'MASTER_SORT_REGEX=' << 'MASTER_SORT=' if retried
+
+  cmdargs << "FETCH_CMD=#{$fetch_cmd}" if retried && ! $fetch_cmd.nil?
+
+  Dir.chdir(portdir) {
+    $fetch_cmd = `make -V FETCH_CMD`.chomp
+
+    if $fetch_only
+      cmdargs << '-DBATCH' << '-DPACKAGE_BUILDING'
+
+      if $distclean >= 2
+	script!(logfile, *(cmdargs.dup << 'distclean')) or
+	  raise BuildError, 'distclean error'
+      end
+
+      if $fetch_recursive
+	cmdargs << 'checksum-recursive'
+      else
+	cmdargs << 'checksum'
+      end
+
+      xscript!(logfile, *cmdargs)	# raises CommandFailedError
+    else
+      if $distclean >= 2
+	script(logfile, *(cmdargs.dup << 'distclean')) or
+	  raise BuildError, 'distclean error'
+      elsif $clean
+	script(logfile, *(cmdargs.dup << 'clean')) or
+	  raise BuildError, 'clean error'
+      end
+
+      if $package
+	cmdargs << 'DEPENDS_TARGET=package'
+      end
+
+      if $sudo && Process.euid != 0
+	dep_cmdargs = cmdargs.dup << 'fetch-depends' << 'build-depends' << 'lib-depends' << 'misc-depends'
+
+	if not system(shelljoin(*dep_cmdargs) + ' DEPENDS_TARGET="-n nonexistent_target" >/dev/null 2>&1')
+	  script!(logfile, *dep_cmdargs) or
+	    raise BuildError, 'dependent ports'
+	end
+      end
+
+      xscript(logfile, *cmdargs)	# raises CommandFailedError
+    end
+  }
+
+  true
+rescue CommandFailedError => e
+  reason = guess_reason(logfile)
+  comment = REASON_COMMENT[reason]
+
+  if !retried && reason == :checksum && $distclean == 1
+    progress_message "Retrying #{origin}"
+
+    if /fetch/ =~ $fetch_cmd
+      $fetch_cmd.gsub!(/[Rr]/, '')
+    else
+      $fetch_cmd = nil
+    end
+
+    return build_port(origin, logfile, true)
+  end
+
+  warning_message e.message
+  warning_message "Fix the problem and try again."
+  raise BuildError, comment
+ensure
+  timer_end(time_key) unless retried
+end
+
+# raises:
+#   CommandFailedError and Errno::*
+def distclean_mismatched(logfile)
+  progress_message "Deleting mismatched files"
+
+  if File.size(logfile) >= 65536	# 64KB
+    obj = "| grep '^>> Checksum mismatch for ' #{logfile}"
+  else
+    obj = logfile
+  end
+
+  files = []
+
+  open(obj) do |f|
+    f.each do |line|
+      case line
+      when /^>> Checksum mismatch for (\S+)\.\r?$/
+	distfile = File.join($portsdb.dist_dir, $1)
+
+	information_message "Deleting #{distfile}"
+
+	unlink_file(distfile)
+      end
+    end
+  end
+
+  true
+end
+
+# raises:
+#   InstallError
+def install_port(origin, logfile = nil, is_new = false, *teardown_procs)
+  timer_start(time_key = "Installation of #{origin}")
+
+  portdir = $portsdb.portdir(origin)
+
+  msg = 'Installing the new version via the port'
+
+  make_env = get_make_env(origin, is_new)
+  cmdargs = make_env << 'make'
+
+  make_args = shellwords($make_args)
+
+  unless make_args.empty?
+    cmdargs.concat(make_args)
+
+    msg << ' with make flags: ' << shelljoin(*make_args)
+  end
+
+  progress_message msg
+
+  cmdargs << 'PORT_UPGRADE=yes' unless $is_new
+
+  if $package
+    cmdargs << 'DEPENDS_TARGET=package'
+  end
+
+  if $force
+    cmdargs << '-DFORCE_PKG_REGISTER'
+  end
+
+  # timestamp hack - let PkgDB detect the update
+  $pkgdb.close_db
+  sleep 1
+  $pkgdb_update = true
+
+  Dir.chdir(portdir) {
+    xscript!(logfile, *(cmdargs.dup << 'reinstall'))	# raises CommandFailedError
+
+    if $package
+      script!(logfile, *(cmdargs.dup << 'package'))
+    end
+
+    if $cleanup
+      script!(logfile, *(cmdargs.dup << 'clean'))
+    end
+
+    teardown_procs.each { |f|
+      f.call(:cleanup) if f
+    }
+
+    if command = get_afterinstall_command(origin)
+      progress_message "Executing a post-install command for '#{origin}': " + command
+
+      unless $noexecute
+	script!(logfile, '/bin/sh', '-c', command)
+      end
+    end
+  }
+
+  true
+rescue CommandFailedError => e
+  warning_message e.message
+
+  teardown_procs.each { |f|
+    f.call(:restore) if f
+  }
+
+  warning_message "Fix the installation problem and try again."
+  raise InstallError, "install error"
+ensure
+  timer_end(time_key)
+end
+
+# raises:
+#   InstallError
+def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
+  newpkg, pkgfile = find_pkg(origin)
+
+  if pkgfile and deporigins = extract_pkgfile_deporigins(pkgfile)
+    deporigins.each do |deporigin|
+      $pkgdb.deorigin(deporigin) and next
+
+      progress_message "Installing #{deporigin} as dependency required by #{pkgname}"
+
+      do_install(deporigin)
+    end
+  end
+
+  timer_start(time_key = "Installation of #{pkgname}")
+
+  unless $is_new
+    cmdargs = ['/usr/bin/env', 'PORT_UPGRADE=yes']
+  else
+    cmdargs = []
+  end
+
+  cmdargs << PkgDB::command(:pkg_add) << '-f' << pkgfile
+
+  progress_message "Installing the new version via the package"
+
+  # timestamp hack - let PkgDB detect the update
+  $pkgdb.close_db
+  sleep 1
+  $pkgdb_update = true
+
+  xscript!(logfile, *cmdargs)	# raises CommandFailedError
+
+  teardown_procs.each { |f|
+    f.call(:cleanup) if f
+  }
+
+  if command = get_afterinstall_command(origin)
+    progress_message "Executing a post-install command for '#{origin}': " + command
+
+    unless $noexecute
+      script!(logfile, '/bin/sh', '-c', command)
+    end
+  end
+
+  true
+rescue CommandFailedError => e
+  warning_message e.message
+
+  teardown_procs.each { |f|
+    f.call(:restore) if f
+  }
+
+  warning_message "Fix the package's problem and try again."
+  raise InstallError, "pkg_add failed"
+ensure
+  timer_end(time_key)
+end
+
+# raises:
+#   BackupError, UninstallError
+def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
+  timer_start(time_key = "Uninstallation of #{pkgname}")
+
+  $pkgdb.close_db
+
+  progress_message "Fixing up dependencies before creating a package" if $verbose
+
+  $pkgdb.autofix
+
+  progress_message "Backing up the old version"
+
+  backup_pkgfile = nil
+
+  if str = backquote!(PkgDB::command(:pkg_create), '-vb', pkgname,
+		      File.join($tmpdir, pkgname + $portsdb.pkg_sufx))
+    str.each { |line|
+      if /^Creating .*tar ball in \'(.*)\'/ =~ line
+	backup_pkgfile = $1
+	break
+      end
+    }
+  end
+
+  if backup_pkgfile.nil? || !File.file?(backup_pkgfile)
+    warning_message "Backup failed."
+    raise BackupError
+  end
+
+  pkgdir = $pkgdb.pkgdir(pkgname)
+  backup_dir = File.join($tmpdir, pkgname + '.bak')
+
+  system!('/bin/cp', '-RPp', pkgdir, backup_dir) or
+    raise BackupError
+
+  origin = $pkgdb.origin(pkgname)
+
+  progress_message "Uninstalling the old version"
+
+  # pkg_deinstall will update the pkgdb
+  $pkgdb.close_db
+  # sleep 1	# pkg_deinstall does the timestamp hack
+  $pkgdb_update = false
+
+  system!('/usr/bin/env', 'PORT_UPGRADE=yes', PkgDB::command(:pkg_deinstall), 
+	  '-f' + extra_flags, pkgname) or
+    raise UninstallError, "uninstall error"
+
+  proc { |behavior|
+    case behavior
+    when :restore
+      progress_message "Restoring the old version"
+
+      xsystem! PkgDB::command(:pkg_add), '-f', backup_pkgfile
+
+      if origin and command = get_afterinstall_command(origin)
+	progress_message "Executing a post-install command for '#{origin}': " + command
+	
+	unless $noexecute
+	  script!(logfile, '/bin/sh', '-c', command) 
+	end
+      end
+
+      $pkgdb_update = true
+
+      process_old_package(backup_pkgfile)
+    when :cleanup
+      progress_message "Removing temporary files and directories" if $verbose
+
+      process_old_package(backup_pkgfile)
+      system! '/bin/rm', '-rf', backup_dir
+    end
+  }
+ensure
+  timer_end(time_key)
+end
+
+# raises:
+#   (PortDirError, MakefileBrokenError, IgnoreMarkError - get_pkgname)
+def find_pkg(origin)
+  if $pkg_cache.include?(origin)
+    return $pkg_cache[origin]
+  end
+
+  pkgname = get_pkgname(origin) or return nil
+
+  name = pkgname.sub(/-[^\-]+$/, '')
+
+  glob_pkgfile = name + '-*.t[bg]z'
+  re_pkgfile = /^#{Regexp.quote(name)}-[^\-]+\.t[bg]z$/
+
+  if latest_link = $portsdb.latest_link(origin)
+    glob_pkgfile = "{#{glob_pkgfile},#{latest_link}.t[bg]z}"
+    re_pkgfile = /(?:#{re_pkgfile.source}|^#{Regexp.quote(latest_link)}\.t[bg]z$)/
+  end
+
+  pkglist = []
+
+  $pkg_path.split(':').each do |dir|
+    begin
+      Dir.chdir(dir) {
+	Dir.glob(glob_pkgfile).grep(re_pkgfile) { |file|
+          id_pkgname, id_origin, pkgdep = identify_pkg(file)
+
+          if id_origin == origin
+            pkglist << [PkgInfo.new(id_pkgname), File.join(dir, file)]
+          end
+        }
+      }
+    rescue => e
+      warning_message e.message
+    end
+  end
+
+  latest_pkg, pkgfile = *pkglist.max { |(pkg1, file1), (pkg2, file2)|
+    pkg1 <=> pkg2
+  }
+
+  if latest_pkg
+    progress_message "Found a package of '#{origin}': #{pkgfile} (#{latest_pkg.fullname})"
+  end
+
+  $pkg_cache[origin] = [latest_pkg, pkgfile]
+end
+
+def extract_pkgfile_deporigins(pkgfile)
+  dir, file = File.split(pkgfile)
+
+  deporigins = []
+
+  IO.popen("cd #{dir} && #{PkgDB::command(:pkg_info)} -qfo #{file}") do |r|
+    r.each do |line|
+      case line
+      when /^@comment\s+DEPORIGIN:(\S*)/
+	deporigins << $1
+      end
+    end
+  end
+
+  return deporigins
+rescue => e
+  warning_message e.message
+  return nil
+end
+
+def guess_reason(logfile)
+  if grep_q_file(/\^C/, logfile)
+    reason = :interrupt
+#  elsif grep_q_file(/list of extra files and directories/, logfile)
+#    reason = :mtree
+  elsif grep_q_file(/See <URL:http:\/\/www.gnu.org\/software\/gcc\/bugs\.html> for instructions\./, logfile)
+    reason = :gcc_bug
+  elsif grep_q_file(/Checksum mismatch/, logfile)
+    reason = :checksum
+  elsif grep_q_file(/perl: Perl is not installed, try .pkg_add -r perl./, logfile)
+    reason = :perl
+  elsif grep_q_file(/(No checksum recorded for|(Maybe|Either) .* is out of date, or)/, logfile)
+    reason = :distinfo
+  elsif grep_q_file(/(configure: error:|script.*failed: here are the contents of)/, logfile)
+    reason = :configure
+  elsif grep_q_file(/(bison:.*(No such file|not found)|multiple definition of \`yy)/, logfile)
+    reason = :bison
+  elsif grep_q_file(/Couldn't fetch it - please try/, logfile) #'
+    reason = :fetch
+  elsif grep_q_file(/out of .* hunks .*--saving rejects to/, logfile)
+    reason = :patch
+  elsif grep_q_file(/Error: category .* not in list of valid categories/, logfile)
+    reason = :categories
+  elsif grep_q_file(/make: don.t know how to make .*\.man. Stop/, logfile)
+    reason = :xfree4man
+  elsif grep_q_file(/Xm\/Xm\.h: No such file/, logfile)
+    reason = :motif
+  elsif grep_q_file(/undefined reference to \`Xp/, logfile)
+    reason = :motiflib
+#  elsif grep_q_file(/read-only file system/, logfile)
+#    reason = :wrkdir
+  elsif grep_q_file(/makeinfo: .* use --force/, logfile)
+    reason = :texinfo
+  elsif grep_q_file(/means that you did not run the h2ph script/, logfile)
+    reason = :perl5
+  elsif grep_q_file(/Error: shared library ".*" does not exist/, logfile)
+    reason = :libdepends
+  elsif grep_q_file(/(crt0|c\+\+rt0)\.o: No such file/, logfile)
+    reason = :elf
+  elsif grep_q_file(/machine\/soundcard\.h: No such file or directory/, logfile)
+    reason = :soundcard_h
+  elsif grep_q_file(/values\.h: No such file or directory/, logfile)
+    reason = :values_h
+  elsif grep_q_file(/.*\.h: No such file/, logfile)
+    if grep_q_file(/(X11\/.*|Xosdefs)\.h: No such file/, logfile)
+      if $pkgdb.glob('XFree86-*').empty?
+	reason = :usexlib
+      else
+	reason = :header
+      end
+    else
+      reason = :header
+    end
+#  elsif grep_q_file(/pnohang: killing make checksum/, logfile)
+#    reason = :fetch_timeout
+#  elsif grep_q_file(/pnohang: killing make package/, logfile)
+#    reason = :runaway
+#  elsif grep_q_file(/cd: can't cd to/, logfile) #'
+#    reason = :nfs
+#  elsif grep_q_file(/pkg_add: (can't find enough temporary space|projected size of .* exceeds available free space)/, logfile) #'
+#    reason = :diskfull
+  elsif grep_q_file(/(parse error|too (many|few) arguments to|argument.*doesn.*prototype|incompatible type for argument|conflicting types for|undeclared \(first use (in |)this function\)|incorrect number of parameters|has incomplete type and cannot be initialized)/, logfile)
+    reason = :cc
+  elsif grep_q_file(/(ANSI C.. forbids|is a contravariance violation|changed for new ANSI .for. scoping|[0-9]: passing .* changes signedness|discards qualifiers|lacks a cast|redeclared as different kind of symbol|invalid type .* for default argument to|wrong type argument to unary exclamation mark|duplicate explicit instantiation of|incompatible types in assignment|assuming . on overloaded member function|call of overloaded .* is ambiguous|declaration of C function .* conflicts with|initialization of non-const reference type|using typedef-name .* after|[0-9]: implicit declaration of function|[0-9]: size of array .* is too large|fixed or forbidden register .* for class)/, logfile)
+    reason = :newgcc
+  elsif grep_q_file(/(syntax error before|ISO C\+\+ forbids|friend declaration|no matching function for call to|.main. must return .int.|invalid conversion from|cannot be used as a macro name as it is an operator in C\+\+|is not a member of type|after previous specification in|no class template named|because worst conversion for the former|better than worst conversion|no match for.*operator|no match for call to|undeclared in namespace|is used as a type, but is not)/, logfile)
+    reason = :badcpp
+  elsif grep_q_file(/(\/usr\/libexec\/elf\/ld: cannot find|undefined reference to|cannot open -l.*: No such file)/, logfile)
+    reason = :ld
+  elsif grep_q_file(/install: .*: No such file/, logfile)
+    reason = :install
+  elsif grep_q_file(/chown:.*invalid argument/, logfile)
+    reason = :chown
+  elsif grep_q_file(/\/usr\/.*\/man\/.*: No such file or directory/, logfile)
+    reason = :manpage
+  elsif grep_q_file(/tar: can't add file|pkg_create: make_dist: tar command failed with code/, logfile) #'
+    reason = :plist
+  elsif grep_q_file(/Can't open display/, logfile) #'
+    reason = :display
+  elsif grep_q_file(/ is already installed - perhaps an older version/, logfile)
+    reason = :dependobj
+#  elsif grep_q_file(/error in dependency .*, exiting/, logfile)
+#    reason = :dependpkg
+  elsif grep_q_file(/\#error "<malloc\.h> has been replaced by <stdlib\.h>"/, logfile)
+    reason = :malloc_h
+  elsif grep_q_file(/core dumped/, logfile)
+    reason = :coredump
+  elsif grep_q_file(/Segmentation fault/, logfile)
+    reason = :segfault
+  elsif grep_q_file(/storage size of.*isn't known/, logfile)
+    reason = :wait
+  elsif grep_q_file(/initializer element is not constant/, logfile)
+    reason = :stdio
+  elsif grep_q_file(/structure has no member named/, logfile)
+    reason = :struct
+  elsif grep_q_file(/Permission denied/, logfile)
+    reason = :perm
+  else
+    reason = :unknown
+  end
+
+  reason
+end
+
+def guess_missing_origin
+  require 'pathname'
+
+  portsdir = Pathname.new($portsdb.ports_dir).realpath.to_s
+  if %r|^#{portsdir}/([^/]+/[^/]+)| =~ Dir.pwd
+    return $1
+  else
+    return nil
+  end
+end
+
+class PkgResultSet
+  def save(file)
+    progress_message "Saving the results to '#{file}'" if $verbose
+
+    f = Tempfile.new(MYNAME)
+    write(f, '', true)
+    f.close
+
+    install_data(f.path, file)
+  rescue => e
+    warning_message "Failed to save the results: #{e.message}"
+  end
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end

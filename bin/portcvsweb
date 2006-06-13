@@ -1,0 +1,551 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+# All rights reserved.
+# Copyright (c) 2005, 2006 KOMATSU Shinichiro
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 52 $[1]
+MYDATE = %w$Date: 2006-01-01 15:26:59 +0900 (Sun, 01 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require 'pkgtools'
+
+BROWSER = ENV['BROWSER'] || 'w3m:lynx:links:firefox:mozilla:netscape'
+
+OS_DEFAULT = 'FreeBSD'
+
+MAKEFILE = 'Makefile'
+
+COLUMNSIZE = 24
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+module PortCvsWeb
+  CVSTAGS = ['FreeBSD', 'NetBSD', 'OpenBSD']
+  CVSTAG_RE = /\$(#{CVSTAGS.join('|')}):\s+(\S+),v\s*(\d[\d.]*)/
+
+  PathInfo = Struct.new(:dir, :file, :path)
+  UriInfo = Struct.new(:uri, :base, :path, :os, :anchor)
+
+  def get_pathinfo(path)
+    if File.directory?(path)
+      path = File.expand_path(path)
+      return PathInfo.new(path, nil, path)
+    elsif File.exist?(path)
+      path = File.expand_path(path)
+      dir, file = File.split(File.expand_path(path))
+      return PathInfo.new(dir, file, path)
+    else
+      return nil
+    end
+  end
+  module_function :get_pathinfo
+
+  module GetCvsInfo
+    module_function
+    def get_cvsinfo(file)
+      uri_info = check_cvs(file)
+
+      if file
+	if !uri_info
+	  (uri_info = check_file(file, true)) \
+	  || (uri_info = check_makefile)
+	end
+      else
+	uri_info = check_makefile
+      end
+
+      if !uri_info
+	dir, rel = File.split(Dir.pwd)
+
+	until dir == '/'
+	  Dir.chdir(dir)
+	  uri_info = check_makefile(rel) and break
+
+	  dir, last = File.split(dir)
+
+	  rel = File.join(last, rel)
+	end
+
+	if !uri_info
+	  uri_info = UriInfo.new
+	  uri_info.path = file ? file.sub(/^\//, '') : ''
+	end
+      end
+
+      uri_info
+    end
+
+    def check_cvs(file)
+      File.directory?('CVS') or return false
+
+      uri_info = UriInfo.new
+
+      pwd = Dir.pwd if $verbose
+
+      open('CVS/Repository') do |f|
+	puts "Reading #{pwd}/CVS/Repository..." if $verbose
+	uri_info.path = File.join(f.gets.chomp, file || '')
+      end rescue nil
+
+      if file
+	open('CVS/Entries') do |f|
+	  puts "Reading #{pwd}/CVS/Entries..." if $verbose
+	  f.each do |line|
+	    ary = line.split('/')
+
+	    if ary[1] == file
+	      uri_info.anchor = '#rev' + ary[2]
+	      break
+	    end
+	  end
+	end rescue nil
+      end
+
+      uri_info
+    end
+
+    def check_makefile(file = nil, subdir = nil)
+      uri_info = check_file(MAKEFILE)
+
+      if uri_info
+	if subdir
+	  uri_info.path = 
+	    File.join(File.dirname(uri_info.path), subdir, file || '')
+	else
+	  uri_info.path = 
+	    File.join(File.dirname(uri_info.path), file || '')
+	end
+
+	uri_info.anchor = nil if file.nil?
+      end
+
+      uri_info
+    end
+
+    def check_file(file, set_anchor = false)
+      uri_info = nil
+
+      IO::popen("/usr/bin/ident #{file} 2>/dev/null").each do |line|
+	puts "Checking ident of #{file}..." if $verbose
+
+	if CVSTAG_RE =~ line
+	  uri_info = UriInfo.new
+	  uri_info.os = $1
+	  uri_info.anchor = '#rev' + $3 if set_anchor
+
+	  if uri_info.path.nil?
+	    case uri_info.os
+	    when 'NetBSD'
+	      if %r:/([^/]+/[^/]+)$: =~ Dir.pwd
+		uri_info.path = File.join('pkgsrc', $1, file)
+	      end
+	    when 'OpenBSD'
+	      category = `make -V CATEGORIES`.split[0]
+	      if %r"/(#{Regexp.quote(category)}(?:/[^/]+){1,3})$" =~ Dir.pwd
+		uri_info.path = File.join('ports', $1, file)
+	      end
+	    else
+	      uri_info.path = $2
+	    end
+	    break
+	  end
+	end
+      end
+
+      uri_info
+    rescue
+      return false
+    end
+  end
+
+  module SearchDB
+    module_function
+    def search_pkgdb(file)
+      ret = nil
+
+      # search pkgdb
+      if pattern = $pkgdb.strip(file)
+	begin
+	  pattern = parse_pattern(file)
+
+	  puts "Searching pkgdb..." if $verbose
+
+	  if pkg = $pkgdb.glob(pattern)[0]
+	    #puts "Inquiring the CVSweb site (ports)..." if $verbose
+	    ret = pkg.origin
+	  end
+	rescue RegexpError => e
+	  # warning_message e.message.capitalize
+	end
+      end
+
+      ret
+    end
+
+    def search_portsdb(file)
+      ret = nil
+
+      # search portsdb
+      pattern = $portsdb.strip(file) || file    # allow pkgname_glob
+
+      begin
+	pattern = parse_pattern(pattern)
+      rescue RegexpError => e
+	# warning_message e.message.capitalize
+	return nil
+      end
+
+      puts "Searching portsdb..." if $verbose
+
+      if port = $portsdb.glob(pattern)[0]
+	ret = port.origin
+      end
+
+      ret
+    end
+  end
+
+  class Uri_Base
+    include GetCvsInfo
+
+    public
+    def Uri_Base.path2uri(arg, check_cvsinfo)
+      uri_info = nil
+
+      if check_cvsinfo
+	savedir = Dir.pwd
+	Dir.chdir(arg.dir)
+	begin
+	  uri_info = GetCvsInfo::get_cvsinfo(arg.file)
+	  if !uri_info.os
+	    uri_info.os = guess_os(arg.file) || OS_DEFAULT
+	  end
+	ensure
+	  Dir.chdir(savedir)
+	end
+      else
+	uri_info = UriInfo.new
+	uri_info.os = guess_os(arg.file) || OS_DEFAULT
+	uri_info.path = arg
+      end
+
+      uri_info
+    end
+    
+    private
+    def Uri_Base.guess_tag(hint)
+      CVSTAGS.each do |name|
+	if /#{name}/i =~ hint
+	  return name
+	end
+      end
+
+      nil
+    end
+
+    def Uri_Base.guess_os(hint)
+      (hint ? guess_tag(hint) : nil) || guess_tag(RUBY_PLATFORM) || nil
+    end
+  end
+
+  class Uri_CvsWeb < Uri_Base
+    URI_BASE = {
+      'FreeBSD' => 'http://www.FreeBSD.org/cgi/cvsweb.cgi/',
+      'NetBSD' => 'http://cvsweb.netbsd.org/bsdweb.cgi/',
+      'OpenBSD' => 'http://www.openbsd.org/cgi-bin/cvsweb/',
+    }
+
+    def Uri_CvsWeb.path2uri(arg, check_cvsinfo)
+      uri_info = Uri_Base::path2uri(arg, check_cvsinfo)
+      uri_info.base = URI_BASE[uri_info.os]
+      uri_info.uri = uri_info.base + uri_info.path + (uri_info.anchor || '')
+      uri_info
+    end
+
+    def Uri_CvsWeb.search_pkgdb(file)
+      if origin = SearchDB::search_pkgdb(file)
+	uri_info = UriInfo.new
+	uri_info.os = Uri_Base.guess_os(nil) || OS_DEFAULT
+	uri_info.base = URI_BASE[uri_info.os]
+	uri_info.path = File.join('ports', origin)  # XXX
+	uri_info.uri = uri_info.base + uri_info.path
+	uri_info
+      else
+	nil
+      end
+    end
+
+    def Uri_CvsWeb.search_portsdb(file)
+      ret = nil
+      if origin = SearchDB::search_portsdb(file)
+	if PortCvsWeb::get_pathinfo(File.join($ports_dir, origin))
+	  uri_info = UriInfo.new
+	  uri_info.os = Uri_Base.guess_os(nil) || OS_DEFAULT
+	  uri_info.base = URI_BASE[uri_info.os]
+	  uri_info.path = File.join('ports', origin)  # XXX
+	  uri_info.uri = uri_info.base + uri_info.path
+	  ret = uri_info
+	end
+      end
+      ret
+    end
+  end
+
+  class Uri_FreshPorts < Uri_Base
+    URI_BASE = "http://www.FreshPorts.org/"
+    DATE_PATH = 'date.php?date='
+    DATE_FMT = '%Y/%m/%d'
+
+    TZ_FRESHPORTS = 'GMT'
+
+    DATESPEC_DAYBACK_RE = /^-\d+$/
+    DATESPEC_DATE_RE = %r|^\d[\d/-]*$|
+
+    def Uri_FreshPorts.path2uri(arg, check_cvsinfo)
+      uri_info = Uri_Base::path2uri(arg, check_cvsinfo)
+      uri_info.base = URI_BASE
+      uri_info.uri = uri_info.base + uri_info.path 
+      uri_info
+    end
+
+    def Uri_FreshPorts.date2uri(arg)
+      if (DATESPEC_DAYBACK_RE =~ arg) || (DATESPEC_DATE_RE =~ arg) 
+	uri_info = UriInfo.new
+	uri_info.base = URI_BASE
+	uri_info.os = 'FreeBSD'
+	uri_info.path = DATE_PATH + gettime(arg).strftime(DATE_FMT)
+	uri_info.uri = uri_info.base + uri_info.path
+	uri_info
+      else
+	nil
+      end
+    end
+
+    def Uri_FreshPorts.search_pkgdb(file)
+      if origin = SearchDB::search_pkgdb(file)
+	uri_info = UriInfo.new
+	uri_info.os = Uri_Base.guess_os(nil) || OS_DEFAULT
+	uri_info.base = URI_BASE
+	uri_info.path = origin
+	uri_info.uri = uri_info.base + uri_info.path
+	uri_info
+      else
+	nil
+      end
+
+    def Uri_FreshPorts.search_portsdb(file)
+      ret = nil
+      if origin = SearchDB::search_portsdb(file)
+	if PortCvsWeb::get_pathinfo(File.join($ports_dir, origin))
+	  uri_info = UriInfo.new
+	  uri_info.os = Uri_Base.guess_os(nil) || OS_DEFAULT
+	  uri_info.base = URI_BASE
+	  uri_info.path = origin
+	  uri_info.uri = uri_info.base + uri_info.path
+	  ret = uri_info
+	end
+      end
+      ret
+    end
+    end
+
+    private
+    def Uri_FreshPorts.gettime(datespec)
+      time = nil
+
+      tz_back = ENV['TZ']
+      ENV['TZ'] = TZ_FRESHPORTS
+      if DATESPEC_DAYBACK_RE =~ datespec
+	time = Time.at(Time.now + datespec.to_i*24*60*60)
+      else   # DATESPEC_DATE_RE =~ datespec
+	time = Time.parse(datespec)
+      end
+      ENV['TZ'] = tz_back
+
+      time
+    end
+  end
+end
+
+def init_global
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-hqv] {pkgname_glob|portorigin_glob|file|directory}
+    EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+  freshports = false
+  datespec = nil
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_option("-v", "--verbose", "Be verbose") {
+      |$verbose|
+    }
+
+    opts.def_option("-F", "--freshports", 
+                    "View FreshPorts.org instead of cvsweb") {
+      |freshports|
+    }
+
+    opts.def_option("-D [DATE]", "--datespec [DATE]", 
+                    "View the FreshPorts.org of DAYBACK days ago.") {
+      |datespec|
+      if datespec == nil
+	datespec = "0"
+      end
+    }
+
+    begin
+      init_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+  end
+
+  file = argv[0] || '.'
+
+  if freshports
+    if datespec
+      uri = PortCvsWeb::Uri_FreshPorts.date2uri(datespec).uri
+    else
+      uri = resolve_uri(file, PortCvsWeb::Uri_FreshPorts)
+    end
+    open_browser!(uri)
+  else
+    if uri = resolve_uri(file, PortCvsWeb::Uri_CvsWeb)
+      open_browser!(uri)
+    else
+      STDERR.puts "#{MYNAME}: #{file}: not found."
+      exit 1
+    end
+  end
+rescue => e
+  STDERR.puts e.message
+  exit 1
+end
+
+def open_browser(uri)
+  if uri_exist?(uri)
+    open_browser!(uri)
+  end
+end
+
+def open_browser!(uri)
+  BROWSER.split(':').each do |s|
+    s.strip!
+
+    next if s.empty?
+
+    s << ' %s' if not s.include?('%s')
+
+    system('/bin/sh', '-c', format(s, uri)) and exit 0
+  end
+
+  STDERR.puts 'No browser is available - please define BROWSER.'
+  exit 1
+end
+
+def resolve_uri(file, uri_class)
+  uri = nil
+
+  if pathinfo = PortCvsWeb.get_pathinfo(file)
+    return uri_class.path2uri(pathinfo, true).uri
+  else
+    # search pkgdb
+    if (uri_info = uri_class.search_pkgdb(file)) && uri_exist?(uri_info.uri)
+      return uri_info.uri
+    end
+
+    # search portsdb
+    if uri_info = uri_class.search_portsdb(file)
+      puts "search_portsdb"
+      uri = uri_info.uri
+    else
+      puts "search cvsweb"
+      uri = search_cvsweb(file)
+    end
+    return uri
+  end
+end
+
+def search_cvsweb(file)
+  puts "Inquiring the CVSweb site..." if $verbose
+  uri = PortCvsWeb::Uri_CvsWeb::URI_BASE[OS_DEFAULT] + file.sub(/^\//, '')
+  if uri_exist?(uri)
+    return uri
+  end
+
+  puts "Inquiring the CVSweb site (ports)..." if $verbose
+  uri = PortCvsWeb::Uri_CvsWeb::URI_BASE[OS_DEFAULT] + File.join('ports', file)
+  if uri_exist?(uri)
+    return uri
+  end
+
+  nil
+end
+
+def uri_exist?(uri)
+  if system('/usr/bin/fetch', '-qs', uri)
+    return true
+  else
+    return false
+  end
+end
+
+main(ARGV)

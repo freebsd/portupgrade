@@ -1,0 +1,220 @@
+.\" $Id: pkg_deinstall.1 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd July 27, 2001
+.Dt PKG_DEINSTALL 1
+.Os FreeBSD
+.Sh NAME
+.Nm pkg_deinstall
+.Nd a package deinstaller with wildcards and dependency recursion support 
+.Sh SYNOPSIS
+.Nm
+.Op Fl hacdDfinOPqrRv
+.Op Fl p Ar prefix
+.Op Fl x Ar pkgname_glob
+.Op Ar pkgname_glob ...
+.Sh DESCRIPTION
+The
+.Nm
+command is a wrapper of
+.Xr pkg_delete 1
+used to deinstall packages, which understands wildcards and is capable
+of recursing through dependencies.
+.Pp
+Before reading these instructions, you must understand that a
+port/package can have the following two types of related
+ports/packages:
+.Bl -tag -width "dependent" -compact
+.It required
+Ports/packages that a port/package needs for it to be built and/or
+run.  Port Makefiles refer to this type of ports/packages using the
+.Dv BUILD_DEPENDS
+and 
+.Dv RUN_DEPENDS
+macros, respectively.
+.It dependent
+Ports/packages that need this port/package.
+.El 
+.Sh OPTIONS
+The following command line arguments are supported.  The options
+marked as 
+.Sq [*]
+are transparently passed to
+.Xr pkg_delete 1 .
+.Pp
+.Bl -tag -width "--upward-recursive" -compact
+.It Ar pkgname_glob
+Specify one of these: a full pkgname, a pkgname without version, a
+shell glob pattern in which you can use wildcards
+.Sq * ,
+.Sq \&? ,
+and
+.Sq [..] ,
+an extended regular expression preceded by a colon
+.Sq \&: ,
+or a date range specification preceded by either
+.Sq <
+or
+.Sq > .
+See
+.Xr pkg_glob 1
+for details and concrete examples.
+.Pp
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl a
+.It Fl -all
+Deinstall all the installed packages.  Equivalent to specify
+.Ar '*'
+as
+.Ar pkgname_glob .
+.Pp
+.It Fl c
+.It Fl -collate
+For each package, check if any of the files installed by the package
+has been overwritten by others.  If any, list them and abort the
+deinstallation of the package.  This option is disabled by the
+.Fl f
+option.
+.Pp
+.It Fl d
+.It Fl -rmdir
+Remove empty directories created by file cleanup.  By default, only
+files/directories explicitly listed in a package's contents (either as
+normal files/directories or with the
+.Li @dirrm
+directive) will be removed at deinstallation time.  This option tells
+.Nm
+to also remove any directories that were emptied as a result of
+removing the package. [*]
+.Pp
+.It Fl D
+.It Fl -noscripts
+If a deinstallation script exists for a given package, do not execute
+it. [*]
+.Pp
+.It Fl f
+.It Fl -force
+Force removal of the package, even if a dependency is recorded or the
+deinstall or require script fails. [*]
+.Pp
+.It Fl i
+.It Fl -interactive
+Request confirmation before attempting to delete each package,
+regardless whether or not the standard input device is a
+terminal.
+.Pp
+.It Fl n
+.It Fl -noexecute
+Don't actually deinstall a package, just report the steps that would
+be taken if it were. [*]
+.Pp
+.It Fl O
+.It Fl -omit-check
+Omit sanity checks for dependencies.  By default,
+.Nm
+checks if all the packages to deinstall have consistent dependencies,
+though it takes extra time to calculate dependencies.  If you are sure
+you have run
+.Dq Li "pkgdb -F"
+in advance, you can specify this option to omit the sanity checks.
+.Pp
+.It Fl p Ar prefix
+.It Fl -prefix Ar prefix
+Set
+.Ar prefix
+as the directory in which to delete files from any installed packages
+which do not explicitly set theirs.  For most packages, the prefix
+will be set automatically to the installed location by
+.Xr pkg_add 1 .
+[*]
+.Pp
+.It Fl P
+.It Fl -preserve
+Preserve
+.Fx
+shared library files.
+.Nm
+invokes
+.Xr file 1
+to check if each file with the
+.Dq .so.X ,
+or
+.Dq .so.X.Y
+suffix is a
+.Fx
+shared library, copies all the found shared libraries to
+.Pa $LOCALBASE/lib/compat/pkg ,
+and runs
+.Xr ldconfig 8
+to update the ldconfig cache.
+.Pp
+This option is useful when you suspect that you still have some
+binaries that depend on the shared library being deleted.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file. ($PREFIX/etc/pkgtools.conf)
+.Pp
+.It Fl r
+.It Fl -recursive
+Deinstall all those packages depending on the given packages as well.
+.Pp
+.It Fl R
+.It Fl -upward-recursive
+Deinstall all those packages required by the given packages as well.
+.Pp
+.It Fl v
+.It Fl -verbose
+Turn on verbose output. [*]
+.Pp
+.It Fl x Ar pkgname_glob
+.It Fl -exclude Ar pkgname_glob
+Exclude packages matching the specified glob pattern.  Exclusion is
+performed after recursing dependency in response to
+.Fl r
+and/or
+.Fl R ,
+which means, for example, the following command will deinstall all the
+packages depending on XFree86 but leave XFree86 as it is:
+.Pp
+.Nm
+.Fl rx
+.Ar XFree86 XFree86
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PKG_DBDIR
+Alternative location for the installed package database.  Default is
+.Dq Pa /var/db/pkg
+.Pp
+.It Ev PKGTOOLS_CONF
+Configuration file for the pkgtools suite.  Default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf"
+.It Pa /var/db/pkg
+Default location of the installed package database.
+.Pp
+.It Pa $LOCALBASE/lib/compat/pkg
+Location where shared library files are preserved.
+.Pp
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_delete 1 ,
+.Xr pkg_glob 1 ,
+.Xr pkg_info 1 ,
+.Xr pkg_sort 1 ,
+.Xr pkgdb 1 ,
+.Xr portinstall 1 ,
+.Xr portsclean 1 ,
+.Xr portupgrade 1 ,
+.Xr pkgtools.conf 5 ,
+.Xr ports 7
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org

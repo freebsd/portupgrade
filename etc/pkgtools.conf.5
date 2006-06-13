@@ -1,0 +1,38 @@
+.\" $Id: pkgtools.conf.5 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd November 3, 2001
+.Dt PKGTOOLS.CONF 5
+.Os FreeBSD
+.Sh NAME
+.Nm pkgtools.conf
+.Nd configuration file for the pkgtools suite
+.Sh DESCRIPTION
+The file
+.Nm
+configures the behavior of the tools of the pkgtools suite.  It is
+written in the ruby language, but you don't need to learn ruby to edit
+the file.  Read the comments in the sample configuration file for
+assistance.
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PKGTOOLS_CONF
+Alternative configuration file for the pkgtools suite.  Default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf"
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr pkg_deinstall 1 ,
+.Xr pkg_glob 1 ,
+.Xr pkgdb 1 ,
+.Xr portcvsweb 1 ,
+.Xr portsdb 1 ,
+.Xr portsclean 1 ,
+.Xr ports_glob 1 ,
+.Xr portupgrade 1 ,
+.Xr portversion 1
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org

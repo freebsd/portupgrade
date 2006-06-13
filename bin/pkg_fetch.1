@@ -1,0 +1,149 @@
+.\" $Id: pkg_fetch.1 52 2006-01-01 06:26:59Z koma2 $
+.\"
+.Dd August 27, 2001
+.Dt PKG_FETCH 1
+.Os FreeBSD
+.Sh NAME
+.Nm pkg_fetch
+.Nd a remote package fetcher
+.Sh SYNOPSIS
+.Nm
+.Op Fl hfqRv
+.Ar pkgname[@] ...
+.Sh DESCRIPTION
+The
+.Nm
+command downloads binary packages from remote sites.  It can
+optionally download packages recursively through dependencies.
+.Sh OPTIONS
+The following command line arguments are supported:
+.Pp
+.Bl -tag -width "--upward-recursive" -compact
+.It Ar pkgname
+Specify a full pkgname, a pkgname without version, or a full URI.
+.Pp
+If pkgname is a full package name with version,
+.Nm
+will use
+.Dq Pa All
+directory on a server for fetching.
+.Pp
+If pkgname is a name without version, it will be fetched from
+.Dq Pa Latest
+directory. You can force using of 
+.Dq Pa Latest
+directory for ambiguous cases adding @ to the pkgname.
+.Pp
+If a full URI is supplied, required packages are also fetched from the
+same site when
+.Fl R
+is specified.
+.Pp
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl f
+.It Fl -force
+Download a package even if it is recorded as installed.  By default,
+.Nm
+skips the packages which are recorded as installed.
+.Pp
+.It Fl q
+.It Fl -noconfig
+Do not read the configuration file -
+.Pa $PREFIX/etc/pkgtools.conf .
+.Pp
+Remove existing packages if they are corrupt.
+.Pp
+.It Fl R
+.It Fl -upward-recursive
+Download the packages required by the given packages as well.
+.Pp
+.It Fl v
+.It Fl -verbose
+Turn on verbose output.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "PKGTOOLS_CONF" -compact
+.It Ev PACKAGEROOT
+URI of the root of your preferred mirror site.  Default is
+.Dq Pa ftp://ftp.FreeBSD.org .
+The site must have a directory
+.Dq Pa /pub/FreeBSD/ports/$arch/packages-$release/ .
+.Pp
+.It Ev PACKAGESITE
+URI of the directory to fetch packages from.  This variable precedes
+all other package site related variables, i.e.
+.Ev PACKAGEROOT
+and
+.Ev PKG_SITES .
+Use of this variable is discouraged.  Use
+.Ev PKG_SITES .
+.Pp
+.It Ev PKG_SITES
+List of URI's to fetch packages from separated by space.  Each site
+directory must contain directories named
+.Dq All
+and
+.Dq Latest .
+.Pp
+.It Ev PACKAGES
+Base directory where
+.Nm
+saves downloaded packages.  Default is
+.Dq Pa $PORTSDIR/packages .
+.Pp
+.It Ev PKG_DBDIR
+Alternative location for the installed package database.  Default is
+.Dq Pa /var/db/pkg .
+.Pp
+.It Ev PKG_FETCH
+Alternative command for downloading files.  Default is
+.Dq /usr/bin/fetch -ao '%2$s' '%1$s' ,
+where every actual command line is composed as:
+.Pp
+.Dl sprintf(PKG_FETCH, URI, path)
+.Pp
+For example, try
+.Dq wget -O '%2$s' '%1$s'
+or
+.Dq curl '%s' -o '%s' .
+.Pp
+.It Ev PKG_TMPDIR
+.It Ev TMPDIR
+(In that order) Temporary directory where
+.Nm 
+downloads files temporarily.  If neither is not defined,
+.Dq Pa /var/tmp
+is used.
+.Pp
+.It Ev PORTSDIR
+Alternative location for the ports tree.  Default is
+.Dq Pa /usr/ports .
+.Pp
+.It Ev PKGTOOLS_CONF
+Configuration file for the pkgtools suite.  Default is
+.Dq Pa $PREFIX/etc/pkgtools.conf .
+.El
+.Sh FILES
+.Bl -tag -width "$PREFIX/etc/pkgtools.conf"
+.It Pa /usr/ports
+Default location of the ports tree
+.It Pa /usr/ports/packages/All
+Default location to save downloaded files into.
+.It Pa /var/tmp
+Default location to save downloaded files into temporarily.
+.Pp
+.It Pa $PREFIX/etc/pkgtools.conf
+Default location of the pkgtools configuration file.
+.El
+.Sh SEE ALSO
+.Xr fetch 1 ,
+.Xr pkg_add 1 ,
+.Xr portinstall 1 ,
+.Xr portupgrade 1 ,
+.Xr pkgtools.conf 5 ,
+.Xr ports 7
+.Sh AUTHORS
+.An Akinori MUSHA Aq knu@iDaemons.org

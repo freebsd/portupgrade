@@ -1,0 +1,685 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 52 $[1]
+MYDATE = %w$Date: 2006-01-01 15:26:59 +0900 (Sun, 01 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require "pkgtools"
+require "find"
+
+COLUMNSIZE = 18
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+def init_global
+  $distclean = 0
+  $interactive = false
+  $libclean = false
+  $noconfig = false
+  $noexecute = false
+  $pkgclean = 0
+  $quiet = false
+  $quieter = false
+  #$sanity_check = true
+  $workclean = false
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-hCDDiLnPPQQq]
+  EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-C", "--workclean", "Clean up working directories") {
+      |$workclean|
+    }
+
+    opts.def_option("-D", "--distclean", "Clean up distfiles which are not referenced from any#{NEXTLINE}port in the ports tree;#{NEXTLINE}Specified twice, clean up distfiles which are not#{NEXTLINE}referenced from any port that is currently installed") {
+      $distclean += 1
+    }
+
+    opts.def_option("-i", "--interactive", "Turn on interactive mode") {
+      unless $noexecute
+	$interactive = true
+      end
+    }
+
+    opts.def_option("-L", "--libclean", "Clean up old shared libraries") {
+      |$libclean|
+    }
+
+    opts.def_option("-n", "--noexecute", "Do not actually delete files") {
+      |$noexecute|
+      if $noexecute
+	$interactive = false
+      end
+    }
+
+#    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
+#      $sanity_check = false
+#    }
+
+    opts.def_option("-P", "--pkgclean", "Clean up outdated package tarballs;#{NEXTLINE}Specified twice, delete all the package tarballs") {
+      $pkgclean += 1
+    }
+
+    opts.def_option("-Q", "--quiet", "Do not write anything to stdout;#{NEXTLINE}Specified twice, stderr neither") {
+      if !$quiet
+	STDOUT.reopen(open('/dev/null', 'w')) unless dry_parse
+	$quiet = true
+      elsif !$quieter
+	STDERR.reopen(open('/dev/null', 'w')) unless dry_parse
+	$quieter = true
+      end
+    }
+
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_tail_option '
+Environment Variables [default]:
+    PACKAGES         packages directory [$PORTSDIR/packages]
+    PKGTOOLS_CONF    configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_DBDIR        packages DB directory [/var/db/pkg]
+    PORTSDIR         ports directory [/usr/ports]
+    PORTS_DBDIR      ports db directory [$PORTSDIR]
+    PORTS_INDEX      ports index file [$PORTSDIR/INDEX]'
+
+    begin
+      init_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+
+      if !$workclean && $distclean.zero? && $pkgclean.zero? && !$libclean
+	print opts
+	exit 0
+      end
+
+      workclean if $workclean
+      distclean($distclean) if $distclean.nonzero?
+      pkgclean($pkgclean) if $pkgclean.nonzero?
+      libclean if $libclean
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+  end
+
+  return 0
+end
+
+def workclean()
+  perm = '770'
+  grp = 'wheel'
+
+  if not File.exist?(File.join($ports_dir, 'Mk/bsd.port.mk'))
+    STDERR.puts "#{MYNAME}: PORTSDIR (#{$ports_dir}) does not seem to be a ports directory."
+    return false
+  end
+
+  wrkdirprefix = $portsdb.make_var('WRKDIRPREFIX') || ''
+  wrkdirprefix.gsub!(%r"/(?=/|$)", '')
+
+  if wrkdirprefix.empty?
+    puts "Cleaning out #{$ports_dir}/*/*/work..."
+
+    # Ruby's glob yields the given block everytime a new matching
+    # entry is found, so it doesn't overflow, and we don't have to
+    # wait until everything is found.
+
+    Dir.glob(File.join($ports_dir, "*/*/work")) do |dir|
+      delete_dir dir
+    end
+
+    puts "done."
+    return true
+  end
+
+  wrkdir = wrkdirprefix + $portsdb.abs_ports_dir
+
+  puts "Cleaning out #{wrkdir}..."
+
+  if File.directory?(wrkdir)
+    delete_dir wrkdir
+  end
+
+  # Dig group writable directories in advance so all wheel users can
+  # build ports without the root privilege.
+
+  system('/bin/mkdir', '-p', wrkdir)
+  system('/usr/bin/chgrp', '-f', grp, wrkdir)
+  system('/bin/chmod', '-f', perm, wrkdir)
+
+  $portsdb.categories.each do |category|
+    subdir = File.join(wrkdir, category)
+
+    system('/bin/mkdir', '-p', subdir)
+    system('/usr/bin/chgrp', '-f', grp, subdir)
+    system('/bin/chmod', '-f', perm, subdir)
+  end
+
+  puts "done."
+
+  true
+end
+
+def distclean(level)
+  return if level <= 0
+
+  puts "Detecting unreferenced distfiles..."
+
+  dist_dir = $portsdb.make_var('DISTDIR', $portsdb.my_portdir) or
+    raise 'Cannot obtain DISTDIR!'
+
+  distfiles = scan_distfiles(dist_dir)
+
+  catch(:done) {
+    throw :done if distfiles.empty?
+
+    if 2 <= level
+      $pkgdb.installed_ports.each do |origin|
+	check_distinfo(origin).each do |file|
+	  i = distfiles.qinclude?(file) and distfiles.delete_at(i)
+	end
+
+	throw :done if distfiles.empty?
+      end
+    else
+      $portsdb.each_origin do |origin|
+	check_distinfo(origin, true).each do |file|
+	  i = distfiles.qinclude?(file) and distfiles.delete_at(i)
+	end
+
+	throw :done if distfiles.empty?
+      end
+    end
+  }
+
+  if distfiles.empty?
+    puts 'no unreferenced distfiles found.'
+  else
+    distfiles.each do |file|
+      file = File.join(dist_dir, file)
+
+      delete_file file
+    end
+  end
+
+  dirs = []
+
+  Dir.chdir(dist_dir) do
+    Find.find('.') do |path|
+      if File.directory?(path) && path != '.'
+	dirs << path.sub(/^\./, dist_dir)
+      end
+    end
+  end
+
+  dirs.sort {|a, b| b <=> a}.each do |dir|
+    if Dir.entries(dir).size <= 2
+      delete_empty_dir(dir) rescue nil
+    end
+  end
+end
+
+def ldconfig_m(*dirs)
+  msg = " --> Running ldconfig -m"
+
+  case dirs.size
+  when 0
+    puts msg
+  when 1
+    puts msg << " for #{dirs.join(' and ')}"
+  else
+    puts msg << " for #{dirs[0..-2].join(', ')} and #{dirs[-1]}"
+  end
+
+  system('/sbin/ldconfig', '-m', *dirs) unless $noexecute
+end
+
+def libclean()
+  libdirs = nil
+
+  localbase = $portsdb.localbase
+  x11base = $portsdb.x11base
+
+  compatlibdir = File.join(localbase, 'lib/compat/pkg')
+
+  compatlib_re = /^#{Regexp.quote(compatlibdir)}/
+
+  libpath_re = %r"^((#{Regexp.quote(localbase)}|#{Regexp.quote(x11base)})?(?:/.+)?)/lib([^/]+)\.so\.(\d+)$"	#"
+
+  libtable = {}
+
+  `/sbin/ldconfig -elf -r`.each do |line|
+    line.strip!
+
+    case line
+    when /^search directories:\s*(.*)/
+      libdirs = $1.split(':')
+    when /^\d+:-l.*\s+=>\s+(\/.*)/
+      path = $1
+
+      # handle sequences of /'s (tr_s is not multibyte-aware, hence gsub)
+      path.gsub!(%r"//+", '/')
+
+      libpath_re =~ path or next
+
+      dir, prefix, libname, ver = $~[1..-1]
+
+      pkgname = $pkgdb.which(path)
+
+      if libtable.key?(libname)
+	hash = libtable[libname]
+
+	if hash.key?(ver)
+	  prev_path, prev_dir, prev_prefix, prev_pkgname = hash[ver]
+
+	  next if prev_path == path
+
+	  puts "** #{path} is shadowed by #{prev_path}"
+
+	  if dir == compatlibdir
+	    puts " --> The one in #{dir} is not used"
+	    delete_file(path)
+	    ldconfig_m(dir)
+	    puts ""
+	  elsif prev_dir == compatlibdir
+	    puts " --> Libraries in #{compatlibdir} should not shadow ones in other directories"
+
+	    if delete_file(prev_path)
+	      ldconfig_m(compatlibdir)
+	      hash[ver] = [path, dir, prefix, pkgname]
+	    end
+
+	    puts ""
+	  elsif prefix
+	    puts "\t#{prev_path}\t<- #{prev_pkgname || '?'}"
+	    puts "\t#{path}\t<- #{pkgname || '?'}"
+
+	    if pkgname
+	      if prev_pkgname
+		puts " --> Two packages install the same library in different directories!"
+	      else
+		puts " --> This may be an undesirable situation"
+
+		# do not delete by default
+		if delete_file(prev_path, false)
+		  ldconfig_m(prev_dir)
+		  hash[ver] = [path, dir, prefix, pkgname]
+		end
+	      end
+	    else
+	      puts " --> #{path} is under #{prefix} but orphaned and unused."
+
+	      # do not delete by default
+	      if delete_file(path, false)
+		ldconfig_m(dir)
+	      end
+	    end
+
+	    puts ""
+	  end
+	else
+	  hash[ver] = [path, dir, prefix, pkgname]
+	end
+      else
+	libtable[libname] = { ver => [path, dir, prefix, pkgname] }
+      end
+    end
+  end
+
+  libtable.each do |libname, hash|
+    # ignore the ones outside the localbase and the x11base
+    hash.delete_if { |ver, (path, dir, prefix, pkgname)|
+      !prefix || dir == compatlibdir
+    }
+
+    size = hash.size
+
+    next if size < 2
+
+    # multiple versions of a library detected
+
+    pkgnames = {}
+    n = size
+
+    hash.each do |ver, (path, dir, prefix, pkgname)|
+      if pkgname
+	pkgnames[ver] = pkgname
+	n -= 1
+      end
+    end
+
+    next if n <= 0
+
+    vers = hash.keys.sort! { |a, b| b.to_i <=> a.to_i }
+
+    puts "** You have multiple versions of lib#{libname} but #{n} of them are not from packages:"
+
+    vers.each do |ver|
+      path, dir, prefix, pkgname = hash[ver]
+      puts "\t#{libname}.#{ver} (#{path})\t<- " + (pkgname || "?")
+    end
+
+    symlink = find_so_link(libname, libdirs)
+
+    if symlink
+      source = read_link(symlink)
+
+      dir, symlink_libname, symlink_ver = parse_so(source)
+
+      if dir
+	puts "and the symlink (#{symlink}) points to:"
+	puts "\t#{symlink_libname}.#{symlink_ver} (#{source})\t<- " + ($pkgdb.which(source) || "?")
+      end
+    end
+
+    libs = []
+    ldconfig_dirs = []
+
+    max_ver = vers.find { |ver| pkgnames.key?(ver) }
+
+    vers.each do |ver|
+      if ver.to_i > max_ver.to_i
+	puts " --> Skipping #{libname}.#{ver} because it is newer than what the packages provide"
+	puts ""
+	next
+      end
+
+      next if pkgnames.key?(ver)
+
+      path, = hash[ver]
+
+      if !$interactive || prompt_yesno("Do you want to move #{File.basename(path)} to #{compatlibdir} ?", false)
+	hash.delete(ver)
+
+	if symlink && ver == symlink_ver
+	  if $interactive
+	    symlink_ver = choose_from_options("Change #{File.basename(symlink)} to point to which version?", hash.keys.sort.reverse, OPTIONS_SKIP)
+	    case symlink_ver
+	    when :abort
+	      puts "Abort."
+	      return
+	    when :skip
+	      puts "Skipped."
+	      break
+	    end
+
+	    symlink_source = hash[symlink_ver][0]
+
+	    if symlink_source && File.exist?(symlink_source)
+	      puts " --> Changing #{File.basename(symlink)} to point to #{libname}.#{symlink_ver}"
+	      system('/bin/ln', '-sf', symlink_source, symlink) unless $noexecute
+	    end
+	  else
+	    puts " --> Skipping #{libname}.#{symlink_ver} because #{File.basename(symlink)} to point to it"
+	    puts ""
+	    next
+	  end
+	end
+
+	puts " --> Moving #{File.basename(path)} to #{compatlibdir}"
+	system('/bin/mkdir', '-p', compatlibdir) unless $noexecute
+	system('/bin/mv', $interactive ? '-i' : '-f', path, compatlibdir) unless $noexecute
+	ldconfig_m(File.dirname(path), compatlibdir)
+      end
+
+      puts ""
+    end
+  end
+
+  puts "** Clean out #{compatlibdir} manually on occasions."
+  puts "** Try using libchk(1) (sysutils/libchk) to find out unreferenced libraries."
+end
+
+def pkgclean(level)
+  return if level <= 0
+
+  puts "Cleaning out #{$packages_base}..."
+
+  IO.popen("cd #{$packages_dir} && find . -maxdepth 1 -type f -name '*.t[bg]z' | xargs #{PkgDB::command(:pkg_info)} -o") do |r|
+    pkgfile = pkgname = nil
+
+    r.each do |line|
+      case line
+      when /^Information for +\.\/((\S+-\S+)\.t[bg]z):/
+	pkgfile = $1
+	pkgname = $2
+      when /^(\S+\/\S+)$/		# /
+	origin = $1
+
+	if pkgfile
+	  pkg = PkgInfo.new(pkgname)
+
+	  pkgfile = File.join($packages_dir, pkgfile)
+
+	  if 2 <= level
+	    delete_file(pkgfile)
+	  else
+	    if port = $portsdb[origin]
+	      if port.pkgname.version > pkg.version
+		delete_file(pkgfile)
+	      end
+	    else
+	      puts "Origin not found: #{origin}: #{pkgfile}"
+	    end
+	  end
+
+	  pkgfile = pkgname = nil
+	end
+      end
+    end
+  end
+
+  IO.popen("find -H #{$packages_base} -type l -name '*.t[bg]z'") do |r|
+    r.each do |line|
+      pkgfile = line.chomp
+
+      if not File.exist?(pkgfile)	# dead link
+	delete_file(pkgfile)
+      end
+    end
+  end
+end
+
+def read_link(f)
+  l = File.readlink(f)
+
+  if l[0] != ?/
+    l = File.join(File.dirname(f), l)
+  end
+
+  true while l.gsub!(%r"/([^/]+/\.)?\.(/|$)/", '/')
+
+  l
+end
+
+def find_so_link(libname, libdirs)
+  libdirs.each do |dir|
+    f = File.join(dir, "lib#{libname}.so")
+
+    if File.file?(f)
+      if File.symlink?(f)
+	return f
+      else
+	return nil
+      end
+    end
+  end
+
+  nil
+end
+
+def parse_so(f)
+  dir, file = File.split(f)
+
+  if /^lib(.*)\.so((?:\.\d+)*)?$/ =~ file
+    return dir, $1, $2.sub(%r"^\.", "")
+  end
+
+  return nil
+end
+
+def scan_distfiles(dist_dir)
+  distfiles = []
+
+  Dir.chdir(dist_dir) do
+    Find.find('.') do |f|
+      next if not File.file?(f)
+
+      if f[1] == ?/
+	f.slice!(0,2)
+
+	distfiles << f
+      end
+    end
+  end
+
+  distfiles.sort!
+
+  distfiles
+end
+
+def parse_distinfo(file)
+  distfiles = []
+
+  open(file) do |f|
+    f.each do |line|
+      if /^MD5 \((.*)\) = / =~ line
+	distfiles << $1
+      end
+    end
+
+    return distfiles
+  end rescue []
+end
+
+def check_distinfo(origin, lazy = false)
+  portdir = $portsdb.portdir(origin)
+
+  File.directory?(portdir) or return []
+
+  if lazy
+    distfiles = []
+
+    Dir.glob(File.join($ports_dir, origin, 'distinfo*')) do |file|
+      distfiles.concat(parse_distinfo(file))
+    end
+
+    distfiles
+  else
+    file = $portsdb.make_var('MD5_FILE', portdir)
+
+    parse_distinfo(file)
+  end
+end
+
+def delete_file(file, yes_by_default = true)
+  if $noexecute
+    if yes_by_default
+      puts 'Delete ' + file
+      return true
+    else
+      puts "Leave #{file} (specify -i to ask on this)"
+      return false
+    end
+  end
+
+  if $interactive
+    puts 'Delete ' + file
+    prompt_yesno('OK?', yes_by_default) or return false
+  else
+    if yes_by_default
+      puts 'Delete ' + file
+    else
+      puts "Leave #{file} (specify -i to ask on this)"
+      return false
+    end
+  end
+
+  File.unlink(file)
+
+  true
+rescue => e
+  STDERR.puts e
+  return false
+end
+
+def delete_empty_dir(dir)
+  puts 'Delete ' + dir
+
+  return if $noexecute
+
+  return if $interactive && !prompt_yesno('OK?', true)
+
+  Dir.rmdir(dir)
+end
+
+def delete_dir(dir)
+  puts 'Delete ' + dir
+
+  return if $noexecute
+
+  return if $interactive && !prompt_yesno('OK?', true)
+
+  system('/bin/rm', '-rf', dir)
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end

@@ -1,0 +1,257 @@
+#!/usr/bin/env bash
+#
+# $Id: complete.sample 52 2006-01-01 06:26:59Z koma2 $
+
+_pkg_func() {   
+    local cur prev dbdir portsdir command
+
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD - 1]}
+    dbdir=${PKG_DBDIR:-/var/db/pkg}
+    portsdir=${PORTSDIR:-/usr/ports}
+    command=${COMP_WORDS[0]}
+
+    case $command in
+    portcvsweb)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -q -v)
+	    ;;
+	*)
+	    COMPREPLY=( $(compgen -f $2 ) $(cd $portsdir && compgen -d $2) $(cd $dbdir && compgen -d $2) )
+	    ;;
+	esac
+	;;
+    portinstall|portupgrade)
+	case $prev in
+	-[ABS])
+	    COMPREPLY=( $(compgen -c $2) )
+	    ;;
+	-[lL])
+	    COMPREPLY=( $(compgen -f $2) )
+	    ;;
+	-o)
+	    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
+	    ;;
+	*)
+	    case $cur in
+	    -*)
+		COMPREPLY=(-h -a -A -b -B -c -C -D -f -F -i -k -l -L -m -M -n -N -o -O -p -P -PP -q -r -R -s -S -u -v -w -W -x -y)
+		;;
+	    *)
+		if [[ $command = 'portinstall' ]]; then
+		    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
+		else
+		    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		fi
+		;;
+	    esac
+	    ;;
+	esac
+	;;
+    portversion)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -l -L -O -q -r -R -t -v -x)
+	    ;;
+	*)
+	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    ;;
+	esac
+	;;
+    portsdb)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -f -q -u -U)
+	    ;;
+	esac
+	;;
+    ports_glob)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -M -q -r -R -x)
+	    ;;
+	*)
+	    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
+	    ;;
+	esac
+	;;
+    portsclean)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -C -D -DD -i -L -n -P -PP -Q -QQ -q)
+	    ;;
+	esac
+	;;
+    pkgdb|pkg_which)
+	case $prev in
+	-[co])
+	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    ;;
+	-s)
+	    local ch prefix base nospace
+	    #nospace='-o nospace'
+	    ch=${cur:0:1}
+
+	    case $cur in
+	    ?*${ch}*)
+	        base=${cur##*$ch}
+	        prefix=${cur%$base}
+		COMPREPLY=( $(cd $dbdir && compgen -P "${prefix}" -S "$ch" -d "${base}") )
+		;;
+	    "")
+		COMPREPLY=( $(compgen $nospace '/') )
+		;;
+	    *)
+	        base=${cur##*$ch}
+	        prefix=${cur%$base}
+		COMPREPLY=( $(cd $dbdir && compgen $nospace -P "${prefix}" -S "$ch" -d "${base}") )
+		;;
+	    esac
+	    ;;
+	*)
+	    case $cur in
+	    -*)
+		COMPREPLY=(-h -a -c -f -F -o -Q -QQ -q -s -u -v)
+		;;
+	    *)
+		COMPREPLY=( $(compgen -c -f $2 ) )
+	    esac
+	    ;;
+	esac
+	;;
+    pkg_fetch)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -f -q -R -v)
+	    ;;
+	*)
+	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( ${COMPREPLY[@]%-*} )
+	    ;;
+	esac
+	;;
+    pkg_sort)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -q)
+	    ;;
+	esac
+	;;
+    pkg_glob)
+	case $cur in
+	-*)
+	    COMPREPLY=(-h -a -O -q -r -R -x)
+	    ;;
+	*)
+	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    ;;
+	esac
+	;;
+    pkg_deinstall)
+	case $prev in
+	-p)
+	    COMPREPLY=( $(compgen -d $2) )
+	    ;;
+	*)
+	    case $cur in
+	    -*)
+		COMPREPLY=(-h -a -c -d -D -f -i -n -O -p -P -q -r -R -v -x)
+		;;
+	    *)
+		COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		;;
+	    esac
+	    ;;
+	esac
+	;;
+    # Standard commands
+    pkg_create)
+	case $prev in
+	-[bP])
+	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    ;;
+	-o)
+	    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
+	    ;;
+	-[ps])
+	    COMPREPLY=( $(compgen -d $2) )
+	    ;;
+	-[fiIkKrtXDmcdf])
+	    COMPREPLY=( $(compgen -f $2) )
+	    ;;
+	*)
+	    case $cur in
+	    -*)
+		COMPREPLY=(-Y -N -O -h -j -v -y -z -P -p -f -i -I -k -K -r -s -t -X -D -m -o -c -d -f)
+		;;
+	    *)
+		COMPREPLY=( $(compgen -f $2) )
+		;;
+	    esac
+	    ;;
+	esac
+	;;
+    pkg_delete)
+	case $prev in
+	-p)
+	    COMPREPLY=( $(compgen -d $2) )
+	    ;;
+	*)
+	    case $cur in
+	    -*)
+		COMPREPLY=(-d -D -f -G -i -n -r -v -x -p -a)
+		;;
+	    *)
+		COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		;;
+	    esac
+	    ;;
+	esac
+	;;
+    pkg_info)
+	case $prev in
+	-e)
+	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    ;;
+	-O)
+	    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
+	    ;;
+	-l)
+	    COMPREPLY=( $(compgen -d $2) )
+	    ;;
+	-[tW])
+	    COMPREPLY=( $(compgen -f $2) )
+	    ;;
+	*)
+	    case $cur in
+	    -*)
+		COMPREPLY=(-c -d -D -f -g -G -i -I -k -L -m -o -p -q -r -R -s -v -V -x -a -e -O -l -t -W)
+		;;
+	    *)
+		COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		;;
+	    esac
+	    ;;
+	esac
+	;;
+    esac
+
+    return 0
+}
+
+complete -F _pkg_func \
+		pkgdb \
+		pkg_create \
+		pkg_deinstall \
+		pkg_delete \
+		pkg_fetch \
+		pkg_glob \
+		pkg_info \
+		pkg_which \
+		portcvsweb \
+		portinstall \
+		portsdb \
+		ports_glob \
+		portupgrade \
+		portversion

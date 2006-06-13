@@ -1,0 +1,362 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 71 $[1]
+MYDATE = %w$Date: 2006-01-04 01:25:27 +0900 (Wed, 04 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require "pkgtools"
+
+COLUMNSIZE = 24
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+SUGGESTIONS = {
+  ?< => 'needs updating (port has %s)',
+  ?= => 'up-to-date with port',
+  ?> => 'succeeds port (port has %s)',
+  ?? => 'error - origin not found',
+  ?! => 'error - port broken',
+  ?# => 'error - origin not recorded; run pkgdb -F',
+}
+
+def init_global
+  $command = 'portupgrade'
+  $command_output = false
+  $exclude_packages = []
+  $ignore_moved = false
+  $inv_limit_chars = nil
+  $limit_chars = nil
+  $noconfig = false
+  $recursive = false
+  $sanity_check = true
+  $test_version = false
+  $upward_recursive = false
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
+        [pkgname_glob ...]
+       #{MYNAME} [-v] -t ver0 ver1 [ver2 ...]
+  EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+    EOF
+
+  dry_parse = true
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-c", "--command-output", "Enable command output") {
+      |$command_output|
+    }
+
+    opts.def_option("-C", "--command-args=ARGS", "Specify the arguments for portupgrade in command#{NEXTLINE}output (default: none)") {
+      |command_args|
+      $command = 'portupgrade ' + command_args
+    }
+
+    opts.def_option("--ignore-moved",
+		    "Ignore MOVED file") {
+      |$ignore_moved|
+    }
+
+    opts.def_option("-l", "--limit=CHARS", "Only include the packages with the specified#{NEXTLINE}status flags") {
+      |$limit_chars|
+      # XXX: workaround: optparse treats `-l=' as '-l ""'
+      if $limit_chars.empty?
+	$limit_chars = '='
+      end
+    }
+
+    opts.def_option("-L", "--inv-limit=CHARS", "Exclude the packages with the specified#{NEXTLINE}status flags") {
+      |$inv_limit_chars|
+      # XXX: workaround: optparse treats `-L=' as '-L ""'
+      if $inv_limit_chars.empty?
+	$inv_limit_chars = '='
+      end
+    }
+
+    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
+      $sanity_check = false
+    }
+
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_option("-r", "--recursive", "Check for all those depending on the given#{NEXTLINE}packages as well") {
+      |$recursive|
+    }
+
+    opts.def_option("-R", "--upward-recursive", "Check for all those required by the given#{NEXTLINE}packages as well") {
+      |$upward_recursive|
+    }
+
+    opts.def_option("-t", "--test=VERSION", "Compare the version with the following one(s),#{NEXTLINE}and print the result(s)") {
+      |$test_version|
+      $test_version = PkgVersion.new($test_version)
+    }
+
+    opts.def_option("-v", "--verbose", "Be verbose") {
+      |$verbose|
+    }
+
+    opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") {
+      |arg|
+      begin
+	pattern = parse_pattern(arg)
+      rescue RegexpError => e
+	warning_message e.message.capitalize
+	break
+      end
+
+      $exclude_packages |= $pkgdb.glob(pattern, false) unless dry_parse
+    }
+
+    opts.def_tail_option '
+pkgname_glob is one of these: a full pkgname, a pkgname w/o version,
+a shell glob pattern in which you can use wildcards *, ?, and [..],
+an extended regular expression preceded by a colon (:), or a date range
+specification preceded by either < or >.  See pkg_glob(1) for details.
+If none is given, all the installed packages are checked.
+
+Environment Variables [default]:
+    PKGTOOLS_CONF            configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_DBDIR                packages DB directory [/var/db/pkg]
+    PORTSDIR                 ports directory [/usr/ports]
+    PORTS_DBDIR              ports db directory [$PORTSDIR]
+    PORTS_INDEX              ports index file [$PORTSDIR/INDEX]'
+
+    all = '*'
+
+    argv << all
+
+    tasks = []
+
+    begin
+      init_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+
+      opts.order(*argv) do |arg|
+	next if arg.empty?
+
+	if arg.equal? all
+	  pattern = arg
+
+	  $recursive = false
+	  $upward_recursive = false
+	else
+	  all.replace ''
+
+	  pattern = $pkgdb.strip(arg, true)
+
+	  if pattern.nil?
+	    pattern = arg
+
+	    if pattern.include?('/')
+	      # `|| arg' just in case
+	      pattern = $pkgdb.strip(pattern) || arg
+	    end
+	  end
+
+	  begin
+	    pattern = parse_pattern(pattern)
+	  rescue RegexpError => e
+	    warning_message e.message.capitalize
+	    next
+	  end
+
+	  if $test_version
+	    version = PkgVersion.new(arg)
+	    x = $test_version <=> version
+	    sign = if x < 0 then ?< elsif x == 0 then ?= else ?> end
+
+	    if $verbose
+	      printf "%s %c %s\n", $test_version, sign, version
+	    else
+	      printf "%c\n", sign
+	    end
+	    
+	    next
+	  end
+	end
+
+	list = []
+
+	begin
+	  $pkgdb.glob(pattern, false).each do |pkgname|
+	    list |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
+	  end
+	rescue => e
+	  STDERR.puts e.message
+	  exit 1
+	end
+
+	if list.empty?
+	  warning_message "No matching package found: #{arg}"
+	  next
+	end
+
+	list -= $exclude_packages
+
+	if list.empty?
+          warning_message "No matching packages left after exclusion: #{arg}"
+	  next
+	end
+
+	tasks |= list
+      end
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    rescue ArgumentError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+
+    tasks -= $exclude_packages
+
+    check_pkgs tasks.sort.collect {|pkgname| PkgInfo.new(pkgname) }
+
+    if $command_output
+      printf %Q`\nif [ X"$pkgs" != X"" ]; then\n  %s "$@" $pkgs\nfi\n`, $command
+    end
+  end
+
+  0
+end
+
+def check_pkg(pkg, origin = nil)
+  pkgname = pkg.fullname
+
+  if origin.nil?
+    return nil, ?#
+  end
+
+  if portinfo = $portsdb[origin]
+    newpkg = portinfo.pkgname
+  elsif $portsdb.exist?(origin, true)
+    pkgname = $portsdb.exist?(origin) or return nil, ?!
+    newpkg = PkgInfo.new(pkgname)	# raises ArgumentError
+  else
+    return nil, ??
+  end
+
+  cmp = newpkg.version <=> pkg.version
+
+  if cmp > 0 then
+    return newpkg, ?<
+  elsif cmp < 0 then
+    return newpkg, ?>
+  end
+
+  return newpkg, ?=
+rescue
+  return nil, ?!
+end
+
+def check_pkgs(pkgs)
+  pkgs.each do |pkg|
+    if !$ignore_moved and \
+       !config_ignore_moved?(pkg) and \
+       (moved = $portsdb.moved.trace(pkg.origin)) and \
+       (o = moved.last.to)
+      origin = o
+    else
+      origin = pkg.origin
+    end
+
+    newpkg, sign = check_pkg(pkg, origin)
+
+    next if $command_output && sign != ?<
+
+    next if ($limit_chars && !$limit_chars.include?(sign)) ||
+      ($inv_limit_chars && $inv_limit_chars.include?(sign))
+
+    held = config_held?(pkg)
+
+    suggestion = SUGGESTIONS[sign] % [ newpkg ? newpkg.version : nil ]
+
+    if held
+      suggestion = '[held] ' + suggestion
+    end
+
+    if $command_output
+      printf %Q`#\n#  %s%s\n#  %s\n#\n%spkgs="$pkgs %s"\n\n`,
+	pkg.name,
+	held ? ' [held]' : '',
+	suggestion,
+	held ? '# ' : '',
+	pkg.fullname
+    else
+      if $verbose then
+	printf "%-26s  %c  %s %s\n",
+	  pkg.fullname,
+	  sign,
+	  suggestion,
+	  (origin != pkg.origin) ? "(=> '#{origin}')" : ''
+      else
+	printf "%-26s  %c\n",
+	  pkg.name,
+	  sign
+      end
+    end
+  end
+rescue PortsDB::IndexFileError
+  warning_message "Error reading the ports INDEX."
+rescue PortsDB::DBError
+  warning_message "Error reading the ports database."
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end

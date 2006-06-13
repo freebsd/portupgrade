@@ -1,0 +1,362 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2000-2004 Akinori MUSHA
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 52 $[1]
+MYDATE = %w$Date: 2006-01-01 15:26:59 +0900 (Sun, 01 Jan 2006) $[1]
+MYNAME = File.basename($0)
+
+require "fileutils"
+require "optparse"
+require "pkgtools"
+require "uri"
+
+def init_global
+  $force = false
+  $noconfig = false
+  #$sanity_check = true
+  $upward_recursive = false
+end
+
+COLUMNSIZE = 24
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+if PkgConfig::OS_MAJOR.to_i >= 5
+  PKG_SUFFIXES = ['.tbz', '.tgz']
+else
+  PKG_SUFFIXES = ['.tgz', '.tbz']
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-hfqRv] {pkgname|URI} ...
+  EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-f", "--force", "Download a package even if recorded as installed;#{NEXTLINE}Remove existing packages if they are corrupt") {
+      |$force|
+    }
+
+#    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
+#      $sanity_check = false
+#    }
+
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
+      |$noconfig|
+    }
+
+    opts.def_option("-R", "--upward-recursive", "Download the packages required by the given#{NEXTLINE}packages as well") {
+      |$upward_recursive|
+    }
+
+    opts.def_option("-v", "--verbose", "Be verbose") {
+      |$verbose|
+    }
+
+    opts.def_tail_option '
+pkgname is a full pkgname, a pkgname w/o version followed by an @,
+or a full URI.
+
+Environment Variables [default]:
+    PACKAGEROOT      URI of the root of the site [ftp://ftp.FreeBSD.org]
+    PACKAGESITE      URI of the directory to fetch packages from [none]
+                     (overrides PACKAGEROOT and PKG_SITES)
+    PACKAGES         packages directory to save files [$PORTSDIR/packages]
+    PKGTOOLS_CONF    configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_DBDIR        packages DB directory [/var/db/pkg]
+    PKG_FETCH        command to fetch files [/usr/bin/fetch -ao %2$s %1$s]
+    PKG_SITES        list of URIs to fetch packages from [none]
+    PKG_TMPDIR       temporary directory for download [$TMPDIR]
+    PORTSDIR         ports directory [/usr/ports]
+    TMPDIR           temporary directory [/var/tmp]'
+
+    begin
+      init_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+
+      if argv.empty?
+	print opts
+	return 0
+      end
+
+      results = PkgResultSet.new
+
+      opts.order(*argv) do |arg|
+	set_uri_base(arg)
+
+	arg = File.basename(arg).sub(/\.t[bg]z$/, '')
+
+	fetch_pkg(arg, $upward_recursive, results)
+      end
+
+      return results.show('downloaded')
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+  end
+end
+
+def fetch_pkg(pkgname, recursive, results)
+  downloaded, pkgdep = do_fetch_pkg(pkgname)
+
+  $subdir = nil
+
+  results << PkgResult.new(pkgname, downloaded ? :done : :ignored)
+
+  if pkgdep.is_a?(Array) && recursive
+    pkgdep.each do |dep|
+      results.include?(dep) or fetch_pkg(dep, true, results)
+    end
+  end
+rescue => e
+  results << PkgResult.new(pkgname, e)
+end
+
+def do_fetch_pkg(pkgname)
+  pkgname = pkgname.dup
+
+  latest = pkgname.chomp!('@') || !pkgname.index(/-\d/)
+
+  if !latest && !$force && $pkgdb.installed?(pkgname)
+    progress_message "Skipping #{pkgname} (already installed)"
+    return false, nil
+  end
+
+  PKG_SUFFIXES.each do |suffix|
+    pkgfilename = pkgname + suffix
+    path = File.join($packages_dir, pkgfilename)
+
+    File.exist?(path) or next
+
+    progress_message "Identifying the package #{path}"
+
+    id_pkgname, origin, pkgdep = identify_pkg(path)
+
+    return false, pkgdep if not id_pkgname.nil?
+
+    warning_message "Failed to extract information from #{path}"
+
+    raise "corrupt package" unless $force
+
+    warning_message "Removing the corrupt package #{path}"
+
+    File.unlink(path)
+  end
+
+  FileUtils.mkdir_p [$tmpdir, $packages_dir]
+
+  progress_message "Fetching #{pkgname}"
+
+  temp_path_base = File.join($tmpdir, pkgname)
+
+  temp_path = real_fetch_pkg(pkgname, temp_path_base, latest)
+
+  if not temp_path
+    warning_message "Failed to fetch #{pkgname}"
+    raise "fetch error"
+  end
+
+  pkgfilename = File.basename(temp_path)
+
+  progress_message "Downloaded as #{pkgfilename}"
+
+  case pkgfilename
+  when /\.tgz$/
+    if /tar archive$/ =~ `file #{shelljoin(temp_path)}`
+      warning_message "Seems the downloaded file is somehow not compressed despite its file name"
+      progress_message "Compressing #{temp_path} with gzip"
+
+      tar = temp_path.sub(/\.tgz$/, '.tar')
+      targz = tar + '.gz'
+      system([shelljoin('mv', temp_path, tar),
+	       shelljoin('gzip', tar),
+	       shelljoin('mv', targz, temp_path)].join(' && '))
+    end
+  when /\.tbz2?$/
+    if /tar archive$/ =~ `file #{shelljoin(temp_path)}`
+      warning_message "Seems the downloaded file is somehow not compressed despite its file name"
+      progress_message "Compressing #{temp_path} with bzip2"
+
+      tar = temp_path.sub(/\.tbz2?$/, '.tar')
+      tarbz2 = tar + '.bz2'
+      system([shelljoin('mv', temp_path, tar),
+	       shelljoin('bzip2', tar),
+	       shelljoin('mv', tarbz2, temp_path)].join(' && '))
+    end
+  end
+
+  progress_message "Identifying the package #{temp_path}"
+
+  pkgname, origin, pkgdep = identify_pkg(temp_path)
+
+  if pkgname.nil?
+    warning_message "Failed to extract information from #{temp_path}"
+    raise "corrupt package"
+  end
+
+  save_path = File.join($packages_dir,
+                        pkgname + pkgfilename.sub(/^.*(\.[^.]+)$/, "\\1"))
+
+  begin
+    FileUtils.mv(temp_path, save_path)
+  rescue => e
+    warning_message "Failed to save the dowloaded tarball as #{save_path}"
+    raise e
+  end
+
+  progress_message "Saved as #{save_path}"
+
+  return true, pkgdep
+end
+
+def set_uri_base(uri_s)
+  $subdir = nil
+
+  begin
+    uri = URI.parse(uri_s)
+
+    if not uri.scheme.nil?
+      $subdir = File.basename((uri + './').path.chomp('/'))
+
+      case $subdir
+      when 'All', 'Latest'
+	$pkg_site_uris = [uri + '../']
+      else
+	$subdir = '.'
+	$pkg_site_uris = [uri]
+      end
+
+      return true
+    end
+  rescue => e
+    # not a remote URI
+  end
+
+  if ENV.key?('PACKAGESITE')
+    $pkg_site_uris = [URI.parse(ENV['PACKAGESITE']) + '../']
+  else
+    $pkg_site_uris = $pkg_sites.map { |str|
+      URI.parse(str)
+    }
+  end
+
+  return true
+rescue => e
+  warning_message e.message
+  $pkg_site_uris = []
+  return false
+end
+
+def real_fetch_pkg(pkgname, path_base, latest = false)
+  if latest
+    subdir = $subdir || 'Latest'
+  else
+    subdir = $subdir || 'All'
+  end
+
+  if $verbose
+    information_message 'Will try the following sites in the order named:'
+
+    $pkg_site_uris.each do |site|
+      STDERR.puts "\t#{site}"
+    end
+  end
+
+  $pkg_site_uris.each do |uri_base|
+    PKG_SUFFIXES.each do |suffix|
+      uri = uri_base + (subdir + '/' + pkgname + suffix)
+      path = path_base + suffix
+
+      fetch(uri, path) and return path
+    end
+  end
+
+  nil
+end
+
+def fetch(uri, path = File.basename(uri.path))
+  if path.empty?
+    warning_message 'Missing filename'
+    return false
+  end
+
+  cmdline = format(ENV['PKG_FETCH'] || "/usr/bin/fetch -o '%2$s' '%1$s'", uri, path)
+
+  progress_message "Invoking a command: #{cmdline}" if $verbose
+
+  system(cmdline)
+  status = $? >> 8
+
+  if status.nonzero?
+    warning_message format("The command returned a non-zero exit status: %d", status)
+  end
+
+  if File.zero?(path)
+    warning_message "Got a zero-sized file #{path} (removing)"
+    File.unlink(path)
+  end
+
+  if !File.exist?(path)
+    warning_message "Failed to fetch #{uri}"
+    return false
+  end
+
+  return true
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end
