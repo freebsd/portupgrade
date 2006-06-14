@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/13 12:59:01 $[1]
+MYDATE = %w$Date: 2006/06/14 11:52:38 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -704,16 +704,14 @@ Environment Variables [default]:
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
       do_upgrade(pkgname)
-      progress_message "Upgrade tasks: #{upgrade_tasks.length}"
-      progress_message "Summary: #{$results.summary}"
+      progress_message "Upgrade tasks #{upgrade_tasks.length}: #{$results.summary}"
     end
 
     install_tasks.each do |origin| 
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, origin)
       do_install(origin)
-      progress_message "Install tasks: #{install_tasks.length}"
-      progress_message "Summary: #{$results.summary}"
+      progress_message "Install tasks #{install_tasks.length}: #{$results.summary}"
     end
 
     return result_proc.call
