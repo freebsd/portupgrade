@@ -1,4 +1,4 @@
-# $Id: pkgdb.rb 52 2006-01-01 06:26:59Z koma2 $
+# $Id: pkgdb.rb,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -73,6 +73,7 @@ class PkgDB
   end
 
   def initialize(*args)
+    @db = nil
     setup(*args)
   end
 

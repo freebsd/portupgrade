@@ -28,7 +28,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006-01-01 15:26:59 +0900 (Sun, 01 Jan 2006) $[1]
+MYDATE = %w$Date: 2006/06/13 12:59:00 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -57,6 +57,7 @@ def init_global
   $preserve_shlib = false
   $recursive = false
   $sanity_check = true
+  $tempdir = ""
   $upward_recursive = false
   $verbose = false
 end
@@ -192,11 +193,11 @@ Environment Variables [default]:
 
     begin
       init_global
+      init_pkgtools_global
 
       rest = opts.order(*argv)
 
       unless $noconfig
-	init_global
 	load_config
       else
 	argv = rest

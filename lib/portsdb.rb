@@ -1,4 +1,4 @@
-# $Id: portsdb.rb 71 2006-01-03 16:25:27Z koma2 $
+# $Id: portsdb.rb,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -111,6 +111,7 @@ class PortsDB
   end
 
   def setup(alt_db_dir = nil, alt_ports_dir = nil, alt_db_driver = nil)
+    @db = nil
     set_ports_dir(alt_ports_dir)
     set_db_dir(alt_db_dir)
     set_db_driver(alt_db_driver)
