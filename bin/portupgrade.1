@@ -1,4 +1,4 @@
-.\" $Id: portupgrade.1 71 2006-01-03 16:25:27Z koma2 $
+.\" $Id: portupgrade.1,v 1.1.1.1 2006/06/13 12:59:01 sem Exp $
 .\"
 .Dd June 15, 2001
 .Dt PORTUPGRADE 1
@@ -9,7 +9,7 @@
 .Nd tools to upgrade installed packages or install new ones via ports or packages
 .Sh SYNOPSIS
 .Nm
-.Op Fl habcCDDfFiknNOpPPqrRsuvwWy
+.Op Fl habcCDDefFiknNOpPPqrRsuvwWy
 .Op Fl A Ar command
 .Op Fl B Ar command
 .Op Fl l Ar file
@@ -162,6 +162,10 @@ Delete failed distfiles and retry if checksum fails.  Specified twice,
 do
 .Dq Li "make distclean"
 before each fetch or build.
+.Pp
+.It Fl e
+.It Fl -emit-summaries
+Emit summary info after each port processing.
 .Pp
 .It Fl f
 .It Fl -force
