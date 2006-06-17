@@ -1,4 +1,4 @@
-# $Id: pkgdb.rb,v 1.3 2006/06/17 16:34:40 sem Exp $
+# $Id: pkgdb.rb,v 1.4 2006/06/17 18:07:05 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -78,7 +78,7 @@ class PkgDB
     }
   end
 
-  # remove lock file if it exists and it's ours
+  # remove lock file if it exists and it's ours (unless forced)
   def PkgDB.remove_lock(force = false)
     if !@@lock_file.nil? && File.exist?(@@lock_file) &&
       file = File.open(@@lock_file)
@@ -561,12 +561,12 @@ class PkgDB
       file.close
       if mode == 'w' 
 	if count == 0
-	  puts "Database file locked for writing. Waiting."
+	  puts "** Database file locked for writing. Waiting."
 	end
 	sleep 1
 	count += 1
 	if count > 120
-	  puts "Lock looks dead. Remove it."
+	  puts "** Timeout. Lock looks dead. Remove it."
 	  PkgDB.remove_lock(true)
 	end
       else
@@ -584,12 +584,12 @@ class PkgDB
     count = 0
     while FileTest.exist?(@@lock_file)
       if count == 0
-	puts "Database file locked. Waiting."
+	puts "** Database file locked. Waiting."
       end
       sleep 1
       count += 1
       if count > 120
-	puts "Lock looks dead. Remove it."
+	puts "** Timeout. Lock looks dead. Remove it."
 	PkgDB.remove_lock(true)
       end
     end
