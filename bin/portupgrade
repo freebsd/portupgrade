@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/15 11:32:11 $[1]
+MYDATE = %w$Date: 2006/06/15 15:54:30 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -92,6 +92,11 @@ end
 class PortDirError < StandardError
   def message
     "port directory error"
+  end
+end
+class ConfigError < StandardError
+  def message
+    "make config failed"
   end
 end
 class MakefileBrokenError < StandardError
@@ -283,6 +288,11 @@ usage: #{MYNAME} [-habcCDDfFiklnOpPPqrRsuvwWy] [-A command] [-B command]
 		    "Turn on interactive mode") {
       |$interactive|
       $verbose = true
+    }
+
+    opts.def_option("-j", "--jet-mode",
+		    "Turn on jet mode: do not run \"make config\" for each port") {
+      |$jet_mode|
     }
 
     opts.def_option("-k", "--keep-going",
@@ -706,6 +716,22 @@ Environment Variables [default]:
     ntasks = upgrade_tasks.size + install_tasks.size
     ctask = 0
 
+    if ! $jet_mode
+      config_tasks = upgrade_tasks.dup
+      config_tasks.concat(install_tasks)
+
+      config_tasks.each do |pname|
+	origin = nil
+	if pname.index('/')
+	  origin = pname
+	else
+	  pkg = PkgInfo.new(pname)
+	  origin = pkg.origin
+	end
+	do_config(origin)
+      end
+    end
+
     upgrade_tasks.each do |pkgname|
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
@@ -726,6 +752,39 @@ ensure
   stty_sane unless $results.empty?
 
   timer_end("Session")
+end
+
+# raises:
+#   PortDirError, ConfigError
+def run_make_config(origin)
+  portdir = $portsdb.portdir(origin)
+
+  if not File.directory?(portdir)
+    warning_message "Port directory not found: #{origin}"
+    raise PortDirError
+  end
+
+  make_args = get_make_args(origin)
+  make_env = get_make_env(origin)
+  cmdargs = make_env << 'make'
+
+  cmdargs.concat(shellwords($make_args))
+
+  progress_message "Run 'make config' for #{origin}"
+  if ! system "cd #{portdir} && #{shelljoin(*cmdargs)} config"
+    warning_message "make config failed for #{origin}"
+    raise ConfigError
+  end
+end
+
+def do_config(origin)
+  run_make_config(origin)
+
+  make_args = get_make_args(origin)
+  make_env = get_make_env(origin)
+  $portsdb.all_depends_list!(origin, shelljoin(*make_env), make_args).each do |o|
+    run_make_config(o)
+  end
 end
 
 def do_upgrade(pkgname)
