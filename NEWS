@@ -4,6 +4,22 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.1.4 (released 2006-06-18):
+
+ * Add -e (--emit-summaries) option and show summary messages only when
+   the option defined or verbose mode is on.
+
+ * Allow origins in ALT_PKGDEP. This announced in pkgtools.conf
+   but did not work really.
+
+ * Run 'make config' before all operations unless -j (--jet-mode)
+   option specified.
+
+ * Add lock on operations with pkgdb.db. Now you can safe run a few
+   portupgrade(1).
+
+ * Bugs fixes.
+
 portupgrade 2.1.3 (released 2006-06-11):
 
 * Add ALT_INDEX array to pkgtools.conf. The array holds additional
