@@ -28,7 +28,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/14 11:52:38 $[1]
+MYDATE = %w$Date: 2006/06/18 12:41:35 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -300,7 +300,7 @@ def libclean()
 
   compatlib_re = /^#{Regexp.quote(compatlibdir)}/
 
-  libpath_re = %r"^((#{Regexp.quote(localbase)}|#{Regexp.quote(x11base)})(?:/.+)?)/lib([^/]+)\.so\.(\d+)$"	#"
+  libpath_re = %r"^((#{Regexp.quote(localbase)}|#{Regexp.quote(x11base)})?(?:/.+)?)/lib([^/]+)\.so\.(\d+)$"	#"
 
   libtable = {}
 
@@ -482,8 +482,8 @@ def libclean()
     end
   end
 
-  puts "** Clean out #{compatlibdir} manually on occasions."
-  puts "** Try using libchk(1) (sysutils/libchk) to find out unreferenced libraries."
+#  puts "** Clean out #{compatlibdir} manually on occasions."
+#  puts "** Try using libchk(1) (sysutils/libchk) to find out unreferenced libraries."
 end
 
 def pkgclean(level)
