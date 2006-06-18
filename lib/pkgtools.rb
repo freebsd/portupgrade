@@ -1,4 +1,4 @@
-# $Id: pkgtools.rb,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+# $Id: pkgtools.rb,v 1.2 2006/06/14 11:52:38 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.0.1"
@@ -774,7 +774,14 @@ def timer_end(name, verbose = $verbose)
   start_time = $timer[name]
 
   time = end_time - start_time
-  str_time = Time.at(time).utc.strftime("%T")
+  days = time/86400
+  str_time = ""
+  if days.to_i > 0
+    str_time = "#{days.to_i} day"
+    str_time += "s" if days.to_i > 1
+    str_time += " and "
+  end
+  str_time += Time.at(time).utc.strftime("%T")
 
   if verbose
     progress_message "#{name} ended at: #{end_time.rfc2822} (consumed #{str_time})"
