@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/17 13:13:33 $[1]
+MYDATE = %w$Date: 2006/06/18 14:24:45 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -770,14 +770,14 @@ def run_make_config(origin)
 
   cmdargs.concat(shellwords($make_args))
 
-  if $verbose
-    config_cmd = 'config'
-  else
-    config_cmd = 'config > /dev/null'
+  unless $verbose
+    cmdargs << 'ECHO_MSG=/usr/bin/true'
   end
 
+  cmdargs << 'config'
+
   progress_message "Run 'make config' for #{origin}"
-  if ! system "cd #{portdir} && #{shelljoin(*cmdargs)} #{config_cmd}"
+  if ! system "cd #{portdir} && #{shelljoin(*cmdargs)}"
     warning_message "make config failed for #{origin}"
     raise ConfigError
   end
