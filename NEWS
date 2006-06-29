@@ -4,21 +4,14 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.1.4 (released 2006-06-18):
+portupgrade 2.1.3.1 (released 2006-06-29)
 
- * Add -e (--emit-summaries) option and show summary messages only when
-   the option defined or verbose mode is on.
+* Fork a stable version.
 
- * Allow origins in ALT_PKGDEP. This announced in pkgtools.conf
-   but did not work really.
+* Excludes showing summary messages. They will be reworked.
 
- * Run 'make config' before all operations unless -j (--jet-mode)
-   option specified.
-
- * Add lock on operations with pkgdb.db. Now you can safe run a few
-   portupgrade(1).
-
- * Bugs fixes.
+* Fix a bug in selecting of DB driver. It never tried bdb_btree
+  by default, only bdb1 and fall back to dbm unless success.
 
 portupgrade 2.1.3 (released 2006-06-11):
 
@@ -29,7 +22,7 @@ portupgrade 2.1.3 (released 2006-06-11):
   It downloads keys and values from files coincided with 'glob'
   and returns a filled hash. The glob is related to PREFIX.
 
-* Add a summary messages on each upgrade/install transaction:
+* Add summary messages on each upgrade/install transaction:
   how many tasks and how many task done.
 
 portupgrade 2.1.2 (released 2006-06-07):
