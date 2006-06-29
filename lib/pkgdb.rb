@@ -1,4 +1,4 @@
-# $Id: pkgdb.rb,v 1.4 2006/06/17 18:07:05 sem Exp $
+# $Id: pkgdb.rb,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -72,28 +72,7 @@ class PkgDB
 #    end
   end
 
-  def PkgDB.finalizer
-    Proc.new { 
-      PkgDB.remove_lock
-    }
-  end
-
-  # remove lock file if it exists and it's ours (unless forced)
-  def PkgDB.remove_lock(force = false)
-    if !@@lock_file.nil? && File.exist?(@@lock_file) &&
-      file = File.open(@@lock_file)
-
-      pid, mode = file.gets.split(' ')
-      file.close
-
-      File.unlink(@@lock_file) if pid.to_i == $$ || force
-    end
-  end
-
   def initialize(*args)
-    @db = nil
-    @@lock_file = nil
-    ObjectSpace.define_finalizer(self, PkgDB.finalizer)
     setup(*args)
   end
 
@@ -118,7 +97,6 @@ class PkgDB
     @db_dir = File.expand_path(new_db_dir || ENV['PKG_DBDIR'] || '/var/db/pkg')
 
     @db_file = File.join(@db_dir, 'pkgdb.db')
-    @@lock_file = File.join(@db_dir, 'pkgdb.db.lock')
     @fixme_file = ENV['PKG_FIXME_FILE'] || "/var/db/pkgdb.fixme"
     @db_filebase = @db_file.sub(/\.db$/, '')
     close_db
@@ -155,7 +133,7 @@ class PkgDB
 
   def db_driver=(new_db_driver)
     begin
-      case new_db_driver || ENV['PKG_DBDRIVER'] || 'bdb1_btree'
+      case new_db_driver || ENV['PKG_DBDRIVER'] || 'bdb_btree'
       when 'bdb_btree'
 	@db_driver = :bdb_btree
       when 'bdb_hash', 'bdb'
@@ -553,96 +531,57 @@ class PkgDB
     close_db
   end
 
-  def lock_db_on_read
-    count = 0
-    while FileTest.exist?(@@lock_file)
-      file = File.open(@@lock_file)
-      pid, mode = file.gets.chomp.split(' ')
-      file.close
-      if mode == 'w' 
-	if count == 0
-	  puts "** Database file locked for writing. Waiting."
-	end
-	sleep 1
-	count += 1
-	if count > 120
-	  puts "** Timeout. Lock looks dead. Remove it."
-	  PkgDB.remove_lock(true)
-	end
-      else
-	# ignore read lock
-	break
-      end
-    end
-
-    file = File.open(@@lock_file, "w")
-    file.puts "#$$ r"
-    file.close
-  end
-
-  def lock_db_on_write
-    count = 0
-    while FileTest.exist?(@@lock_file)
-      if count == 0
-	puts "** Database file locked. Waiting."
-      end
-      sleep 1
-      count += 1
-      if count > 120
-	puts "** Timeout. Lock looks dead. Remove it."
-	PkgDB.remove_lock(true)
-      end
-    end
-
-    file = File.open(@@lock_file, "w")
-    file.puts "#$$ w"
-    file.close
-  end
-
-  def unlock_db
-    PkgDB.remove_lock
-  end
-
-  def get_db(mode, perm)
-    case db_driver
-    when :bdb_btree
-      db = BDB::Btree.open @db_file, nil, mode, perm, *@db_params
-    when :bdb_hash
-      db = BDB::Hash.open @db_file, nil, mode, perm, *@db_params
-    when :bdb1_btree
-      db = BDB1::Btree.open @db_file, mode, perm, *@db_params
-    when :bdb1_hash
-      db = BDB1::Hash.open @db_file, mode, perm, *@db_params
-    else
-      if mode == 'w+'
-	File.unlink(@db_file) if File.exist?(@db_file)
-	db = DBM.open(@db_filebase, mode)
-      else
-	db = DBM.open(@db_filebase)
-      end
-    end
-    db
-  end
-
   def open_db_for_read!
     close_db
 
-    lock_db_on_read
-    @db = get_db('r', 0)
+    case db_driver
+    when :bdb_btree
+      @db = BDB::Btree.open @db_file, nil, 'r', 0, *@db_params
+    when :bdb_hash
+      @db = BDB::Hash.open @db_file, nil, 'r', 0, *@db_params
+    when :bdb1_btree
+      @db = BDB1::Btree.open @db_file, 'r', 0, *@db_params
+    when :bdb1_hash
+      @db = BDB1::Hash.open @db_file, 'r', 0, *@db_params
+    else
+      @db = DBM.open(@db_filebase)
+    end
   end
 
   def open_db_for_update!
     close_db
 
-    lock_db_on_write
-    @db = get_db('r+', 0664)
+    case db_driver
+    when :bdb_btree
+      @db = BDB::Btree.open @db_file, nil, 'r+', 0664, *@db_params
+    when :bdb_hash
+      @db = BDB::Hash.open @db_file, nil, 'r+', 0664, *@db_params
+    when :bdb1_btree
+      @db = BDB1::Btree.open @db_file, 'r+', 0664, *@db_params
+    when :bdb1_hash
+      @db = BDB1::Hash.open @db_file, 'r+', 0664, *@db_params
+    else
+      @db = DBM.open(@db_filebase)
+    end
   end
 
   def open_db_for_rebuild!
     close_db
 
-    lock_db_on_write
-    @db = get_db('w+', 0664)
+    case db_driver
+    when :bdb_btree
+      @db = BDB::Btree.open @db_file, nil, 'w+', 0664, *@db_params
+    when :bdb_hash
+      @db = BDB::Hash.open @db_file, nil, 'w+', 0664, *@db_params
+    when :bdb1_btree
+      @db = BDB1::Btree.open @db_file, 'w+', 0664, *@db_params
+    when :bdb1_hash
+      @db = BDB1::Hash.open @db_file, 'w+', 0664, *@db_params
+    else
+      File.unlink(@db_file) if File.exist?(@db_file)
+
+      @db = DBM.open(@db_filebase, 0664)
+    end
   end
 
   def open_db
@@ -683,7 +622,6 @@ class PkgDB
 
   def close_db
     if @db
-      unlock_db
       @db.close
       @db = nil
     end
@@ -707,8 +645,6 @@ class PkgDB
     end
   rescue => e
     raise DBError, e.message
-  ensure
-    close_db
   end
 
   def date_installed(pkgname)
