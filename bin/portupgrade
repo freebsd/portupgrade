@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/18 14:24:45 $[1]
+MYDATE = %w$Date: 2006/06/13 12:59:01 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -92,11 +92,6 @@ end
 class PortDirError < StandardError
   def message
     "port directory error"
-  end
-end
-class ConfigError < StandardError
-  def message
-    "make config failed"
   end
 end
 class MakefileBrokenError < StandardError
@@ -168,7 +163,6 @@ def init_global
   $clean = true			# now cleaned by default
   $cleanup = true		# not cleaned up by default
   $distclean = 0
-  $emit_summaries = false
   $exclude_packages = []
   $fetch_only = false
   $fetch_recursive = false
@@ -189,7 +183,6 @@ def init_global
   $recursive = false
   $resultsfile = nil
   $sanity_check = true
-  $tmpdir = ""
   $uninstall_extra_flags = 'P'
   $upward_recursive = false
   $use_packages = false
@@ -262,11 +255,6 @@ usage: #{MYNAME} [-habcCDDfFiklnOpPPqrRsuvwWy] [-A command] [-B command]
       $distclean += 1
     }
 
-    opts.def_option("-e", "--emit-summaries",
-		    "Emit summary info after each port processing" << NEXTLINE ) {
-      |$emit_summaries|
-    }
-
     opts.def_option("-f", "--force",
 		    "Force the upgrade of a port even if it is to be a" << NEXTLINE <<
 		    "downgrade or just a reinstall, or the port is held") {
@@ -288,11 +276,6 @@ usage: #{MYNAME} [-habcCDDfFiklnOpPPqrRsuvwWy] [-A command] [-B command]
 		    "Turn on interactive mode") {
       |$interactive|
       $verbose = true
-    }
-
-    opts.def_option("-j", "--jet-mode",
-		    "Turn on jet mode: do not run \"make config\" for each port") {
-      |$jet_mode|
     }
 
     opts.def_option("-k", "--keep-going",
@@ -501,11 +484,11 @@ Environment Variables [default]:
 
     begin
       init_global
-      init_pkgtools_global
 
       rest = opts.order(*argv)
 
       unless $noconfig
+	init_global
 	load_config
       else
 	argv = rest
@@ -716,34 +699,16 @@ Environment Variables [default]:
     ntasks = upgrade_tasks.size + install_tasks.size
     ctask = 0
 
-    if ! $jet_mode
-      config_tasks = upgrade_tasks.dup
-      config_tasks.concat(install_tasks)
-
-      config_tasks.each do |pname|
-	origin = nil
-	if pname.index('/')
-	  origin = pname
-	else
-	  pkg = PkgInfo.new(pname)
-	  origin = pkg.origin
-	end
-	do_config(origin)
-      end
-    end
-
     upgrade_tasks.each do |pkgname|
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
       do_upgrade(pkgname)
-      progress_message "Upgrade tasks #{upgrade_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
     end
 
     install_tasks.each do |origin| 
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, origin)
       do_install(origin)
-      progress_message "Install tasks #{install_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
     end
 
     return result_proc.call
@@ -752,45 +717,6 @@ ensure
   stty_sane unless $results.empty?
 
   timer_end("Session")
-end
-
-# raises:
-#   PortDirError, ConfigError
-def run_make_config(origin)
-  portdir = $portsdb.portdir(origin)
-
-  if not File.directory?(portdir)
-    warning_message "Port directory not found: #{origin}"
-    raise PortDirError
-  end
-
-  make_args = get_make_args(origin)
-  make_env = get_make_env(origin)
-  cmdargs = make_env << 'make'
-
-  cmdargs.concat(shellwords($make_args))
-
-  unless $verbose
-    cmdargs << 'ECHO_MSG=/usr/bin/true'
-  end
-
-  cmdargs << 'config'
-
-  progress_message "Run 'make config' for #{origin}"
-  if ! system "cd #{portdir} && #{shelljoin(*cmdargs)}"
-    warning_message "make config failed for #{origin}"
-    raise ConfigError
-  end
-end
-
-def do_config(origin)
-  run_make_config(origin)
-
-  make_args = get_make_args(origin)
-  make_env = get_make_env(origin)
-  $portsdb.all_depends_list!(origin, shelljoin(*make_env), make_args).each do |o|
-    run_make_config(o)
-  end
 end
 
 def do_upgrade(pkgname)
