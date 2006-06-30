@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/14 11:52:38 $[1]
+MYDATE = %w$Date: 2006/06/13 12:59:00 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -46,7 +46,6 @@ def init_global
   $quiet = false
   $quieter = false
   #$sanity_check = true
-  $temp_dir = ""
   $update_db = false
 end
 
@@ -208,13 +207,13 @@ Environment Variables [default]:
 
     begin
       init_global
-      init_pkgtools_global
 
       dry_parse = false
 
       rest = opts.order(*argv)
 
       unless $noconfig
+	init_global
 	load_config
       else
 	argv = rest
@@ -626,7 +625,7 @@ def alt_dep(dep, origin = nil)
     if pat.index('/')
       return nil if !origin || !File.fnmatch?(pat, origin)
     elsif !File.fnmatch?(pat, dep)
-      return nil
+       return nil
     end
 
     case alt
@@ -671,7 +670,7 @@ end
 
 def guess_dep(dep, origin)
   if origin
-    pkgnames = tracing_deorigin(origin) || alt_dep(dep, origin) || $pkgnames
+    pkgnames = tracing_deorigin(origin) || alt_dep(dep) || $pkgnames
   else
     pkgnames = alt_dep(dep) || $pkgnames
   end
