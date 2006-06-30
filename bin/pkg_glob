@@ -28,7 +28,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/13 12:59:00 $[1]
+MYDATE = %w$Date: 2006/06/14 11:52:38 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -198,6 +198,7 @@ Environment Variables [default]:
       rest = opts.order(*argv)
 
       unless $noconfig
+	init_global
 	load_config
       else
 	argv = rest
