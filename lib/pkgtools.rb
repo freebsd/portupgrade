@@ -1,4 +1,4 @@
-# $Id: pkgtools.rb,v 1.2 2006/06/14 11:52:38 sem Exp $
+# $Id: pkgtools.rb,v 1.3 2006/06/18 16:10:33 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.0.1"
@@ -767,6 +767,7 @@ def timer_start(name, verbose = $verbose)
 end
 
 def timer_end(name, verbose = $verbose)
+  return if $time.nil?
   $timer.key?(name) or return
 
   end_time = Time.now
