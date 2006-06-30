@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/18 14:24:45 $[1]
+MYDATE = %w$Date: 2006/06/18 15:14:02 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -291,7 +291,7 @@ usage: #{MYNAME} [-habcCDDfFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-j", "--jet-mode",
-		    "Turn on jet mode: do not run \"make config\" for each port") {
+		    "Turn on jet mode: do not run options config for each port") {
       |$jet_mode|
     }
 
@@ -716,21 +716,23 @@ Environment Variables [default]:
     ntasks = upgrade_tasks.size + install_tasks.size
     ctask = 0
 
-    if ! $jet_mode
-      config_tasks = upgrade_tasks.dup
-      config_tasks.concat(install_tasks)
-
-      config_tasks.each do |pname|
-	origin = nil
-	if pname.index('/')
-	  origin = pname
-	else
-	  pkg = PkgInfo.new(pname)
-	  origin = pkg.origin
-	end
-	do_config(origin)
-      end
-    end
+#    if ! $jet_mode
+#      config_tasks = upgrade_tasks.dup
+#      config_tasks.concat(install_tasks)
+#
+#      config_tasks.each do |pname|
+#	unless pname.index('/')
+#	  pkg = PkgInfo.new(pname)
+#	  pname = pkg.origin
+#	  puts pname
+#	end
+#      end
+#      
+#      config_tasks.sort!
+#      config_tasks.each do |pname|
+#	do_config(pname)
+#      end
+#    end
 
     upgrade_tasks.each do |pkgname|
       ctask += 1
@@ -774,9 +776,9 @@ def run_make_config(origin)
     cmdargs << 'ECHO_MSG=/usr/bin/true'
   end
 
-  cmdargs << 'config'
+  cmdargs << 'config-conditional'
 
-  progress_message "Run 'make config' for #{origin}"
+  progress_message "Run options config for #{origin}"
   if ! system "cd #{portdir} && #{shelljoin(*cmdargs)}"
     warning_message "make config failed for #{origin}"
     raise ConfigError
