@@ -111,7 +111,6 @@ class PortsDB
   end
 
   def setup(alt_db_dir = nil, alt_ports_dir = nil, alt_db_driver = nil)
-    @db = nil
     set_ports_dir(alt_ports_dir)
     set_db_dir(alt_db_dir)
     set_db_driver(alt_db_driver)
@@ -195,7 +194,7 @@ class PortsDB
 
   def db_driver=(new_db_driver)
     begin
-      case new_db_driver || ENV['PORTS_DBDRIVER'] || 'bdb1_btree'
+      case new_db_driver || ENV['PORTS_DBDRIVER'] || 'bdb_btree'
       when 'bdb_btree'
 	@db_driver = :bdb_btree
       when 'bdb_hash', 'bdb'
