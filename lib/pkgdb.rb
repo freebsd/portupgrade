@@ -1,4 +1,4 @@
-# $Id: pkgdb.rb,v 1.4 2006/06/17 18:07:05 sem Exp $
+# $Id: pkgdb.rb,v 1.5 2006/06/17 18:21:27 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -118,7 +118,7 @@ class PkgDB
     @db_dir = File.expand_path(new_db_dir || ENV['PKG_DBDIR'] || '/var/db/pkg')
 
     @db_file = File.join(@db_dir, 'pkgdb.db')
-    @@lock_file = File.join(@db_dir, 'pkgdb.db.lock')
+    @@lock_file = Process.euid == 0 ? File.join(@db_dir, 'pkgdb.db.lock') : nil
     @fixme_file = ENV['PKG_FIXME_FILE'] || "/var/db/pkgdb.fixme"
     @db_filebase = @db_file.sub(/\.db$/, '')
     close_db
@@ -155,7 +155,7 @@ class PkgDB
 
   def db_driver=(new_db_driver)
     begin
-      case new_db_driver || ENV['PKG_DBDRIVER'] || 'bdb1_btree'
+      case new_db_driver || ENV['PKG_DBDRIVER'] || 'bdb_btree'
       when 'bdb_btree'
 	@db_driver = :bdb_btree
       when 'bdb_hash', 'bdb'
@@ -554,6 +554,7 @@ class PkgDB
   end
 
   def lock_db_on_read
+    return if @@lock_file.nil?
     count = 0
     while FileTest.exist?(@@lock_file)
       file = File.open(@@lock_file)
@@ -581,6 +582,7 @@ class PkgDB
   end
 
   def lock_db_on_write
+    return if @@lock_file.nil?
     count = 0
     while FileTest.exist?(@@lock_file)
       if count == 0
@@ -616,7 +618,7 @@ class PkgDB
     else
       if mode == 'w+'
 	File.unlink(@db_file) if File.exist?(@db_file)
-	db = DBM.open(@db_filebase, mode)
+	db = DBM.open(@db_filebase, mode.to_i)
       else
 	db = DBM.open(@db_filebase)
       end
