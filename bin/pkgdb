@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/13 12:59:00 $[1]
+MYDATE = %w$Date: 2006/06/30 20:27:42 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -670,7 +670,7 @@ end
 
 def guess_dep(dep, origin)
   if origin
-    pkgnames = tracing_deorigin(origin) || alt_dep(dep) || $pkgnames
+    pkgnames = tracing_deorigin(origin) || alt_dep(dep, origin) || $pkgnames
   else
     pkgnames = alt_dep(dep) || $pkgnames
   end
