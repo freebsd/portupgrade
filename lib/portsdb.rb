@@ -1,4 +1,4 @@
-# $Id: portsdb.rb,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+# $Id: portsdb.rb,v 1.2 2006/06/14 11:52:38 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -195,7 +195,7 @@ class PortsDB
 
   def db_driver=(new_db_driver)
     begin
-      case new_db_driver || ENV['PORTS_DBDRIVER'] || 'bdb1_btree'
+      case new_db_driver || ENV['PORTS_DBDRIVER'] || 'bdb_btree'
       when 'bdb_btree'
 	@db_driver = :bdb_btree
       when 'bdb_hash', 'bdb'
