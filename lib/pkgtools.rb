@@ -1,4 +1,4 @@
-# $Id: pkgtools.rb,v 1.2 2006/06/14 11:52:38 sem Exp $
+# $Id: pkgtools.rb,v 1.1.1.1.4.1 2006/06/30 19:58:37 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.0.1"
@@ -1151,3 +1151,5 @@ module PkgConfig
     :cmd_disable_rc, :cmd_enable_rc,
     :include_eval, :include_hash
 end
+
+init_pkgtools_global
