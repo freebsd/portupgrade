@@ -1,4 +1,4 @@
-.\" $Id: portupgrade.1,v 1.2 2006/06/15 15:54:30 sem Exp $
+.\" $Id: portupgrade.1,v 1.1.1.1 2006/06/13 12:59:01 sem Exp $
 .\"
 .Dd June 15, 2001
 .Dt PORTUPGRADE 1
@@ -9,7 +9,7 @@
 .Nd tools to upgrade installed packages or install new ones via ports or packages
 .Sh SYNOPSIS
 .Nm
-.Op Fl habcCDDefFijknNOpPPqrRsuvwWy
+.Op Fl habcCDDefFiknNOpPPqrRsuvwWy
 .Op Fl A Ar command
 .Op Fl B Ar command
 .Op Fl l Ar file
@@ -193,12 +193,6 @@ Do not read MOVED file.
 Turn on interactive mode.  You are asked for approval before each
 suggested installation or upgrade.  This option implies
 .Fl v .
-Pp
-.It Fl j
-.It Fl -jet-mode
-Turn on jet mode: do not run
-.Dq Li "make clean"
-for each port.
 .Pp
 .It Fl k
 .It Fl -keep-going

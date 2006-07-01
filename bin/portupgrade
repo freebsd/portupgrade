@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/13 12:59:01 $[1]
+MYDATE = %w$Date: 2006/06/29 18:02:12 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -163,6 +163,7 @@ def init_global
   $clean = true			# now cleaned by default
   $cleanup = true		# not cleaned up by default
   $distclean = 0
+  $emit_summaries = false
   $exclude_packages = []
   $fetch_only = false
   $fetch_recursive = false
@@ -253,6 +254,11 @@ usage: #{MYNAME} [-habcCDDfFiklnOpPPqrRsuvwWy] [-A command] [-B command]
 		    "Specified twice, do \"make distclean\" before each" << NEXTLINE <<
 		    "fetch or build") {
       $distclean += 1
+    }
+
+    opts.def_option("-e", "--emit-summaries",
+		    "Emit summary info after each port processing" << NEXTLINE ) {
+      |$emit_summaries|
     }
 
     opts.def_option("-f", "--force",
@@ -703,12 +709,14 @@ Environment Variables [default]:
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
       do_upgrade(pkgname)
+      progress_message "** Upgrade tasks #{upgrade_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
     end
 
     install_tasks.each do |origin| 
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, origin)
       do_install(origin)
+      progress_message "** Install tasks #{install_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
     end
 
     return result_proc.call
