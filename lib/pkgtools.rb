@@ -774,14 +774,7 @@ def timer_end(name, verbose = $verbose)
   start_time = $timer[name]
 
   time = end_time - start_time
-  days = time/86400
-  str_time = ""
-  if days.to_i > 0
-    str_time = "#{days.to_i} day"
-    str_time += "s" if days.to_i > 1
-    str_time += " and "
-  end
-  str_time += Time.at(time).utc.strftime("%T")
+  str_time = Time.at(time).utc.strftime("%T")
 
   if verbose
     progress_message "#{name} ended at: #{end_time.rfc2822} (consumed #{str_time})"

@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/30 20:27:42 $[1]
+MYDATE = %w$Date: 2006/06/13 12:59:00 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -610,7 +610,7 @@ def fix_dependencies(pkgname)
   end
 end
 
-def alt_dep(dep, origin = nil)
+def alt_dep(dep)
   hash = config_value(:ALT_PKGDEP) or return nil
 
   hash.each do |pat, alt|
@@ -621,30 +621,25 @@ def alt_dep(dep, origin = nil)
       next
     end
 
-    # pattern allowed both in origin and pkgname
-    if pat.index('/')
-      return nil if !origin || !File.fnmatch?(pat, origin)
-    elsif !File.fnmatch?(pat, dep)
-       return nil
-    end
-
-    case alt
-    when :delete, :skip
-      return [alt]
-    else
-      begin
-	alt = parse_pattern(alt)
-      rescue RegexpError => e
-	warning_message e.message.capitalize
-	next
-      end
-
-      pkgnames = $pkgdb.glob(alt, false)
-
-      if pkgnames.empty?
-	return nil
+    if File.fnmatch?(pat, dep)
+      case alt
+      when :delete, :skip
+	return [alt]
       else
-	return pkgnames
+	begin
+	  alt = parse_pattern(alt)
+	rescue RegexpError => e
+	  warning_message e.message.capitalize
+	  next
+	end
+
+	pkgnames = $pkgdb.glob(alt, false)
+
+	if pkgnames.empty?
+	  return nil
+	else
+	  return pkgnames
+	end
       end
     end
   end
@@ -670,7 +665,7 @@ end
 
 def guess_dep(dep, origin)
   if origin
-    pkgnames = tracing_deorigin(origin) || alt_dep(dep, origin) || $pkgnames
+    pkgnames = tracing_deorigin(origin) || alt_dep(dep) || $pkgnames
   else
     pkgnames = alt_dep(dep) || $pkgnames
   end
