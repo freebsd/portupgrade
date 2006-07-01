@@ -4,21 +4,37 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.1.5 (released 2006-07-01):
+
+* Try bdb driver first. If it's failed fall back to bdb1 and dbd afterwards.
+  Before the chain was bdb1->dbd, no bdb driver tried.
+
+* Disable running config for all ports. It should be moved to after
+  depedencies parsing and dependencies parsing should be rerun after config.
+
+* Fix portupgrade work when stdin closed. It allows to run portupgrade from
+  wrappers.
+
+* Do not lock pkgdb.db when runned not as root. No writting possible
+  anyway.
+
+* Other bugs fixes.
+
 portupgrade 2.1.4 (released 2006-06-18):
 
- * Add -e (--emit-summaries) option and show summary messages only when
-   the option defined or verbose mode is on.
+* Add -e (--emit-summaries) option and show summary messages only when
+  the option defined or verbose mode is on.
 
- * Allow origins in ALT_PKGDEP. This announced in pkgtools.conf
-   but did not work really.
+* Allow origins in ALT_PKGDEP. This announced in pkgtools.conf
+  but did not work really.
 
- * Run 'make config' before all operations unless -j (--jet-mode)
-   option specified.
+* Run 'make config' before all operations unless -j (--jet-mode)
+  option specified.
 
- * Add lock on operations with pkgdb.db. Now you can safe run a few
-   portupgrade(1).
+* Add lock on operations with pkgdb.db. Now you can safe run a few
+  portupgrade(1).
 
- * Bugs fixes.
+* Bugs fixes.
 
 portupgrade 2.1.3 (released 2006-06-11):
 
