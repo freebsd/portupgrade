@@ -1,4 +1,4 @@
-# $Id: Makefile 52 2006-01-01 06:26:59Z koma2 $
+# $Id: Makefile,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
 
 ETCDIR?=	${PREFIX}/etc
 
@@ -15,10 +15,6 @@ FILES=		pkgtools.conf
 
 FILESDIR?=	${ETCDIR}
 FILESNAME_pkgtools.conf=	pkgtools.conf.sample
-
-MANDIR=		${PREFIX}/man/man
-
-MAN5=		pkgtools.conf.5
 
 CLEANDIRS=	${BUILDDIR}
 
