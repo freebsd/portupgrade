@@ -1,4 +1,4 @@
-# $Id: Makefile 52 2006-01-01 06:26:59Z koma2 $
+# $Id: Makefile,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
 
 SCRIPTSDIR?=	${PREFIX}/sbin
 
@@ -17,23 +17,6 @@ LINKS=		${SCRIPTSDIR}/pkg_glob		${SCRIPTSDIR}/pkg_deinstall \
 		${SCRIPTSDIR}/pkgdb		${SCRIPTSDIR}/pkg_which \
 		${SCRIPTSDIR}/portupgrade	${SCRIPTSDIR}/portinstall \
 		${SCRIPTSDIR}/portsdb		${SCRIPTSDIR}/ports_glob
-
-MANDIR=		${PREFIX}/man/man
-
-MAN1=		pkg_deinstall.1 \
-		pkg_fetch.1 \
-		pkg_glob.1 \
-		pkg_sort.1 \
-		pkgdb.1 \
-		portcvsweb.1 \
-		portsclean.1 \
-		portsdb.1 \
-		portupgrade.1 \
-		portversion.1
-
-MLINKS=		pkgdb.1		pkg_which.1 \
-		portupgrade.1	portinstall.1 \
-		portsdb.1	ports_glob.1
 
 CLEANDIRS=	${BUILDDIR}
 

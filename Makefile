@@ -1,8 +1,9 @@
-# $Id: Makefile 73 2006-01-03 16:32:06Z koma2 $
+# $Id: Makefile,v 1.1.1.1 2006/06/13 12:58:59 sem Exp $
 
 SUBDIR=	bin \
 	etc \
 	lib \
+	man \
 	misc
 
 .include <bsd.subdir.mk>
