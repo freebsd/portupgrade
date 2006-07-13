@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/29 18:02:12 $[1]
+MYDATE = %w$Date: 2006/07/01 06:40:10 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -900,8 +900,7 @@ end
 def get_make_env(origin, is_new = false)
   $make_env_table ||= compile_config_table(config_value(:MAKE_ENV))
 
-  envset = lookup_config_table($make_env_table, origin, nil) or
-    return Array.new
+  envset = (lookup_config_table($make_env_table, origin, nil) or Array.new)
 
   make_env = $make_env.dup
   if make_env.empty?
