@@ -1,4 +1,4 @@
-# $Id: pkgdb.rb,v 1.5 2006/06/17 18:21:27 sem Exp $
+# $Id: pkgdb.rb,v 1.6 2006/06/30 19:13:03 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -118,8 +118,8 @@ class PkgDB
     @db_dir = File.expand_path(new_db_dir || ENV['PKG_DBDIR'] || '/var/db/pkg')
 
     @db_file = File.join(@db_dir, 'pkgdb.db')
-    @@lock_file = Process.euid == 0 ? File.join(@db_dir, 'pkgdb.db.lock') : nil
-    @fixme_file = ENV['PKG_FIXME_FILE'] || "/var/db/pkgdb.fixme"
+    @@lock_file = Process.euid == 0 ? '/var/run/pkgdb.db.lock' : nil
+    @fixme_file = ENV['PKG_FIXME_FILE'] || '/var/db/pkgdb.fixme'
     @db_filebase = @db_file.sub(/\.db$/, '')
     close_db
 
