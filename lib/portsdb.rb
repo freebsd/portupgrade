@@ -1,4 +1,4 @@
-# $Id: portsdb.rb,v 1.2 2006/06/14 11:52:38 sem Exp $
+# $Id: portsdb.rb,v 1.3 2006/06/30 19:03:39 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -539,10 +539,6 @@ class PortsDB
       s = @db[':pkgnames']
       s.is_a?(String) or raise TypeError, "missing key: pkgnames"
       @pkgnames = s.split.map { |n| PkgInfo.new(n) }
-
-      s = @db[':virtual_categories']
-      s.is_a?(String) or raise TypeError, "missing key: virtual_categories"
-      @virtual_categories = s.split
 
       @origins_by_categories = {}
       (@categories + @virtual_categories).each do |c|
