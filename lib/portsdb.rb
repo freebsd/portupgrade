@@ -1,4 +1,4 @@
-# $Id: portsdb.rb,v 1.3 2006/06/30 19:03:39 sem Exp $
+# $Id: portsdb.rb,v 1.4 2006/07/15 19:21:51 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -699,13 +699,31 @@ class PortsDB
       @categories = (real_categories - @ignore_categories).sort
       @virtual_categories = (all_categories - real_categories).sort
 
+      # db-4.x database does not keep fields with empty values
+      # work around for an empty INDEX bellow
+      if ! @virtual_categories.empty?
+	virtual_categories = @virtual_categories.join(' ')
+      else
+	virtual_categories = ' '
+      end
+      if ! @origins.empty?
+	origins = @origins.join(' ')
+      else
+	origins = ' '
+      end
+      if ! @pkgnames.empty?
+	pkgnames = @pkgnames.map { |n| n.to_s }.join(' ')
+      else
+	pkgnames = ' '
+      end
+
       @db[':categories'] = @categories.join(' ')
       STDERR.putc(?.)
-      @db[':virtual_categories'] = @virtual_categories.join(' ')
+      @db[':virtual_categories'] = virtual_categories
       STDERR.putc(?.)
-      @db[':origins'] = @origins.join(' ')
+      @db[':origins'] = origins
       STDERR.putc(?.)
-      @db[':pkgnames'] = @pkgnames.map { |n| n.to_s }.join(' ')
+      @db[':pkgnames'] = pkgnames
       STDERR.putc(?.)
       all_categories.each do |c|
 	@db['?' + c] = @origins_by_categories[c].join(' ')
