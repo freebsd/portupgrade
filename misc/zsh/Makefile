@@ -1,8 +1,12 @@
-# $Id: Makefile 52 2006-01-01 06:26:59Z koma2 $
+# $Id: Makefile,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
 
 FILES=	_pkgtools
 
-FILESDIR?=	${PREFIX}/share/zsh/site-functions
+.if !defined(ZSH_SITEFNDIR)
+ZSH_SITEFNDIR=	${PREFIX}/share/zsh/site-functions
+.endif
+
+FILESDIR?=	${ZSH_SITEFNDIR}
 
 beforeinstall:
 	mkdir -p ${FILESDIR}
