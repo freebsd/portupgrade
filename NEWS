@@ -4,6 +4,12 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.1.6 (released 2006-07-23):
+
+* Move all man pages into own one directory for easier maintain.
+
+* Bugs fixes.
+
 portupgrade 2.1.5 (released 2006-07-01):
 
 * Try bdb driver first. If it's failed fall back to bdb1 and dbd afterwards.
