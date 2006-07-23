@@ -1,4 +1,4 @@
-# $Id: pkgtools.rb,v 1.1.1.1.4.1 2006/06/30 19:58:37 sem Exp $
+# $Id: pkgtools.rb,v 1.1.1.1.2.1 2006/07/01 06:30:35 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.0.1"
@@ -486,10 +486,8 @@ alias xsystem! xsudo
 def logged_command(file, args)
   if !file  
     args
-  elsif STDIN.tty?
-    ['/usr/bin/script', '-qa', file, *args]
   else
-    ['/bin/sh', '-c', sprintf('%s >>%s 2>&1', shelljoin(*args), shelljoin(file))]
+    ['/usr/bin/script', '-qa', file, *args]
   end
 end
 
