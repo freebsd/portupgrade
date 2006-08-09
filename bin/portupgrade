@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/06/30 20:19:24 $[1]
+MYDATE = %w$Date: 2006/07/13 06:01:03 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1539,6 +1539,10 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
 
   Dir.chdir(portdir) {
     $fetch_cmd = `make -V FETCH_CMD`.chomp
+
+    if ! STDOUT.tty?
+      cmdargs << "FETCH_BEFORE_ARGS=-q"
+    end
 
     if $fetch_only
       cmdargs << '-DBATCH' << '-DPACKAGE_BUILDING'
