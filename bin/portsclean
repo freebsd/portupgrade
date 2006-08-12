@@ -28,7 +28,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/18 16:02:01 $[1]
+MYDATE = %w$Date: 2006/06/30 20:09:28 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -278,6 +278,10 @@ end
 
 def ldconfig_m(*dirs)
   msg = " --> Running ldconfig -m"
+
+  dirs.each do |d|
+    dirs.delete(d) if ! (File.exists?(d) && File.stat(d).directory?)
+  end
 
   case dirs.size
   when 0
