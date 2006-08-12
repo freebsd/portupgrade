@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/17 09:27:21 $[1]
+MYDATE = %w$Date: 2006/06/30 20:09:28 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -365,8 +365,6 @@ def fix_db_phase2()
       end
     else
       indep_pkgnames << pkgname
-
-      File.unlink(req_file) if File.exist?(req_file)
     end
   end
 
@@ -917,10 +915,6 @@ def fix_cycles(tsort)
 	  file = $pkgdb.pkg_required_by(b)
 
 	  filter_file(shelljoin('grep', '-v', "^#{Regexp.quote(a)}$"), file)
-
-	  if File.zero?(file)
-	    File.unlink(file)
-	  end
 
 	  puts 'Done.'
 	  break
