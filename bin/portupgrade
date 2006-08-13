@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/08/13 11:15:21 $[1]
+MYDATE = %w$Date: 2006/08/13 11:23:14 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1532,8 +1532,6 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
 
   progress_message msg
 
-  cmdargs << 'PORT_UPGRADE=yes' unless $is_new
-
   cmdargs << 'MASTER_SORT_REGEX=' << 'MASTER_SORT=' if retried
 
   cmdargs << "FETCH_CMD=#{$fetch_cmd}" if retried && ! $fetch_cmd.nil?
@@ -1660,8 +1658,6 @@ def install_port(origin, logfile = nil, is_new = false, *teardown_procs)
   end
 
   progress_message msg
-
-  cmdargs << 'PORT_UPGRADE=yes' unless $is_new
 
   if $package
     cmdargs << 'DEPENDS_TARGET=package'
