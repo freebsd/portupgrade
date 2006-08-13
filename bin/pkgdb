@@ -2,8 +2,9 @@
 # -*- ruby -*-
 #
 # Copyright (c) 2000-2004 Akinori MUSHA
-# All rights reserved.
 # Copyright (c) 2005, 2006 KOMATSU Shinichiro
+# Copyright (c) 2006 Sergey Matveychuk <sem@FreeBSD.org>
+#
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/30 20:09:28 $[1]
+MYDATE = %w$Date: 2006/08/12 19:07:50 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"

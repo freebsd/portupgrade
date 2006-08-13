@@ -1,6 +1,6 @@
-#!/usr/bin/env ruby
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
+# Copyright (c) 2006 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtsort.rb 52 2006-01-01 06:26:59Z koma2 $
+# $Id: pkgtsort.rb,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
 
 #
 # Topological Sorter
