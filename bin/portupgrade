@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/08/09 17:00:33 $[1]
+MYDATE = %w$Date: 2006/08/13 11:15:21 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -200,7 +200,7 @@ end
 
 def main(argv)
   usage = <<-"EOF"
-usage: #{MYNAME} [-habcCDDfFiklnOpPPqrRsuvwWy] [-A command] [-B command]
+usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
         [-L format] [-S command] [-x pkgname_glob]
         [[-o origin] [-m make_args] [-M make_env] pkgname_glob ...]
   EOF
