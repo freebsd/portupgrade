@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdbtools.rb,v 1.1 2006/08/13 10:29:03 sem Exp $
+# $Id: pkgdbtools.rb,v 1.2 2006/08/13 11:15:21 sem Exp $
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)
@@ -222,6 +222,6 @@ module PkgDBTools
   module_function :db_dir, :db_driver, :set_db_driver,
     :check_db_version, :open_db_for_read!, :open_db_for_update!,
     :open_db_for_rebuild!, :close_db
-  public :db_dir
+  public :db_dir, :close_db
 end
 
