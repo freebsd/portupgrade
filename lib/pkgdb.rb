@@ -1,12 +1,14 @@
-# $Id: pkgdb.rb,v 1.6 2006/06/30 19:13:03 sem Exp $
+# $Id: pkgdb.rb,v 1.7 2006/07/15 19:10:40 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
-require "pkgmisc"
+require 'pkgmisc'
+require 'pkgdbtools'
 
 class PkgDB
   include Singleton
   include Enumerable
+  include PkgDBTools
 
   DB_VERSION = [:FreeBSD, 7]
   # :db_version		=> DB_VERSION
@@ -36,6 +38,8 @@ class PkgDB
   }
 
   PREFIX = '/usr/local'
+
+  LOCK_FILE = '/var/run/pkgdb.db.lock'
 
   CMD = {
     :pkg_add			=> nil,
@@ -73,26 +77,15 @@ class PkgDB
   end
 
   def PkgDB.finalizer
-    Proc.new { 
-      PkgDB.remove_lock
+    Proc.new {
+      PkgDBTools.remove_lock(LOCK_FILE)
     }
-  end
-
-  # remove lock file if it exists and it's ours (unless forced)
-  def PkgDB.remove_lock(force = false)
-    if !@@lock_file.nil? && File.exist?(@@lock_file) &&
-      file = File.open(@@lock_file)
-
-      pid, mode = file.gets.split(' ')
-      file.close
-
-      File.unlink(@@lock_file) if pid.to_i == $$ || force
-    end
   end
 
   def initialize(*args)
     @db = nil
-    @@lock_file = nil
+    @lock_file = Process.euid == 0 ? LOCK_FILE : nil
+    @db_version = DB_VERSION
     ObjectSpace.define_finalizer(self, PkgDB.finalizer)
     setup(*args)
   end
@@ -104,21 +97,12 @@ class PkgDB
     self
   end
 
-  def db_dir()
-    unless @db_dir
-      set_db_dir(nil)	# initialize with the default value
-    end
-
-    @db_dir
-  end
-
   def db_dir=(new_db_dir)
     @abs_db_dir = nil
 
     @db_dir = File.expand_path(new_db_dir || ENV['PKG_DBDIR'] || '/var/db/pkg')
 
     @db_file = File.join(@db_dir, 'pkgdb.db')
-    @@lock_file = Process.euid == 0 ? '/var/run/pkgdb.db.lock' : nil
     @fixme_file = ENV['PKG_FIXME_FILE'] || '/var/db/pkgdb.fixme'
     @db_filebase = @db_file.sub(/\.db$/, '')
     close_db
@@ -144,63 +128,6 @@ class PkgDB
 
     @abs_db_dir
   end
-
-  def db_driver()
-    unless @db_driver
-      set_db_driver(nil)	# initialize with the default value
-    end
-
-    @db_driver
-  end
-
-  def db_driver=(new_db_driver)
-    begin
-      case new_db_driver || ENV['PKG_DBDRIVER'] || 'bdb_btree'
-      when 'bdb_btree'
-	@db_driver = :bdb_btree
-      when 'bdb_hash', 'bdb'
-	@db_driver = :bdb_hash
-      when 'bdb1_btree', 'btree'
-	@db_driver = :bdb1_btree
-      when 'bdb1_hash', 'hash', 'bdb1'
-	@db_driver = :bdb1_hash
-      else
-	@db_driver = :dbm_hash
-      end
-
-      case @db_driver
-      when :bdb_btree
-	next_driver = 'bdb1_btree'
-	require 'bdb'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => [0, 32 * 1024, 0]]
-      when :bdb_hash
-	next_driver = 'bdb1_hash'
-	require 'bdb'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => [0, 32 * 1024, 0]]
-      when :bdb1_btree
-	next_driver = 'dbm'
-	require 'bdb1'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => 32 * 1024]
-      when :bdb1_hash
-	next_driver = 'dbm'
-	require 'bdb1'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => 32 * 1024]
-      else
-	next_driver = nil
-	require 'dbm'
-      end
-    rescue LoadError
-      if next_driver.nil?
-	raise DBError, "No driver is available!"
-      end
-
-      new_db_driver = next_driver
-      retry
-    end
-
-    @db_driver
-  end
-  alias set_db_driver db_driver=
 
   def strip(path, installed_only = false)
     base = path.chomp('/')	# allow `pkgname/'
@@ -378,32 +305,8 @@ class PkgDB
     File.mtime(db_dir) rescue Time.at(0)
   end
 
-  def date_db_file
-    if @db
-      mtime = Marshal.load(@db[':mtime'])
-    elsif File.exist?(@db_file)
-      open_db_for_read!
-      mtime = Marshal.load(@db[':mtime'])
-      close_db
-    else
-      mtime = Time.at(0)
-    end
-
-    mtime
-  rescue => e
-    return Time.at(0)
-  end
-
   def up_to_date?
     date_db_file() >= date_db_dir()
-  end
-
-  def check_db_version
-    db_version = Marshal.load(@db[':db_version'])
-
-    db_version[0] == DB_VERSION[0] && db_version[1] >= DB_VERSION[1]
-  rescue => e
-    return false
   end
 
   def check_db
@@ -553,100 +456,6 @@ class PkgDB
     close_db
   end
 
-  def lock_db_on_read
-    return if @@lock_file.nil?
-    count = 0
-    while FileTest.exist?(@@lock_file)
-      file = File.open(@@lock_file)
-      pid, mode = file.gets.chomp.split(' ')
-      file.close
-      if mode == 'w' 
-	if count == 0
-	  puts "** Database file locked for writing. Waiting."
-	end
-	sleep 1
-	count += 1
-	if count > 120
-	  puts "** Timeout. Lock looks dead. Remove it."
-	  PkgDB.remove_lock(true)
-	end
-      else
-	# ignore read lock
-	break
-      end
-    end
-
-    file = File.open(@@lock_file, "w")
-    file.puts "#$$ r"
-    file.close
-  end
-
-  def lock_db_on_write
-    return if @@lock_file.nil?
-    count = 0
-    while FileTest.exist?(@@lock_file)
-      if count == 0
-	puts "** Database file locked. Waiting."
-      end
-      sleep 1
-      count += 1
-      if count > 120
-	puts "** Timeout. Lock looks dead. Remove it."
-	PkgDB.remove_lock(true)
-      end
-    end
-
-    file = File.open(@@lock_file, "w")
-    file.puts "#$$ w"
-    file.close
-  end
-
-  def unlock_db
-    PkgDB.remove_lock
-  end
-
-  def get_db(mode, perm)
-    case db_driver
-    when :bdb_btree
-      db = BDB::Btree.open @db_file, nil, mode, perm, *@db_params
-    when :bdb_hash
-      db = BDB::Hash.open @db_file, nil, mode, perm, *@db_params
-    when :bdb1_btree
-      db = BDB1::Btree.open @db_file, mode, perm, *@db_params
-    when :bdb1_hash
-      db = BDB1::Hash.open @db_file, mode, perm, *@db_params
-    else
-      if mode == 'w+'
-	File.unlink(@db_file) if File.exist?(@db_file)
-	db = DBM.open(@db_filebase, mode.to_i)
-      else
-	db = DBM.open(@db_filebase)
-      end
-    end
-    db
-  end
-
-  def open_db_for_read!
-    close_db
-
-    lock_db_on_read
-    @db = get_db('r', 0)
-  end
-
-  def open_db_for_update!
-    close_db
-
-    lock_db_on_write
-    @db = get_db('r+', 0664)
-  end
-
-  def open_db_for_rebuild!
-    close_db
-
-    lock_db_on_write
-    @db = get_db('w+', 0664)
-  end
-
   def open_db
     @db and return @db
 
@@ -681,14 +490,6 @@ class PkgDB
     end
 
     @db
-  end
-
-  def close_db
-    if @db
-      unlock_db
-      @db.close
-      @db = nil
-    end
   end
 
   def which_m(path)

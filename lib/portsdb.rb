@@ -6,10 +6,12 @@ begin
   require 'features/ruby18/file'
 rescue LoadError; end
 require 'pkgmisc'
+require 'pkgdbtools'
 
 class PortsDB
   include Singleton
   include Enumerable
+  include PkgDBTools
 
   DB_VERSION = [:FreeBSD, 3]
 
@@ -28,6 +30,8 @@ class PortsDB
   }
 
   MY_PORT = 'sysutils/portupgrade'
+
+  LOCK_FILE = '/var/run/portsdb.lock'
 
   attr_accessor :ignore_categories, :extra_categories, :moved
 
@@ -110,8 +114,17 @@ class PortsDB
     end
   end
 
+  def PortsDB.finalizer
+    Proc.new {
+      PkgDBTools.remove_lock(LOCK_FILE)
+    }
+  end
+
   def setup(alt_db_dir = nil, alt_ports_dir = nil, alt_db_driver = nil)
     @db = nil
+    @lock_file = Process.euid == 0 ? LOCK_FILE : nil
+    @db_version = DB_VERSION
+    ObjectSpace.define_finalizer(self, PortsDB.finalizer)
     set_ports_dir(alt_ports_dir)
     set_db_dir(alt_db_dir)
     set_db_driver(alt_db_driver)
@@ -247,14 +260,6 @@ class PortsDB
       portdir(make_var('INDEXFILE') || 'INDEX')
     @alt_index_files = config_value(:ALT_INDEX) || []
     @index_file
-  end
-
-  def db_dir()
-    unless @db_dir
-      set_db_dir(nil)	# initialize with the default value
-    end
-
-    @db_dir
   end
 
   def db_dir=(new_db_dir)
@@ -454,64 +459,6 @@ class PortsDB
     close_db
   end
 
-  def open_db_for_read!
-    close_db
-
-    case db_driver
-    when :bdb_btree
-      @db = BDB::Btree.open @db_file, nil, 'r', 0, *@db_params
-    when :bdb_hash
-      @db = BDB::Hash.open @db_file, nil, 'r', 0, *@db_params
-    when :bdb1_btree
-      @db = BDB1::Btree.open @db_file, 'r', 0, *@db_params
-    when :bdb1_hash
-      @db = BDB1::Hash.open @db_file, 'r', 0, *@db_params
-    else
-      @db = DBM.open(@db_filebase)
-    end
-  end
-
-  def open_db_for_update!
-    close_db
-
-    case db_driver
-    when :bdb_btree
-      @db = BDB::Btree.open @db_file, nil, 'r+', 0664, *@db_params
-    when :bdb_hash
-      @db = BDB::Hash.open @db_file, nil, 'r+', 0664, *@db_params
-    when :bdb1_btree
-      @db = BDB1::Btree.open @db_file, 'r+', 0664, *@db_params
-    when :bdb1_hash
-      @db = BDB1::Hash.open @db_file, 'r+', 0664, *@db_params
-    else
-      @db = DBM.open(@db_filebase)
-    end
-  end
-
-  def open_db_for_rebuild!
-    close_db
-
-    if File.exist?(rbo = @db_filebase + '.rbo')
-      STDERR.print "[INDEX.rbo is no longer needed.  Removing]"
-      File.unlink(rbo)
-    end
-
-    case db_driver
-    when :bdb_btree
-      @db = BDB::Btree.open @db_file, nil, 'w+', 0664, *@db_params
-    when :bdb_hash
-      @db = BDB::Hash.open @db_file, nil, 'w+', 0664, *@db_params
-    when :bdb1_btree
-      @db = BDB1::Btree.open @db_file, 'w+', 0664, *@db_params
-    when :bdb1_hash
-      @db = BDB1::Hash.open @db_file, 'w+', 0664, *@db_params
-    else
-      File.unlink(@db_file) if File.exist?(@db_file)
-
-      @db = DBM.open(@db_filebase, 0664)
-    end
-  end
-
   def open_db
     @db and return @db
 
@@ -564,13 +511,6 @@ class PortsDB
     raise DBError, 'database file error'
   end
 
-  def close_db
-    if @db
-      @db.close
-      @db = nil
-    end
-  end
-
   def date_index
     latest_mtime = File.mtime(index_file) rescue nil
     @alt_index_files.each do |f|
@@ -586,14 +526,6 @@ class PortsDB
 
   def up_to_date?
     d1 = date_db() and d2 = date_index() and d1 >= d2
-  end
-
-  def check_db_version
-    db_version = Marshal.load(@db[':db_version'])
-
-    db_version[0] == DB_VERSION[0] && db_version[1] == DB_VERSION[1]
-  rescue => e
-    return false
   end
 
   def select_db_dir(force = false)
@@ -699,31 +631,13 @@ class PortsDB
       @categories = (real_categories - @ignore_categories).sort
       @virtual_categories = (all_categories - real_categories).sort
 
-      # db-4.x database does not keep fields with empty values
-      # work around for an empty INDEX bellow
-      if ! @virtual_categories.empty?
-	virtual_categories = @virtual_categories.join(' ')
-      else
-	virtual_categories = ' '
-      end
-      if ! @origins.empty?
-	origins = @origins.join(' ')
-      else
-	origins = ' '
-      end
-      if ! @pkgnames.empty?
-	pkgnames = @pkgnames.map { |n| n.to_s }.join(' ')
-      else
-	pkgnames = ' '
-      end
-
       @db[':categories'] = @categories.join(' ')
       STDERR.putc(?.)
-      @db[':virtual_categories'] = virtual_categories
+      @db[':virtual_categories'] = @virtual_categories.join(' ')
       STDERR.putc(?.)
-      @db[':origins'] = origins
+      @db[':origins'] = @origins.join(' ')
       STDERR.putc(?.)
-      @db[':pkgnames'] = pkgnames
+      @db[':pkgnames'] = @pkgnames.map { |n| n.to_s }.join(' ')
       STDERR.putc(?.)
       all_categories.each do |c|
 	@db['?' + c] = @origins_by_categories[c].join(' ')
