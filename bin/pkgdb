@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/08/12 19:07:50 $[1]
+MYDATE = %w$Date: 2006/08/13 11:15:21 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -624,9 +624,9 @@ def alt_dep(dep, origin = nil)
 
     # pattern allowed both in origin and pkgname
     if pat.index('/')
-      return nil if !origin || !File.fnmatch?(pat, origin)
+      next if !origin || !File.fnmatch?(pat, origin)
     elsif !File.fnmatch?(pat, dep)
-      return nil
+      next
     end
 
     case alt
