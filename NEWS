@@ -4,6 +4,20 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.1.7 (released 2006-08-14):
+
+* Make fetch(1) quiet if stdout is not a tty.
+
+* Highlight summary messages with '**'.
+
+* Extract common code from pkgdb.rb and portdb.rb in pkgdbtools.rb.
+  So we have a common open/locking/close etc. procedures for both DBs.
+
+* Do not remove +REQUIRED_BY files when they are empty. pkg_delete(1)
+  works this way.
+
+* Bugs fixes.
+
 portupgrade 2.1.6 (released 2006-07-23):
 
 * Move all man pages into own one directory for easier maintain.
