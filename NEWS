@@ -14,6 +14,8 @@ portupgrade 2.1.3.3 (released 2006-08-23)
 * MFD: Do not pass PORT_UPGRADE as make(1) argument. It's redundant.
   An environment variable is enough.
 
+* MFD: Fix a bug when -M value was ignored in some cases.
+
 portupgrade 2.1.3.2 (released 2006-07-01)
 
 * MFD: Fix a bug with a time delta. When build took over 24 hour.
