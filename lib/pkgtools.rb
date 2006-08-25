@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.6 2006/07/15 20:37:35 sem Exp $
+# $Id: pkgtools.rb,v 1.7 2006/08/13 11:15:21 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.0.1"
@@ -1050,7 +1050,7 @@ module PkgConfig
 
     case OS_PLATFORM
     when 'i386', 'sparc64', 'amd64', 'ia64'
-      sprintf('http://pointyhat.FreeBSD.org/errorlogs/%s-%s-%s/',
+      sprintf('http://pointyhat.FreeBSD.org/errorlogs/%s-%s-packages-%s/',
 	      OS_PLATFORM, OS_MAJOR, run)
     else
       raise sprintf('There is no official package builder site yet for the %s platform.',
