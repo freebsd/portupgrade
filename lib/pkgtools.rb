@@ -1,7 +1,7 @@
-# $Id: pkgtools.rb,v 1.1.1.1.2.1 2006/07/01 06:30:35 sem Exp $
+# $Id: pkgtools.rb,v 1.1.1.1.2.2 2006/07/23 15:09:59 sem Exp $
 
 PREFIX = "/usr/local"
-Version = "2.0.1"
+Version = "2.1.3.3"
 
 begin
   require 'features/ruby18/file'
