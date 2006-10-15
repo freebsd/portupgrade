@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/08/13 11:23:14 $[1]
+MYDATE = %w$Date: 2006/08/13 11:42:22 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -165,6 +165,7 @@ def init_global
   $afterinstall = ''
   $all = false
   $backup_packages = false
+  $batch_mode = false
   $beforebuild = ''
   $clean = true			# now cleaned by default
   $cleanup = true		# not cleaned up by default
@@ -195,6 +196,7 @@ def init_global
   $upward_recursive = false
   $use_packages = false
   $use_packages_only = false
+  $without_env_upgrade = false
   $yestoall = false
 end
 
@@ -235,8 +237,14 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-b", "--backup-packages",
-		    "Keep backup packages of the old versions'") {
+		    "Keep backup packages of the old versions") {
       |$backup_packages|
+    }
+
+    opts.def_option("--batch",
+		    "Run an upgrading process in a batch mode" << NEXTLINE <<
+    		    "(with BATCH=yes)") {
+      |$batch_mode|
     }
 
     opts.def_option("-B", "--beforebuild=CMD",
@@ -292,7 +300,7 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-j", "--jet-mode",
-		    "Turn on jet mode: do not run options config for each port") {
+		    "Turn on jet mode. Is not implemented yet") {
       |$jet_mode|
     }
 
@@ -436,6 +444,11 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
 		    "Do not \"make clean\" after each installation") {
       |nocleanup|
       $cleanup = false
+    }
+
+    opts.def_option("--without-env-upgrade",
+      		    "Do not set PORT_UPGRADE=yes in an environment") {
+      |$without_env_upgrade|
     }
 
     opts.def_option("-x", "--exclude=GLOB",
@@ -977,7 +990,7 @@ def get_make_env(origin, is_new = false)
     make_env << 'env'
   end
 
-  make_env << 'PORT_UPGRADE=yes' unless is_new
+  make_env << 'PORT_UPGRADE=yes' unless is_new or $without_env_upgrade
 
   envset.each do |envs|
     if envs.is_a?(Proc)
@@ -1522,6 +1535,8 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
   make_env = get_make_env(origin, is_new)
   cmdargs = make_env << 'make'
 
+  cmdargs << 'BATCH=yes' if $batch_mode
+
   make_args = shellwords($make_args)
 
   unless make_args.empty?
@@ -1649,6 +1664,8 @@ def install_port(origin, logfile = nil, is_new = false, *teardown_procs)
   make_env = get_make_env(origin, is_new)
   cmdargs = make_env << 'make'
 
+  cmdargs << 'BATCH=yes' if $batch_mode
+
   make_args = shellwords($make_args)
 
   unless make_args.empty?
@@ -1727,7 +1744,7 @@ def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
 
   timer_start(time_key = "Installation of #{pkgname}")
 
-  unless $is_new
+  unless $is_new or $without_env_upgrade
     cmdargs = ['/usr/bin/env', 'PORT_UPGRADE=yes']
   else
     cmdargs = []
@@ -1815,8 +1832,15 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
   # sleep 1	# pkg_deinstall does the timestamp hack
   $pkgdb_update = false
 
-  system!('/usr/bin/env', 'PORT_UPGRADE=yes', PkgDB::command(:pkg_deinstall), 
-	  '-f' + extra_flags, pkgname) or
+  unless $without_env_upgrade
+    cmd = ['/usr/bin/env', 'PORT_UPGRADE=yes']
+  else
+    cmd = []
+  end
+
+  cmd << PkgDB::command(:pkg_deinstall) << '-f' + extra_flags << pkgname
+
+  system!(*cmd) or
     raise UninstallError, "uninstall error"
 
   proc { |behavior|
