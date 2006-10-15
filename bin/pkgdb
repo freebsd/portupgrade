@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/08/13 11:15:21 $[1]
+MYDATE = %w$Date: 2006/08/14 17:13:30 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -433,7 +433,7 @@ def fix_origin(pkg)
 
     if origin && prompt_yesno("Browse CVSweb for the port's history?", false)
       Dir.chdir($ports_dir) {
-	system(PkgDB::command(:portcvsweb), File.join(origin, "Makefile"))
+	xsystem(PkgDB::command(:portcvsweb), File.join(origin, "Makefile"))
       }
     end
 
@@ -498,7 +498,7 @@ def fix_origin(pkg)
       if prompt_yesno("Unregister #{pkgname} keeping the installed files intact?", false)
 	puts "--> Unregistering #{pkgname}"
 
-	if system('/bin/rm', '-rf', pkg.pkgdir)
+	if xsystem('/bin/rm', '-rf', pkg.pkgdir)
 	  $pkgdb.update_db
 
 	  puts "--> Done."
@@ -514,7 +514,7 @@ def fix_origin(pkg)
       # pkg_deinstall will update the pkgdb
       $pkgdb.close_db
 
-      if system(PkgDB::command(:pkg_deinstall), pkgname)
+      if xsystem(PkgDB::command(:pkg_deinstall), pkgname)
 	puts "--> Done."
 	return nil
       else
@@ -584,7 +584,7 @@ def fix_dependencies(pkgname)
       next if fix == :skip
 
       if fix == :install
-	system(PkgDB::command(:portinstall), origin)
+	xsystem(PkgDB::command(:portinstall), origin)
 	fix = dep
       end
 
@@ -974,10 +974,10 @@ def fix_duplicates(org_hash)
 	backup = $pkgdb.pkg_contents(newpkgname) + '.' + oldpkgname
 
 	puts "  --> Saving the #{oldpkgname}'s +CONTENTS file as #{backup}"
-	system('/bin/cp', '-pf', contents, backup) or next
+	xsystem('/bin/cp', '-pf', contents, backup) or next
 
 	puts "  --> Unregistering #{oldpkgname}"
-	system('/bin/rm', '-rf', oldpkgdir) or next
+	xsystem('/bin/rm', '-rf', oldpkgdir) or next
 
 	puts "  --> Done."
 
