@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.6 2006/08/13 10:29:03 sem Exp $
+# $Id: portsdb.rb,v 1.7 2006/08/13 11:15:21 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -447,7 +447,7 @@ class PortsDB
     end
 
     if fetch
-      system "cd #{abs_ports_dir} && make fetchindex && cp $(make -V INDEXFILE) #{tmp}"
+      system "cd #{abs_ports_dir} && make fetchindex && cp $(make -V INDEXDIR)/$(make -V INDEXFILE) #{tmp}"
     else
       system "cd #{abs_ports_dir} && make INDEXFILE=INDEX.tmp index && mv INDEX.tmp #{tmp}"
     end
