@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/08/13 11:42:22 $[1]
+MYDATE = %w$Date: 2006/10/15 12:54:17 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1559,7 +1559,7 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
     end
 
     if $fetch_only
-      cmdargs << '-DBATCH' << '-DPACKAGE_BUILDING'
+      cmdargs << '-DBATCH'
 
       if $distclean >= 2
 	script!(logfile, *(cmdargs.dup << 'distclean')) or
