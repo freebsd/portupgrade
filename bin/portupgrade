@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/10/15 12:54:17 $[1]
+MYDATE = %w$Date: 2006/11/04 12:39:42 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -981,10 +981,6 @@ def get_make_args(origin, pkgname = nil)
 end
 
 def get_make_env(origin, is_new = false)
-  $make_env_table ||= compile_config_table(config_value(:MAKE_ENV))
-
-  envset = (lookup_config_table($make_env_table, origin, nil) or Array.new)
-
   make_env = $make_env.dup
   if make_env.empty?
     make_env << 'env'
@@ -992,16 +988,9 @@ def get_make_env(origin, is_new = false)
 
   make_env << 'PORT_UPGRADE=yes' unless is_new or $without_env_upgrade
 
-  envset.each do |envs|
-    if envs.is_a?(Proc)
-      make_env << String.new(envs.call(origin)) rescue nil
-    elsif envs.is_a?(Array)
-      envs.each do |entry|
-	make_env << entry
-      end
-    else
-      make_env << envs
-    end
+  config_env = config_make_env(origin)
+  if !config_env.empty?
+    make_env << confg_env
   end
   make_env
 end
