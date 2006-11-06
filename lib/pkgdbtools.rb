@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdbtools.rb,v 1.2 2006/08/13 11:15:21 sem Exp $
+# $Id: pkgdbtools.rb,v 1.3 2006/08/13 11:37:29 sem Exp $
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)
@@ -36,6 +36,7 @@ module PkgDBTools
       pid, mode = file.gets.split(' ')
       file.close
 
+      # Remove only our lock file unless force
       File.unlink(file_name) if pid.to_i == $$ || force
     end
   end
@@ -121,6 +122,11 @@ module PkgDBTools
     return if @lock_file.nil?
     count = 0
     while FileTest.exist?(@lock_file)
+      if Time::now() - File.stat(@lock_file).mtime > 120
+	puts "** Stale lock file was found. Removed."
+	PkgDBTools.remove_lock(@lock_file, true)
+	break
+      end
       file = File.open(@lock_file)
       pid, mode = file.gets.chomp.split(' ')
       file.close
@@ -131,7 +137,7 @@ module PkgDBTools
 	sleep 1
 	count += 1
 	if count > 120
-	  puts "** Timeout. Lock looks dead. Remove it."
+	  puts "** Timeout. The lock looks dead. Remove it."
 	  PkgDBTools.remove_lock(@lock_file, true)
 	end
       else
@@ -149,13 +155,18 @@ module PkgDBTools
     return if @lock_file.nil?
     count = 0
     while FileTest.exist?(@lock_file)
+      if Time::now() - File.stat(@lock_file).mtime > 120
+	puts "** Stale lock file was found. Removed."
+	PkgDBTools.remove_lock(@lock_file, true)
+	break
+      end
       if count == 0
 	puts "** Database file locked. Waiting."
       end
       sleep 1
       count += 1
       if count > 120
-	puts "** Timeout. Lock looks dead. Remove it."
+	puts "** Timeout. The lock looks dead. Remove it."
 	PkgDBTools.remove_lock(@lock_file, true)
       end
     end
