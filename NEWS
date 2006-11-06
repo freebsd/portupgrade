@@ -4,6 +4,22 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.2.0 (released 2006-11-06):
+
+* Respect INDEXDIR after fetching INDEX (Andrew Pantyukhin <sat@FreeBSD.org>)
+
+* Add --batch opition.
+
+* Add --without-env-upgrade option.
+
+* Remove -DPACKAGE_BUILDING (it was in fetch-only mode) because it's only
+  for build cluster, not users. (Pointed out by kris@FreeBSD.org)
+
+* Add detection of stale lock files. They can stay if one of tools suddenly
+  terminated.
+
+* Improve pkgdb -F - respect OPTIONS and pkgtools.conf settings.
+
 portupgrade 2.1.7 (released 2006-08-14):
 
 * Make fetch(1) quiet if stdout is not a tty.
@@ -14,7 +30,8 @@ portupgrade 2.1.7 (released 2006-08-14):
   So we have a common open/locking/close etc. procedures for both DBs.
 
 * Do not remove +REQUIRED_BY files when they are empty. pkg_delete(1)
-  works this way.
+  works this way. (Requested by: Jeremy Messenger <mezz@FreeBSD.org>,
+  Doug Barton <dougb@FreeBSD.org>)
 
 * Bugs fixes.
 
