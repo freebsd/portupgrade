@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.10 2006/10/15 09:27:28 sem Exp $
+# $Id: pkgtools.rb,v 1.11 2006/11/06 13:02:56 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.1.8"
@@ -151,10 +151,10 @@ def config_make_args(origin, pkgname = nil)
   }.join(' ')
 end
 
-def config_make_env(origin)
+def config_make_env(origin, pkgname = nil)
   $make_env_table ||= compile_config_table(config_value(:MAKE_ENV))
 
-  envset = (lookup_config_table($make_env_table, origin, nil) or Array.new)
+  envset = (lookup_config_table($make_env_table, origin, pkgname) or Array.new)
 
   make_env = ""
 
