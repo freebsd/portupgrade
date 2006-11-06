@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/08/14 17:13:30 $[1]
+MYDATE = %w$Date: 2006/10/15 11:33:56 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -560,12 +560,29 @@ rescue => e
   nil
 end
 
+def get_real_run_deps(pkgname)
+  origin = PkgInfo::new(pkgname).origin
+  make_env = config_make_env(origin, pkgname)
+  make_args = config_make_args(origin, pkgname)
+
+  make_env.unshift("env") if !make_env.empty?
+
+  `cd #{$portsdb.portdir(origin)} && #{shelljoin(*make_env)} make #{shelljoin(*make_args)} run-depends-list`.map { |line|
+    $portsdb::strip(line.chomp, true)
+  }.compact
+end
+
 def fix_dependencies(pkgname)
   deps = $pkgdb.pkgdep(pkgname, true) or return
 
   deps.each do |dep, origin|
     unless $pkgnames.include?(dep)
       puts "Stale dependency: #{pkgname} -> #{dep} (#{origin}):"
+      unless get_real_run_deps(pkgname).include?(origin)
+	puts "-> Deleted. (irrelevant)"
+	modify_pkgdep(pkgname, dep, :delete)
+	next
+      end
 
       if config_held?(pkgname) && !$force
 	puts "-> Ignored. (the package is held; specify -f to force)"
