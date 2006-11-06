@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/11/04 12:39:42 $[1]
+MYDATE = %w$Date: 2006/11/06 13:02:56 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -990,7 +990,7 @@ def get_make_env(origin, is_new = false)
 
   config_env = config_make_env(origin)
   if !config_env.empty?
-    make_env << confg_env
+    make_env.concat(config_env)
   end
   make_env
 end
