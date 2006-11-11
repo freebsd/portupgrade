@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.7 2006/08/13 11:15:21 sem Exp $
+# $Id: portsdb.rb,v 1.8 2006/10/15 09:11:49 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -80,6 +80,12 @@ class PortsDB
 #    end
   end
 
+  class MOVEDError < StandardError
+#    def message
+#      "MOVED file error"
+#    end
+  end
+
   class MovedElement
     attr_reader :to, :date, :why, :seq
     def initialize(to, date, why, seq)
@@ -106,6 +112,10 @@ class PortsDB
 	    next if /^[#[:space:]]/ =~ line
 
 	    moved_from, moved_to, date, why = line.chomp.split('|')
+
+	    if moved_from.nil? || moved_to.nil? || date.nil? || why.nil?
+	      raise MOVEDError, "MOVED file format error"
+	    end
 
 	    moved_to.empty? and moved_to = nil
 
