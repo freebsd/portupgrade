@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/11/06 15:58:43 $[1]
+MYDATE = %w$Date: 2006/11/12 11:16:34 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -169,6 +169,7 @@ def init_global
   $beforebuild = ''
   $clean = true			# now cleaned by default
   $cleanup = true		# not cleaned up by default
+  $current_pkgname = ''
   $distclean = 0
   $emit_summaries = false
   $exclude_packages = []
@@ -300,7 +301,7 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-j", "--jet-mode",
-		    "Turn on jet mode. Is not implemented yet") {
+		    "Turn on jet mode. It is not implemented yet") {
       |$jet_mode|
     }
 
@@ -447,7 +448,7 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("--without-env-upgrade",
-      		    "Do not set PORT_UPGRADE=yes in an environment") {
+      		    "Do not set UPGRADE_PORT and UPGRADE_TOOL variables" << NEXTLINE << "in an environment") {
       |$without_env_upgrade|
     }
 
@@ -752,10 +753,12 @@ Environment Variables [default]:
     upgrade_tasks.each do |pkgname|
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
+      $current_pkgname = pkgname
       do_upgrade(pkgname)
       progress_message "** Upgrade tasks #{upgrade_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
     end
 
+    $current_pkgname = ''
     install_tasks.each do |origin| 
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, origin)
@@ -986,7 +989,10 @@ def get_make_env(origin, is_new = false)
     make_env << 'env'
   end
 
-  make_env << 'PORT_UPGRADE=yes' unless is_new or $without_env_upgrade
+  unless is_new or $without_env_upgrade
+    make_env << 'UPGRADE_TOOL=portupgrade'
+    make_env << 'UPGRADE_PORT='+$current_pkgname
+  end
 
   config_env = config_make_env(origin)
   if !config_env.empty?
@@ -1734,7 +1740,8 @@ def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
   timer_start(time_key = "Installation of #{pkgname}")
 
   unless $is_new or $without_env_upgrade
-    cmdargs = ['/usr/bin/env', 'PORT_UPGRADE=yes']
+    cmdargs = ['/usr/bin/env', 'UPGRADE_TOOL=portupgrade',
+      'UPGRADE_PORT='+pkgname]
   else
     cmdargs = []
   end
@@ -1822,7 +1829,8 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
   $pkgdb_update = false
 
   unless $without_env_upgrade
-    cmd = ['/usr/bin/env', 'PORT_UPGRADE=yes']
+    cmd = ['/usr/bin/env', 'UPGRADE_TOOL=portupgrade',
+      'UPGRADE_PORT='+pkgname]
   else
     cmd = []
   end
