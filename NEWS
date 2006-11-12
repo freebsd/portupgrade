@@ -4,6 +4,17 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.2.1 (released 2006-11-12):
+
+* Raise an error when MOVED file has a wrong format instead of a weird
+  ruby error. (Reported by kris@FreeBSD.org).
+
+* Fix a bug when -P always treated as -PP.
+
+* Change PORT_UPGRADE environment variable with UPGRADE_PORT (contains
+  a package name for updating port) and UPGRADE_TOOL=portupgrade.
+  Discussed with skv@FreeBSD.org and DougB@FreeBSD.org.
+
 portupgrade 2.2.0 (released 2006-11-06):
 
 * Respect INDEXDIR after fetching INDEX (Andrew Pantyukhin <sat@FreeBSD.org>)
