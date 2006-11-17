@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/11/12 11:16:34 $[1]
+MYDATE = %w$Date: 2006/11/12 18:58:56 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -448,7 +448,7 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("--without-env-upgrade",
-      		    "Do not set UPGRADE_PORT and UPGRADE_TOOL variables" << NEXTLINE << "in an environment") {
+      		    "Do not set UPGRADE_* environment variables") {
       |$without_env_upgrade|
     }
 
@@ -989,9 +989,8 @@ def get_make_env(origin, is_new = false)
     make_env << 'env'
   end
 
-  unless is_new or $without_env_upgrade
-    make_env << 'UPGRADE_TOOL=portupgrade'
-    make_env << 'UPGRADE_PORT='+$current_pkgname
+  unless is_new
+    make_env.concat(get_upgrade_env_vars($current_pkgname))
   end
 
   config_env = config_make_env(origin)
@@ -999,6 +998,19 @@ def get_make_env(origin, is_new = false)
     make_env.concat(config_env)
   end
   make_env
+end
+
+def get_upgrade_env_vars(pkgname)
+  env_vars = Array.new
+
+  unless $without_env_upgrade
+    env_vars << 'UPGRADE_TOOL=portupgrade'
+    env_vars << 'UPGRADE_PORT='+pkgname
+    pkgname =~ %r{^.*-(.*)$}
+    env_vars << 'UPGRADE_PORT_VER='+$1
+  end
+
+  env_vars
 end
 
 def get_beforebuild_command(origin)
@@ -1740,8 +1752,8 @@ def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
   timer_start(time_key = "Installation of #{pkgname}")
 
   unless $is_new or $without_env_upgrade
-    cmdargs = ['/usr/bin/env', 'UPGRADE_TOOL=portupgrade',
-      'UPGRADE_PORT='+pkgname]
+    cmdargs = [ '/usr/bin/env' ]
+    cmdargs.concat(get_upgrade_env_vars(pkgname))
   else
     cmdargs = []
   end
@@ -1829,8 +1841,8 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
   $pkgdb_update = false
 
   unless $without_env_upgrade
-    cmd = ['/usr/bin/env', 'UPGRADE_TOOL=portupgrade',
-      'UPGRADE_PORT='+pkgname]
+    cmd = [ '/usr/bin/env' ]
+    cmd.concat(get_upgrade_env_vars(pkgname))
   else
     cmd = []
   end
