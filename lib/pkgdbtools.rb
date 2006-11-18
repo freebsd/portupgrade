@@ -25,13 +25,14 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdbtools.rb,v 1.3 2006/08/13 11:37:29 sem Exp $
+# $Id: pkgdbtools.rb,v 1.4 2006/11/06 09:43:56 sem Exp $
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)
     return if file_name.nil?
 
-    if !file_name.nil? && File.exist?(file_name) && file = File.open(file_name)
+    if !file_name.nil? && File.exist?(file_name) && !File.zero?(file_name) &&
+      file = File.open(file_name)
 
       pid, mode = file.gets.split(' ')
       file.close
@@ -127,6 +128,7 @@ module PkgDBTools
 	PkgDBTools.remove_lock(@lock_file, true)
 	break
       end
+      sleep 1 if File.zero?(@lock_file)
       file = File.open(@lock_file)
       pid, mode = file.gets.chomp.split(' ')
       file.close
