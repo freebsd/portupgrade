@@ -4,6 +4,18 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.2.2 (released 2007-11-18):
+
+* Add UPGRADE_PORT_VER environment variable. Discussed with DougB@ and
+  skv@.
+
+* Add description of UPGRADE_* environment variables in a portupgrade
+  man page.
+
+* Add checking size of a lock file before trying read it. It protects us
+  from a ruby error if the file is empty by some reason.
+  (Reported by: Lowell Gilbert <freebsd-ports-local@be-well.ilk.org>)
+
 portupgrade 2.2.1 (released 2006-11-12):
 
 * Raise an error when MOVED file has a wrong format instead of a weird
