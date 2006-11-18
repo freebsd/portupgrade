@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/11/12 18:58:56 $[1]
+MYDATE = %w$Date: 2006/11/17 20:57:21 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -989,7 +989,7 @@ def get_make_env(origin, is_new = false)
     make_env << 'env'
   end
 
-  unless is_new
+  unless is_new or $without_env_upgrade
     make_env.concat(get_upgrade_env_vars($current_pkgname))
   end
 
@@ -1003,7 +1003,7 @@ end
 def get_upgrade_env_vars(pkgname)
   env_vars = Array.new
 
-  unless $without_env_upgrade
+  unless pkgname.empty?
     env_vars << 'UPGRADE_TOOL=portupgrade'
     env_vars << 'UPGRADE_PORT='+pkgname
     pkgname =~ %r{^.*-(.*)$}
