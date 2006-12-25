@@ -1,4 +1,4 @@
-.\" $Id: pkgdb.1,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+.\" $Id: pkgdb.1,v 1.1 2006/07/02 15:23:38 sem Exp $
 .\"
 .Dd September 22, 2001
 .Dt PKGDB 1
@@ -151,9 +151,6 @@ and
 that do not belong to any package:
 .Pp
 .Dl find /usr/local /usr/X11R6 -type f | xargs pkg_which -v | fgrep '?'
-.Pp
-As you see, you can omit version numbers.  If multiple versions are
-installed, each of them is upgraded unless they share a port origin.
 .El
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
