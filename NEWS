@@ -4,7 +4,14 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.2.2 (released 2007-11-18):
+portupgrade 2.2.3 (released 2007-02-16):
+
+* Fixes reflected last changes in the ports tree.
+
+* Hide pkgdb -F smartness under -d switch. It makes life harder when
+  there are a lot of ports with a lot of depends. (Asked by marcus@).
+
+portupgrade 2.2.2 (released 2006-11-18):
 
 * Add UPGRADE_PORT_VER environment variable. Discussed with DougB@ and
   skv@.
