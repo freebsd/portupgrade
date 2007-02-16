@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/10/15 11:33:56 $[1]
+MYDATE = %w$Date: 2006/11/06 16:24:02 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -43,17 +43,19 @@ def init_global
   $fix_db = false
   $force = false
   $automatic = false
+  $check_depends = false;
   $noconfig = false
   $quiet = false
   $quieter = false
   #$sanity_check = true
   $temp_dir = ""
   $update_db = false
+  $origins = Hash.new
 end
 
 def main(argv)
   usage = <<-"EOF"
-usage: #{MYNAME} [-hafFQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_pkgname/] [file ...]
+usage: #{MYNAME} [-hadfFfjQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_pkgname/] [file ...]
     EOF
 
   banner = <<-"EOF"
@@ -93,6 +95,10 @@ usage: #{MYNAME} [-hafFQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_pkg
       rescue => e
 	STDERR.puts e.message
       end unless dry_parse
+    }
+
+    opts.def_option("-d", "--check-depends", "When do fixing the package DB (-F), check#{NEXTLINE}depends against a current ports tree") {
+      |$check_depends|
     }
 
     opts.def_option("-f", "--force", "Force;#{NEXTLINE}Specified with -u, update database#{NEXTLINE}regardless of timestamps#{NEXTLINE}Specified with -F, fix held packages too") {
@@ -561,15 +567,18 @@ rescue => e
 end
 
 def get_real_run_deps(pkgname)
-  origin = PkgInfo::new(pkgname).origin
-  make_env = config_make_env(origin, pkgname)
-  make_args = config_make_args(origin, pkgname)
+  unless $origins.has_key?(pkgname)
+    origin = PkgInfo::new(pkgname).origin
+    make_env = config_make_env(origin, pkgname)
+    make_args = config_make_args(origin, pkgname)
 
-  make_env.unshift("env") if !make_env.empty?
+    make_env.unshift("env") if !make_env.empty?
 
-  `cd #{$portsdb.portdir(origin)} && #{shelljoin(*make_env)} make #{shelljoin(*make_args)} run-depends-list`.map { |line|
-    $portsdb::strip(line.chomp, true)
-  }.compact
+    $origins[pkgname] = `cd #{$portsdb.portdir(origin)} && #{shelljoin(*make_env)} make #{shelljoin(*make_args)} run-depends-list`.map { |line|
+      $portsdb::strip(line.chomp, true)
+    }.compact
+  end
+  $origins[pkgname]
 end
 
 def fix_dependencies(pkgname)
@@ -578,7 +587,7 @@ def fix_dependencies(pkgname)
   deps.each do |dep, origin|
     unless $pkgnames.include?(dep)
       puts "Stale dependency: #{pkgname} -> #{dep} (#{origin}):"
-      unless get_real_run_deps(pkgname).include?(origin)
+      unless $check_depends && get_real_run_deps(pkgname).include?(origin)
 	puts "-> Deleted. (irrelevant)"
 	modify_pkgdep(pkgname, dep, :delete)
 	next
