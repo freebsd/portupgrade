@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.8 2006/10/15 09:11:49 sem Exp $
+# $Id: portsdb.rb,v 1.9 2006/11/11 19:59:24 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -56,7 +56,7 @@ class PortsDB
     "vietnamese"	=> "vi-",
   }
 
-  MY_PORT = 'sysutils/portupgrade'
+  MY_PORT = 'ports-mgmt/portupgrade'
 
   LOCK_FILE = '/var/run/portsdb.lock'
 
@@ -387,8 +387,8 @@ class PortsDB
   end
 
   def subdirs(dir)
-    %x"fgrep -v bsd.port.subdir.mk #{dir}/Makefile |
-       make -f - -V SUBDIR 2> /dev/null".split.select { |i|
+    %x"fgrep SUBDIR #{dir}/Makefile | sed -e 's/SUBDIR +=//'
+       2> /dev/null".split.select { |i|
       File.directory?(File.join(dir, i))
     }.sort
   end

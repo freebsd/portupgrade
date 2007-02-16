@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2006/11/17 20:57:21 $[1]
+MYDATE = %w$Date: 2006/11/18 18:10:10 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1594,7 +1594,7 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
       end
 
       if $sudo && Process.euid != 0
-	dep_cmdargs = cmdargs.dup << 'fetch-depends' << 'build-depends' << 'lib-depends' << 'misc-depends'
+	dep_cmdargs = cmdargs.dup << 'fetch-depends' << 'build-depends' << 'lib-depends'
 
 	if not system(shelljoin(*dep_cmdargs) + ' DEPENDS_TARGET="-n nonexistent_target" >/dev/null 2>&1')
 	  script!(logfile, *dep_cmdargs) or
