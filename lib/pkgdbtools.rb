@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdbtools.rb,v 1.5 2006/11/18 17:57:57 sem Exp $
+# $Id$
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)

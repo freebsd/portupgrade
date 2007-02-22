@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.16 2006/11/18 18:12:37 sem Exp $
+# $Id$
 
 PREFIX = "/usr/local"
 Version = "2.2.2"

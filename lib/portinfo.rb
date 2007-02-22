@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portinfo.rb,v 1.2 2006/08/13 11:15:21 sem Exp $
+# $Id$
 
 require 'portsdb'
 require 'pkginfo'

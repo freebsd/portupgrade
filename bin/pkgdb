@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/16 10:11:40 $[1]
+MYDATE = %w$Date: 2007/02/22 13:36:34 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"

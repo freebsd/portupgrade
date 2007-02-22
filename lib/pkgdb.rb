@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdb.rb,v 1.9 2006/08/13 11:15:21 sem Exp $
+# $Id$
 
 require 'singleton'
 require 'pkgtsort'

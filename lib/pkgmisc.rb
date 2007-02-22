@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgmisc.rb,v 1.2 2006/08/13 11:15:21 sem Exp $
+# $Id$
 
 begin
   require 'features/ruby18/dir'	# for Dir.chdir(dir) { ... }

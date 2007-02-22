@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.10 2007/02/16 09:09:32 sem Exp $
+# $Id$
 
 require 'singleton'
 require 'tempfile'
