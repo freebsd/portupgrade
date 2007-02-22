@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
-# Copyright (c) 2006 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2006,2007 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdbtools.rb,v 1.4 2006/11/06 09:43:56 sem Exp $
+# $Id: pkgdbtools.rb,v 1.5 2006/11/18 17:57:57 sem Exp $
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)

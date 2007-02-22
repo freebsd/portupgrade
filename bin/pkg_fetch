@@ -2,7 +2,7 @@
 # -*- ruby -*-
 #
 # Copyright (c) 2000-2004 Akinori MUSHA
-# Copyright (c) 2006 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2006,2007 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2006/06/30 20:09:27 $[1]
+MYDATE = %w$Date: 2006/08/13 11:15:21 $[1]
 MYNAME = File.basename($0)
 
 require "fileutils"

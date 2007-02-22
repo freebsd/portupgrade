@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
-# Copyright (c) 2006 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2006,2007 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.15 2006/11/12 19:00:05 sem Exp $
+# $Id: pkgtools.rb,v 1.16 2006/11/18 18:12:37 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.2.2"

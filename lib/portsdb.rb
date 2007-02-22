@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
-# Copyright (c) 2006 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2006,2007 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.9 2006/11/11 19:59:24 sem Exp $
+# $Id: portsdb.rb,v 1.10 2007/02/16 09:09:32 sem Exp $
 
 require 'singleton'
 require 'tempfile'

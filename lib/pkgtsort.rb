@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
-# Copyright (c) 2006 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2006,2007 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtsort.rb,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+# $Id: pkgtsort.rb,v 1.2 2006/08/13 11:15:21 sem Exp $
 
 #
 # Topological Sorter
