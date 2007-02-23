@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/16 10:11:40 $[1]
+MYDATE = %w$Date: 2007/02/22 13:36:34 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -43,8 +43,10 @@ def init_global
   $fix_db = false
   $force = false
   $automatic = false
-  $check_depends = false;
+  $check_lost = false;
+  $interactive = false;
   $noconfig = false
+  $omit_check = false;
   $quiet = false
   $quieter = false
   #$sanity_check = true
@@ -55,7 +57,7 @@ end
 
 def main(argv)
   usage = <<-"EOF"
-usage: #{MYNAME} [-hadfFfjQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_pkgname/] [file ...]
+usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_pkgname/] [file ...]
     EOF
 
   banner = <<-"EOF"
@@ -97,24 +99,31 @@ usage: #{MYNAME} [-hadfFfjQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_
       end unless dry_parse
     }
 
-    opts.def_option("-d", "--check-depends", "When do fixing the package DB (-F), check#{NEXTLINE}depends against a current ports tree") {
-      |$check_depends|
-    }
-
     opts.def_option("-f", "--force", "Force;#{NEXTLINE}Specified with -u, update database#{NEXTLINE}regardless of timestamps#{NEXTLINE}Specified with -F, fix held packages too") {
       |$force|
     }
 
     opts.def_option("-F", "--fix", "Fix the package database interactively") {
       |$fix_db|
+      $interactive = true if ! $automatic
     }
 
     opts.def_option("-a", "--auto", "Turn on automatic mode when -F is also specified") {
       |$automatic|
+      $interactive = false if $fix_db
     }
 
     opts.def_option("--autofix", "Shorthand of --auto --fix (-aF)") {
       $automatic = $fix_db = true
+    }
+
+    opts.def_option("-i", "--interactive",
+		    "Turn on interactive mode") {
+      |$interactive|
+    }
+
+    opts.def_option("-L", "--fix-lost", "Check and restore lost dependencies#{NEXTLINE}against the ports tree") {
+      |$check_lost|
     }
 
     opts.def_option("-o", "--origin=PKGNAME[=ORIGIN]", "Look up or change the origin of the given#{NEXTLINE}package") {
@@ -140,9 +149,9 @@ usage: #{MYNAME} [-hadfFfjQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new_
       end
     }
 
-#    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
-#      $sanity_check = false
-#    }
+    opts.def_option("-O", "--omit-check", "Specified with -F, turn off checks#{NEXTLINE}dependencies against the ports tree. Useful#{NEXTLINE}if you need a speed-up") {
+      $omit_check = false
+    }
 
     opts.def_option("-Q", "--quiet", "Do not write anything to stdout;#{NEXTLINE}Specified twice, stderr neither") {
       if !$quiet
@@ -237,9 +246,9 @@ Environment Variables [default]:
 	$pkgdb.open_db	# let it check the DB version
       end
 
-      if $fix_db
-	fix_db()
-      end
+      check_lost_deps() if $check_lost
+
+      fix_db() if $fix_db
 
       list = []
       
@@ -275,6 +284,63 @@ Environment Variables [default]:
   0
 end
 
+def get_real_run_deps(pkgname)
+  unless $origins.has_key?(pkgname)
+    origin = PkgInfo::new(pkgname).origin
+    make_env = config_make_env(origin, pkgname)
+    make_args = config_make_args(origin, pkgname)
+
+    make_env.unshift("env") if !make_env.empty?
+
+    puts "Disclose depends for #{pkgname}" if $verbose
+
+    $origins[pkgname] = Hash.new
+    `cd #{$portsdb.portdir(origin)} && #{shelljoin(*make_env)} make #{shelljoin(*make_args)} package-depends-list`.map { |line|
+      a = line.chomp.split(/ /)
+      $origins[pkgname].store(a[0], a[2])
+    }.compact
+  end
+  $origins[pkgname]
+end
+
+def check_lost_deps()
+  fix_db_init()
+  stty_sane if $interactive
+
+  puts "Look for lost dependencies:"
+
+  $pkgnames.each do |pkgname|
+    deps = $pkgdb.pkgdep(pkgname, true) or return
+    real_deps = get_real_run_deps(pkgname)
+
+    print "#{pkgname}: "
+
+    lost = real_deps.values - deps.values
+    if ! lost.empty?
+      puts "found"
+      lost.each do |origin|
+	puts "  #{origin}"
+      end
+      if $interactive
+	next if not prompt_yesno("Fix?", true)
+      end
+      dep = ""
+      lost.each do |origin|
+	real_deps.each do |d,o|
+	  if o == origin
+	    dep = d
+	    break
+	  end
+	end
+	modify_pkgdep(pkgname, dep, :add, origin)
+      end
+      puts "-> Fixed."
+    else
+      puts "ok"
+    end
+  end
+end
+
 def fix_db
   progress_message "Checking the package registry database"
 
@@ -287,9 +353,7 @@ def fix_db
     end
   end
 
-  if $interactive
-    stty_sane
-  end
+  stty_sane if $interactive
 
   fix_db_init()
   fix_db_phase1()
@@ -566,28 +630,13 @@ rescue => e
   nil
 end
 
-def get_real_run_deps(pkgname)
-  unless $origins.has_key?(pkgname)
-    origin = PkgInfo::new(pkgname).origin
-    make_env = config_make_env(origin, pkgname)
-    make_args = config_make_args(origin, pkgname)
-
-    make_env.unshift("env") if !make_env.empty?
-
-    $origins[pkgname] = `cd #{$portsdb.portdir(origin)} && #{shelljoin(*make_env)} make #{shelljoin(*make_args)} run-depends-list`.map { |line|
-      $portsdb::strip(line.chomp, true)
-    }.compact
-  end
-  $origins[pkgname]
-end
-
 def fix_dependencies(pkgname)
   deps = $pkgdb.pkgdep(pkgname, true) or return
 
   deps.each do |dep, origin|
     unless $pkgnames.include?(dep)
       puts "Stale dependency: #{pkgname} -> #{dep} (#{origin}):"
-      unless $check_depends && get_real_run_deps(pkgname).include?(origin)
+      if !$omit_check && !get_real_run_deps(pkgname).include?(origin)
 	puts "-> Deleted. (irrelevant)"
 	modify_pkgdep(pkgname, dep, :delete)
 	next
