@@ -28,7 +28,7 @@
 # $Id$
 
 PREFIX = "/usr/local"
-Version = "2.2.2"
+Version = "2.2.4"
 
 begin
   require 'features/ruby18/file'
@@ -645,10 +645,13 @@ def grep_q_file(re, file)
 end
 
 # raises StandardError
-def modify_pkgdep(pkgname, olddep, newdep, neworigin = nil)
+def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
+  pkgver_re = %r{-\d\S*$}
   file = $pkgdb.pkg_contents(pkgname)
 
-  grep_q_file(/^@pkgdep[[:space:]]+#{Regexp.quote(olddep)}$/, file) or return
+  if ! newdep == :add
+    grep_q_file(/^@pkgdep[[:space:]]+#{Regexp.quote(dep)}$/, file) or return
+  end
 
   case newdep
   when :delete
@@ -657,64 +660,109 @@ def modify_pkgdep(pkgname, olddep, newdep, neworigin = nil)
     neworigin ||= $pkgdb.origin(newdep)
   end
 
-  lines = []
+  content = File.open(file)
 
-  File.open(file) do |f|
-    pkgdeps = Set.new
+  pkgdeps = Set.new
 
-    deporigin = nil	# what to do with the next DEPORIGIN
+  deporigin = nil	# what to do with the next DEPORIGIN
 
-    f.each do |line|
-      case line
-      when /^@pkgdep\s+(\S+)/
-	deporigin = :keep
+  head_lines = []
+  depends_lines = []
+  tail_lines = []
 
-	pkgdep = $1
+  pkgdep_undeleted = false
+  deporigin_undeleted = false
+  last_correct = false
 
-	if pkgdeps.include?(pkgdep)	# remove duplicates
-	  deporigin = :delete
-	  next
-	end
+  content.each do |line|
+    case line
+    when /^@pkgdep\s+(\S+)/
+      deporigin = :keep
 
-	pkgdeps << pkgdep
+      pkgdep = $1
 
-	if $1 == olddep
-	  if newdep == :delete
-	    lines << "@comment DELETED:pkgdep #{pkgdep}\n"
-	    deporigin = :commentout
-	  else
-	    lines << "@pkgdep #{newdep}\n"
-
-	    if neworigin
-	      lines << "@comment DEPORIGIN:#{neworigin}\n"
-	    end
-
-	    deporigin = :delete
-
-	    pkgdeps << newdep
-	  end
-	else
-	  lines << line
-	end
-      when /^@comment\s+DEPORIGIN:(\S+)/
-	case deporigin
-	when :commentout
-	  lines << "@comment DELETED:DEPORIGIN:#{$1}\n"
-	when :keep
-	  lines << line
- 	else # :delete, nil
-	  # no output
-	end
-
-	deporigin = nil
-      else
-	lines << line
-
-	deporigin = nil
+      if pkgdeps.include?(pkgdep)	# remove duplicates
+	deporigin = :delete
+	next
       end
+
+      pkgdeps << pkgdep
+
+      if $1 == dep
+	if newdep == :delete
+	  depends_lines << "@comment DELETED:pkgdep #{pkgdep}\n"
+	  deporigin = :commentout
+	else
+	  depends_lines << "@pkgdep #{newdep}\n"
+
+	  if neworigin
+	    depends_lines << "@comment DEPORIGIN:#{neworigin}\n"
+	  end
+
+	  deporigin = :delete
+
+	  pkgdeps << newdep
+	end
+      else
+	depends_lines << line
+      end
+    when /^@comment\s+DEPORIGIN:(\S+)/
+      case deporigin
+      when :commentout
+	depends_lines << "@comment DELETED:DEPORIGIN:#{$1}\n"
+      when :keep
+	depends_lines << line
+      else # :delete, nil
+	# no output
+      end
+
+      deporigin = nil
+    when /^@comment\s+DELETED:(pkgdep |DEPORIGIN:)(\S+)/
+      # Undelete it if requested
+      if newdep == :add
+	keyword = $1
+	data = $2
+	if keyword == "pkgdep " && 
+	  		data.sub(pkgver_re,'') == dep.sub(pkgver_re,'')
+	  depends_lines << "@pkgdep #{dep}\n"
+	  pkgdep_undeleted = true
+	  last_correct = true
+	  next
+	elsif keyword == "DEPORIGIN:" && data == neworigin
+	  # Undelete DEPORIGIN only if we sure the last line is correct
+	  if last_correct
+	    depends_lines << "@comment DEPORIGIN:#{neworigin}\n"
+	    deporigin_undeleted = true
+	    next
+	  end
+	end
+	depends_lines << line
+      else
+	depends_lines << line
+      end
+    else
+      if depends_lines.empty?
+	head_lines << line
+      else
+	tail_lines << line
+      end
+
+      deporigin = nil
+      last_correct = false
     end
   end
 
+  if newdep == :add && (!pkgdep_undeleted || !deporigin_undeleted)
+    # Remove partly undeleted entry
+    if pkgdep_undeleted
+      depends_lines.delete_if { |line| line == "@pkgdep #{dep}\n" }
+    end
+    # and just add correct lines
+    depends_lines << "@pkgdep #{dep}\n"
+    depends_lines << "@comment DEPORIGIN:#{neworigin}\n"
+  end
+
+  lines = head_lines + depends_lines + tail_lines
   w = Tempfile.new(File.basename(file))
   w.print(*lines)
   w.close

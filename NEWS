@@ -4,7 +4,19 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.2.3 (released 2007-02-16):
+portupgrade 2.2.4 (released 2007-02-23):
+
+* [pkgdb] Fix a bug when some dependencies could lost.
+
+* [pkgdb] -L to allow users fix dependencies those was lost with the bug
+  mentioned above.
+
+* [pkgdb] -i turns interactive mode on.
+
+* [pkgdb] Add -O option to turn off dependencies check instead of
+  -d option, that turned it on.
+
+portupgrade 2.2.3 (released 2007-02-16, never released in ports):
 
 * Fixes reflected last changes in the ports tree.
 

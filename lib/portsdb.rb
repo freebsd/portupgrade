@@ -49,6 +49,8 @@ class PortsDB
     "hebrew"		=> "iw-",
     "hungarian"		=> "hu-",
     "japanese"		=> "ja-",
+    "polish"		=> "pl-",
+    "portuguese"	=> "pt-",
     "korean"		=> "ko-",
     "portuguese"	=> "pt-",
     "russian"		=> "ru-",
@@ -234,63 +236,6 @@ class PortsDB
 
     @abs_ports_dir
   end
-
-  def db_driver()
-    unless @db_driver
-      set_db_driver(nil)	# initialize with the default value
-    end
-
-    @db_driver
-  end
-
-  def db_driver=(new_db_driver)
-    begin
-      case new_db_driver || ENV['PORTS_DBDRIVER'] || 'bdb_btree'
-      when 'bdb_btree'
-	@db_driver = :bdb_btree
-      when 'bdb_hash', 'bdb'
-	@db_driver = :bdb_hash
-      when 'bdb1_btree', 'btree'
-	@db_driver = :bdb1_btree
-      when 'bdb1_hash', 'hash', 'bdb1'
-	@db_driver = :bdb1_hash
-      else
-	@db_driver = :dbm_hash
-      end
-
-      case @db_driver
-      when :bdb_btree
-	next_driver = 'bdb1_btree'
-	require 'bdb'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => [0, 32 * 1024, 0]]
-      when :bdb_hash
-	next_driver = 'bdb1_hash'
-	require 'bdb'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => [0, 32 * 1024, 0]]
-      when :bdb1_btree
-	next_driver = 'dbm'
-	require 'bdb1'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => 32 * 1024]
-      when :bdb1_hash
-	next_driver = 'dbm'
-	require 'bdb1'
-	@db_params = ["set_pagesize" => 1024, "set_cachesize" => 32 * 1024]
-      else
-	next_driver = nil
-	require 'dbm'
-      end
-    rescue LoadError
-      if next_driver.nil?
-	raise DBError, "No driver is available!"
-      end
-
-      new_db_driver = next_driver
-      retry
-    end
-
-    @db_driver
-  end
-  alias set_db_driver db_driver=
 
   def index_file()
     @index_file ||= ENV['PORTS_INDEX'] ||

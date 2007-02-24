@@ -9,7 +9,7 @@
 .Nd tools to manage and search the package database
 .Sh SYNOPSIS
 .Nm
-.Op Fl ahfFQQquv
+.Op Fl ahfFiLOQQquv
 .Op Fl o Ar pkgname
 .Op Fl s Ar /old/new/
 .Nm pkg_which
@@ -107,9 +107,22 @@ fix "held" packages too.
 .It Fl -fix
 Interactively fix the package registry database.
 .Pp
+.It Fl i
+.It Fl -interactive
+Turn on interactive mode.
+.Pp
+.It Fl L
+.It Fl -fix-lost
+Check and restore lost dependencies against the ports tree.
+.Pp
 .It Fl o Ar PKGNAME
 .It Fl -origin Ar PKGNAME
 Look up the origin of the given package in the package database.
+.Pp
+.It Fl O
+.It Fl -omit-check
+Specified with -F, turn off check dependencies against the ports tree.
+Useful if you need a speed-up.
 .Pp
 .It Fl Q
 .It Fl -quiet
@@ -203,6 +216,7 @@ was taken from
 .Nx .
 .Sh AUTHORS
 .An Akinori MUSHA Aq knu@iDaemons.org
+.An Sergey Matveychuk Aq sem@FreeBSD.org
 .Sh BUGS
 .Pp
 Sometimes a database may get corrupt, and the pkgtools commands may
