@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.10 2007/02/16 09:09:32 sem Exp $
+# $Id: portsdb.rb,v 1.11 2007/02/22 13:36:34 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -49,6 +49,8 @@ class PortsDB
     "hebrew"		=> "iw-",
     "hungarian"		=> "hu-",
     "japanese"		=> "ja-",
+    "polish"		=> "pl-",
+    "portuguese"	=> "pt-",
     "korean"		=> "ko-",
     "portuguese"	=> "pt-",
     "russian"		=> "ru-",
