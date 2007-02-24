@@ -4,6 +4,12 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.3.0 (released 2007-0X-XX):
+
+* [portupgrade] At last all dependencies are tracked by portupgrade
+
+*
+
 portupgrade 2.2.4 (released 2007-02-23):
 
 * [pkgdb] Fix a bug when some dependencies could lost.

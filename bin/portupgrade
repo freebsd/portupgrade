@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/02/16 09:09:32 $[1]
+MYDATE = %w$Date: 2007/02/22 13:36:34 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -612,6 +612,11 @@ Environment Variables [default]:
 	  $origin = nil
 
 	  found = true
+
+	  # Track unistalled ports is appeared after updating
+	  upgrade_tasks.each do |task|
+	    install_tasks |= get_uninstalled_depends($pkgdb.origin(task))
+	  end
 	}
 
 	next if found
@@ -682,9 +687,20 @@ Environment Variables [default]:
 	  $task_options[origin] = {
 	    :make_args => make_args
 	  }
+	  # Track all uninstalled
+	  get_uninstalled_depends(origin).each do |dep|
+	    make_args = get_make_args(dep)
+	    make_env = get_make_env(dep)
+
+	    install_tasks << dep
+	    $task_options[dep] = {
+	      :make_args => make_args
+	    }
+	  end
 
 	  if $upward_recursive
-	    $portsdb.all_depends_list!(origin, shelljoin(*make_env), make_args).each do |o|
+	    get_all_depends(origin).each do |o|
+	      puts "*>#{o}"
 	      make_args = get_make_args(o)
 
 	      if pkgnames = $pkgdb.deorigin(o)
@@ -697,13 +713,13 @@ Environment Variables [default]:
 		  } unless $task_options.include?(p)
 		end
 	      else
-		# XXX: needs to be aware of :extract, :patch, :configure, etc. before enabling this.
-		# install_tasks << o
-		# $task_options[o] = {
-		#   :make_args => make_args
-		#   :origin => o,
-		#   :dependency => origin
-		# } unless $task_options.include?(o)
+		puts "*->#{o}"
+		install_tasks << o
+		$task_options[o] = {
+		  :make_args => make_args,
+		  :origin => o,
+		  :dependency => origin
+		} unless $task_options.include?(o)
 	      end
 	    end
 	  end
@@ -750,14 +766,6 @@ Environment Variables [default]:
 #      end
 #    end
 
-    upgrade_tasks.each do |pkgname|
-      ctask += 1
-      setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
-      $current_pkgname = pkgname
-      do_upgrade(pkgname)
-      progress_message "** Upgrade tasks #{upgrade_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
-    end
-
     $current_pkgname = ''
     install_tasks.each do |origin| 
       ctask += 1
@@ -766,12 +774,74 @@ Environment Variables [default]:
       progress_message "** Install tasks #{install_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
     end
 
+    upgrade_tasks.each do |pkgname|
+      ctask += 1
+      setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
+      $current_pkgname = pkgname
+      do_upgrade(pkgname)
+      progress_message "** Upgrade tasks #{upgrade_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
+    end
+
     return result_proc.call
   end
 ensure
   stty_sane unless $results.empty?
 
   timer_end("Session")
+end
+
+# Returns:
+#      Set: all recursive depends list
+def get_all_depends(origin, parents_list = nil)
+  depends_vars = %w{FETCH_DEPENDS EXTRACT_DEPENDS PATCH_DEPENDS
+		      BUILD_DEPENDS LIB_DEPENDS RUN_DEPENDS}
+
+  depends = Set.new
+  parents_list = Set.new if parents_list.nil?
+  return nil if parents_list.include?(origin)
+  parents_list.add(origin)
+
+  portdir = $portsdb.portdir(origin)
+
+  make_env = get_make_env(origin)
+  cmdargs = make_env << 'make'
+
+  cmdargs.concat(shellwords($make_args))
+
+  `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')} 2>&1`.each do |line|
+      line.split(/\s+/).each do |dep|
+	dep.sub!(/.*?:/,'')
+	if dep.rindex(':') != nil
+	  (dep, target) = dep.split(':')
+	  next if target != "install"
+	end
+	depends.add($portsdb.strip(dep)) if !dep.empty?
+      end
+  end
+
+  children_deps = Set.new
+  depends.each do |dep|
+    children_deps = get_all_depends(dep, parents_list)
+    if children_deps.nil?
+      next
+    else
+      depends.merge(children_deps)
+    end
+  end
+
+  depends
+end
+
+def get_uninstalled_depends(origin)
+  uninstalled = Array.new
+
+  get_all_depends(origin).each do |dep|
+    if !$pkgdb.deorigin(dep)
+      uninstalled.push(dep)
+    end
+  end
+  
+  uninstalled
 end
 
 # raises:
