@@ -412,6 +412,16 @@ class PkgDB
     STDERR.printf "- %d packages found (-%d +%d) ",
       @installed_pkgs.size, deleted_pkgs.size, new_pkgs.size
 
+    if @installed_pkgs.size == 0
+      STDERR.puts " nothing to do]"
+      @db[':mtime'] = Marshal.dump(Time.now)
+      @db[':origins'] = ' '
+      @db[':pkgnames'] = ' '
+      @db[':db_version'] = Marshal.dump(DB_VERSION)
+
+      return true
+    end
+
     unless deleted_pkgs.empty?
       STDERR.print '(...)'
 
