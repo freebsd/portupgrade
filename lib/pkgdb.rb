@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdb.rb,v 1.9 2006/08/13 11:15:21 sem Exp $
+# $Id: pkgdb.rb,v 1.10 2007/02/22 13:36:34 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -411,6 +411,16 @@ class PkgDB
 
     STDERR.printf "- %d packages found (-%d +%d) ",
       @installed_pkgs.size, deleted_pkgs.size, new_pkgs.size
+
+    if @installed_pkgs.size == 0
+      STDERR.puts " nothing to do]"
+      @db[':mtime'] = Marshal.dump(Time.now)
+      @db[':origins'] = ' '
+      @db[':pkgnames'] = ' '
+      @db[':db_version'] = Marshal.dump(DB_VERSION)
+
+      return true
+    end
 
     unless deleted_pkgs.empty?
       STDERR.print '(...)'
