@@ -4,6 +4,19 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.2.5 (released 2007-02-26):
+
+* [pkgdb] Fix issues with ghostscript-afpl vs. ghostscript-gnu,
+  apache13 vs. apache13+mod-ssl, etc. when -F or -L. The ports must be
+  described in ALT_PKGDEP section of pkgtools.conf.
+
+* [pkgdb] Do not make broken pkgdb.db if no ports installed. nanobsd needs it.
+  (Asked by Nick Hibma <n_hibma@...>)
+
+* [pkgdb.rb] Speed-up autofix() - add -O option for pkgdb -aF execution.
+
+* [pkgtools.conf] Describe PKG_SUFX variable. (Submitted by Pavel Gubin).
+
 portupgrade 2.2.4 (released 2007-02-23):
 
 * [pkgdb] Fix a bug when some dependencies could lost.
