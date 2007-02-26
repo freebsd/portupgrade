@@ -862,7 +862,7 @@ class PkgDB
   end
 
   def autofix!(less_quiet = true)
-    xsystem!(PkgDB::command(:pkgdb), '-aF' << (less_quiet ? 'Q' : 'QQ'))
+    xsystem!(PkgDB::command(:pkgdb), '-aFO' << (less_quiet ? 'Q' : 'QQ'))
   end
 
   def recurse(pkgname, recurse_down = false, recurse_up = false, sanity_check = false)
