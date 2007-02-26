@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/02/26 14:36:59 $[1]
+MYDATE = %w$Date: 2007/02/26 14:43:00 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -170,6 +170,7 @@ def init_global
   $clean = true			# now cleaned by default
   $cleanup = true		# not cleaned up by default
   $current_pkgname = ''
+  $depends = Hash.new
   $distclean = 0
   $emit_summaries = false
   $exclude_packages = []
@@ -796,55 +797,60 @@ def get_all_depends(origin, parents_list = nil)
   depends_vars = %w{FETCH_DEPENDS EXTRACT_DEPENDS PATCH_DEPENDS
 		      BUILD_DEPENDS LIB_DEPENDS RUN_DEPENDS}
 
-  depends = Set.new
+  unless $depends.has_key?(origin)
+    depends = Set.new
 
-  first = false
-  if parents_list.nil?
-    parents_list = Set.new
-    STDERR.print "[Gathering depends for #{origin} "
-    first = true
-  end
-  return nil if parents_list.include?(origin)
-  parents_list.add(origin)
+    first = false
+    if parents_list.nil?
+      parents_list = Set.new
+      STDERR.print "[Gathering depends for #{origin} "
+      first = true
+    end
+    return nil if parents_list.include?(origin)
+    parents_list.add(origin)
 
-  portdir = $portsdb.portdir(origin)
+    portdir = $portsdb.portdir(origin)
 
-  make_env = get_make_env(origin)
-  cmdargs = make_env << 'make'
+    make_env = get_make_env(origin)
+    cmdargs = make_env << 'make'
 
-  cmdargs.concat(shellwords($make_args))
+    cmdargs.concat(shellwords($make_args))
 
-  `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')} 2>&1`.each do |line|
-      line.split(/\s+/).each do |dep|
-	dep.sub!(/.*?:/,'')
-	if dep.rindex(':') != nil
-	  (dep, target) = dep.split(':')
-	  next if target != "install"
+    `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')} 2>&1`.each do |line|
+	line.split(/\s+/).each do |dep|
+	  dep.sub!(/.*?:/,'')
+	  if dep.rindex(':') != nil
+	    (dep, target) = dep.split(':')
+	    next if target != "install"
+	  end
+	  depends.add($portsdb.strip(dep)) if !dep.empty?
 	end
-	depends.add($portsdb.strip(dep)) if !dep.empty?
-      end
-  end
+    end
 
-  STDERR.print '.'*depends.length if depends.length > 0
+    STDERR.print '.'*depends.length if depends.length > 0
 
-  children_deps = Set.new
-  depends.each do |dep|
-    children_deps = get_all_depends(dep, parents_list)
+    children_deps = Set.new
+    depends.each do |dep|
+      children_deps.merge(get_all_depends(dep, parents_list))
+    end
     if children_deps.nil?
       next
     else
       depends.merge(children_deps)
     end
-  end
 
-  STDERR.puts ' done]' if first
-  depends
+    STDERR.puts ' done]' if first
+    $depends[origin] = depends
+  else
+    $depends[origin]
+  end
 end
 
 def get_uninstalled_depends(origin)
   uninstalled = Array.new
 
   get_all_depends(origin).each do |dep|
+    next if alt_dep('', dep)
     if !$pkgdb.deorigin(dep)
       uninstalled.push(dep)
     end

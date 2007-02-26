@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.17 2007/02/22 13:36:34 sem Exp $
+# $Id: pkgtools.rb,v 1.18 2007/02/23 16:02:59 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.2.4"
@@ -642,6 +642,48 @@ def grep_q_file(re, file)
   end
 
   system '/usr/bin/egrep', '-q', pat, file
+end
+
+def alt_dep(dep, origin = nil)
+  hash = config_value(:ALT_PKGDEP) or return nil
+
+  hash.each do |pat, alt|
+    begin
+      pat = parse_pattern(pat)
+    rescue RegexpError => e
+      warning_message e.message.capitalize
+      next
+    end
+
+    # pattern allowed both in origin and pkgname
+    if pat.index('/')
+      next if !origin || !File.fnmatch?(pat, origin)
+    elsif !File.fnmatch?(pat, dep)
+      next
+    end
+
+    case alt
+    when :delete, :skip
+      return [alt]
+    else
+      begin
+	alt = parse_pattern(alt)
+      rescue RegexpError => e
+	warning_message e.message.capitalize
+	next
+      end
+
+      pkgnames = $pkgdb.glob(alt, false)
+
+      if pkgnames.empty?
+	return nil
+      else
+	return pkgnames
+      end
+    end
+  end
+
+  nil
 end
 
 # raises StandardError

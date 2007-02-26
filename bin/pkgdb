@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/26 12:51:33 $[1]
+MYDATE = %w$Date: 2007/02/26 13:39:02 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -690,48 +690,6 @@ def fix_dependencies(pkgname)
       ($req_hash[dep] ||= {})[pkgname] = true
     end
   end
-end
-
-def alt_dep(dep, origin = nil)
-  hash = config_value(:ALT_PKGDEP) or return nil
-
-  hash.each do |pat, alt|
-    begin
-      pat = parse_pattern(pat)
-    rescue RegexpError => e
-      warning_message e.message.capitalize
-      next
-    end
-
-    # pattern allowed both in origin and pkgname
-    if pat.index('/')
-      next if !origin || !File.fnmatch?(pat, origin)
-    elsif !File.fnmatch?(pat, dep)
-      next
-    end
-
-    case alt
-    when :delete, :skip
-      return [alt]
-    else
-      begin
-	alt = parse_pattern(alt)
-      rescue RegexpError => e
-	warning_message e.message.capitalize
-	next
-      end
-
-      pkgnames = $pkgdb.glob(alt, false)
-
-      if pkgnames.empty?
-	return nil
-      else
-	return pkgnames
-      end
-    end
-  end
-
-  nil
 end
 
 def tracing_deorigin(origin)

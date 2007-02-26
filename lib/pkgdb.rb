@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdb.rb,v 1.11 2007/02/25 15:46:15 sem Exp $
+# $Id: pkgdb.rb,v 1.12 2007/02/26 10:19:34 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -445,10 +445,16 @@ class PkgDB
       end
     end
 
+    n=0
     new_pkgs.sort { |a, b|
       date_installed(a) <=> date_installed(b)
     }.each do |pkg|
       STDERR.putc ?.
+
+      n+=1
+      if n % 100 == 0
+	STDERR.print n
+      end
 
       begin
 	pkginfo = PkgInfo.new(pkg)
