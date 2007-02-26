@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdb.rb,v 1.10 2007/02/22 13:36:34 sem Exp $
+# $Id: pkgdb.rb,v 1.11 2007/02/25 15:46:15 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -862,7 +862,7 @@ class PkgDB
   end
 
   def autofix!(less_quiet = true)
-    xsystem!(PkgDB::command(:pkgdb), '-aF' << (less_quiet ? 'Q' : 'QQ'))
+    xsystem!(PkgDB::command(:pkgdb), '-aFO' << (less_quiet ? 'Q' : 'QQ'))
   end
 
   def recurse(pkgname, recurse_down = false, recurse_up = false, sanity_check = false)
