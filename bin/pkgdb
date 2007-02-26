@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/22 14:00:36 $[1]
+MYDATE = %w$Date: 2007/02/26 09:58:13 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -320,6 +320,9 @@ def check_lost_deps()
     print "#{pkgname}: "
 
     lost = real_deps.values - deps.values
+    # Remove dependencies which exist in ALG_PKGDEP
+    lost.delete_if { |origin| alt_dep('', origin) }
+
     if ! lost.empty?
       puts "found"
       lost.each do |origin|
@@ -640,7 +643,10 @@ def fix_dependencies(pkgname)
   deps.each do |dep, origin|
     unless $pkgnames.include?(dep)
       puts "Stale dependency: #{pkgname} -> #{dep} (#{origin}):"
-      if !$omit_check && !get_real_run_deps(pkgname).include?(origin)
+      if !$omit_check && !get_real_run_deps(pkgname).values.include?(origin)
+        # Ignore dependencies which exist in ALG_PKGDEP
+	next if alt_dep(dep)
+
 	puts "-> Deleted. (irrelevant)"
 	modify_pkgdep(pkgname, dep, :delete)
 	next
