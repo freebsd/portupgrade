@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/26 10:00:40 $[1]
+MYDATE = %w$Date: 2007/02/26 13:39:02 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -257,7 +257,7 @@ Environment Variables [default]:
       list = []
       
       opts.order(*argv) do |arg|
-	if File.exist?(arg)
+	if arg[0,1] == '/' || File.exist?(arg)
 	  path = arg
 	else
 	  path = `which #{arg}`.chomp
