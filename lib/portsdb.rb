@@ -43,15 +43,15 @@ class PortsDB
   DB_VERSION = [:FreeBSD, 3]
 
   LANGUAGE_SPECIFIC_CATEGORIES = {
+    "arabic"		=> "ar-",
     "chinese"		=> "zh-",
     "french"		=> "fr-",
     "german"		=> "de-",
     "hebrew"		=> "iw-",
     "hungarian"		=> "hu-",
     "japanese"		=> "ja-",
-    "polish"		=> "pl-",
-    "portuguese"	=> "pt-",
     "korean"		=> "ko-",
+    "polish"		=> "pl-",
     "portuguese"	=> "pt-",
     "russian"		=> "ru-",
     "ukrainian"		=> "uk-",
