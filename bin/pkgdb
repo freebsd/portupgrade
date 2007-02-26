@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/23 16:02:59 $[1]
+MYDATE = %w$Date: 2007/02/26 09:58:13 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -150,7 +150,7 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
     }
 
     opts.def_option("-O", "--omit-check", "Specified with -F, turn off checks#{NEXTLINE}dependencies against the ports tree. Useful#{NEXTLINE}if you need a speed-up") {
-      $omit_check = false
+      |$omit_check|
     }
 
     opts.def_option("-Q", "--quiet", "Do not write anything to stdout;#{NEXTLINE}Specified twice, stderr neither") {
