@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.2.6 (released 2007-02-26):
+portupgrade 2.2.6 (released 2007-02-27):
 
 * [pkgdb] Fix -O option parsing.
 
