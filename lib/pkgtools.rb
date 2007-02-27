@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.18 2007/02/23 16:02:59 sem Exp $
+# $Id: pkgtools.rb,v 1.19 2007/02/26 16:00:26 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.2.4"
@@ -646,6 +646,10 @@ end
 
 def alt_dep(dep, origin = nil)
   hash = config_value(:ALT_PKGDEP) or return nil
+
+  if dep == ''
+    dep = $pkgdb.deorigin(origin)
+  end
 
   hash.each do |pat, alt|
     begin
