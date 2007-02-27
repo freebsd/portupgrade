@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/26 13:39:02 $[1]
+MYDATE = %w$Date: 2007/02/26 13:45:07 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -698,6 +698,10 @@ end
 
 def alt_dep(dep, origin = nil)
   hash = config_value(:ALT_PKGDEP) or return nil
+
+  if dep == ''
+    dep = $pkgdb.deorigin(origin)
+  end
 
   hash.each do |pat, alt|
     begin
