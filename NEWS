@@ -4,6 +4,18 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.2.6 (released 2007-02-26):
+
+* [pkgdb] Fix -O option parsing.
+
+* [portsdb.db] Fix and update language specific categories list.
+
+* [pkgdb] When run as pkg_which, don't check file existence. It allows to check
+  against accidently removed files. (Asked by skv@).
+
+* [pkgdb] Fix a bug when only origins worked in ALT_PKGDEP. pkgname globs
+  are very helpful there. (e.g. 'mysql*-server' => 'mysql40-server').
+
 portupgrade 2.2.5 (released 2007-02-26):
 
 * [pkgdb] Fix issues with ghostscript-afpl vs. ghostscript-gnu,
