@@ -25,10 +25,10 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.20 2007/02/27 11:29:30 sem Exp $
+# $Id: pkgtools.rb,v 1.21 2007/02/27 18:00:09 sem Exp $
 
 PREFIX = "/usr/local"
-Version = "2.2.4"
+Version = "2.3.0"
 
 begin
   require 'features/ruby18/file'
