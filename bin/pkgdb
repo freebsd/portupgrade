@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/02/27 11:30:31 $[1]
+MYDATE = %w$Date: 2007/02/27 17:58:46 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -314,6 +314,11 @@ def check_lost_deps()
   puts "Look for lost dependencies:"
 
   $pkgnames.each do |pkgname|
+    # Ignore bsdpan- pseudo ports
+    if /^bsdpan-/ =~ pkgname
+      puts "#{pkgname}: ignored"
+      next 
+    end
     deps = $pkgdb.pkgdep(pkgname, true) or return
     real_deps = get_real_run_deps(pkgname)
 
