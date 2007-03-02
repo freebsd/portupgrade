@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id$
+# $Id: pkgmisc.rb,v 1.2.2.2 2007/02/24 12:32:11 sem Exp $
 
 begin
   require 'features/ruby18/dir'	# for Dir.chdir(dir) { ... }
@@ -93,7 +93,8 @@ end
 def shelljoin(*args)
   args.collect { |arg|
     if /[*?{}\[\]<>()~&|\\$;\'\`\"\s]/ =~ arg
-      '"' + arg.gsub(/([$\\\"\`])/, "\\\\\\1") + '"'
+      a = '"' + arg.gsub(/([$\\\"\`])/, "\\\\\\1") + '"'
+      a.gsub(/\s/, '" "')
     else
       arg
     end
