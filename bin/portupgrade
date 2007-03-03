@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/02/26 16:00:26 $[1]
+MYDATE = %w$Date: 2007/03/03 19:31:26 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -713,7 +713,6 @@ Environment Variables [default]:
 		  } unless $task_options.include?(p)
 		end
 	      else
-		puts "*->#{o}"
 		install_tasks << o
 		$task_options[o] = {
 		  :make_args => make_args,
