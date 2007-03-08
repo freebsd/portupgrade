@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/03/03 19:31:26 $[1]
+MYDATE = %w$Date: 2007/03/03 19:33:20 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -616,7 +616,8 @@ Environment Variables [default]:
 
 	  # Track unistalled ports is appeared after updating
 	  upgrade_tasks.each do |task|
-	    install_tasks |= get_uninstalled_depends($pkgdb.origin(task))
+	    o = $pkgdb.origin(task)
+	    install_tasks |= get_uninstalled_depends(o) if !o.nil?
 	  end
 	}
 
@@ -838,7 +839,7 @@ def get_all_depends(origin, parents_list = nil)
     end
 
     STDERR.puts ' done]' if first
-    $depends[origin] = depends.compact
+    $depends[origin] = depends.to_a.compact
   else
     $depends[origin]
   end
