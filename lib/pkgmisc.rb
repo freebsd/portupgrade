@@ -93,8 +93,7 @@ end
 def shelljoin(*args)
   args.collect { |arg|
     if /[*?{}\[\]<>()~&|\\$;\'\`\"\s]/ =~ arg
-      a = '"' + arg.gsub(/([$\\\"\`])/, "\\\\\\1") + '"'
-      a.gsub(/\s/, '" "')
+      '"' + arg.gsub(/([$\\\"\`])/, "\\\\\\1") + '"'
     else
       arg
     end
