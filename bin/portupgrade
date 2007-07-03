@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/07/03 09:41:41 $[1]
+MYDATE = %w$Date: 2007/07/03 09:57:35 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -694,10 +694,13 @@ Environment Variables [default]:
 	    make_args = get_make_args(dep)
 	    make_env = get_make_env(dep)
 
-	    install_tasks << dep
-	    $task_options[dep] = {
-	      :make_args => make_args
-	    }
+	    # If has not yet installed
+	    if $pkgdb.deorigin(origin)
+	      install_tasks << dep
+	      $task_options[dep] = {
+	        :make_args => make_args
+	      }
+	    end
 	  end
 
 	  if $upward_recursive
