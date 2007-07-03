@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.21 2007/02/27 18:00:09 sem Exp $
+# $Id: pkgtools.rb,v 1.23 2007/07/03 09:57:35 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.3.0"
@@ -692,6 +692,9 @@ end
 
 # raises StandardError
 def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
+  pkgdir = $pkgdb.pkgdir(pkgname)
+  return if pkgdir.nil? || !File.directory?(pkgdir)
+
   pkgver_re = %r{-\d\S*$}
   file = $pkgdb.pkg_contents(pkgname)
 

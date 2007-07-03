@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/03/08 10:38:39 $[1]
+MYDATE = %w$Date: 2007/07/03 09:57:35 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -800,6 +800,9 @@ def get_all_depends(origin, parents_list = nil)
   unless $depends.has_key?(origin)
     depends = Set.new
 
+    portdir = $portsdb.portdir(origin)
+    return nil if not File.directory?(portdir)
+
     first = false
     if parents_list.nil?
       parents_list = Set.new
@@ -808,8 +811,6 @@ def get_all_depends(origin, parents_list = nil)
     end
     return nil if parents_list.include?(origin)
     parents_list.add(origin)
-
-    portdir = $portsdb.portdir(origin)
 
     make_env = get_make_env(origin)
     cmdargs = make_env << 'make'
@@ -907,7 +908,7 @@ def do_upgrade(pkgname)
   dependency = options[:dependency]
 
   origin = $origin
-  if !origin
+  if !origin || !File.directory?($portsdb.ports_dir()+'/'+origin)
     if !$ignore_moved and \
        !config_ignore_moved?(pkg) and \
        (moved = $portsdb.moved.trace(pkg.origin))
@@ -917,6 +918,8 @@ def do_upgrade(pkgname)
 	end
       else
 	warning_message "Package '#{pkg.name}' has been removed from ports tree."
+	$results << PkgResult.new($origin, :ignored, pkgname)
+	return
       end
     else
       origin = pkg.origin
