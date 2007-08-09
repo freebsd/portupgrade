@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/07/03 09:57:35 $[1]
+MYDATE = %w$Date: 2007/07/03 10:37:58 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1704,11 +1704,7 @@ rescue CommandFailedError => e
   if !retried && reason == :checksum && $distclean == 1
     progress_message "Retrying #{origin}"
 
-    if /fetch/ =~ $fetch_cmd
-      $fetch_cmd.gsub!(/[Rr]/, '')
-    else
-      $fetch_cmd = nil
-    end
+    $fetch_cmd = nil
 
     return build_port(origin, logfile, true)
   end
@@ -1726,7 +1722,7 @@ def distclean_mismatched(logfile)
   progress_message "Deleting mismatched files"
 
   if File.size(logfile) >= 65536	# 64KB
-    obj = "| grep '^>> Checksum mismatch for ' #{logfile}"
+    obj = "| grep '^=> \\(MD5\\|SHA256\\) Checksum mismatch for ' #{logfile}"
   else
     obj = logfile
   end
@@ -1736,8 +1732,8 @@ def distclean_mismatched(logfile)
   open(obj) do |f|
     f.each do |line|
       case line
-      when /^>> Checksum mismatch for (\S+)\.\r?$/
-	distfile = File.join($portsdb.dist_dir, $1)
+      when /^=> (MD5|SHA256) Checksum mismatch for (\S+)\.\r?$/
+	distfile = File.join($portsdb.dist_dir, $2)
 
 	information_message "Deleting #{distfile}"
 
