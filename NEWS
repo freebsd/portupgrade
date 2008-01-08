@@ -4,6 +4,15 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.3.2 (released 2007-08-10):
+
+* [portupgrade]
+
+portupgrade 2.3.1 (released 2007-07-03):
+
+* [portupgrade] [pkgbd] Many bug fixes related to the last xorg update
+  to 7.2.0
+
 portupgrade 2.3.0 (released 2007-03-01):
 
 * [portupgrade] At last all dependencies are tracked by portupgrade.
