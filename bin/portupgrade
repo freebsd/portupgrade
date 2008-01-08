@@ -3,7 +3,7 @@
 #
 # Copyright (c) 2000-2004 Akinori MUSHA
 # Copyright (c) 2005,2006 KOMATSU Shinichiro
-# Copyright (c) 2006,2007 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2006-2008 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/07/03 10:37:58 $[1]
+MYDATE = %w$Date: 2007/08/09 15:28:05 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"

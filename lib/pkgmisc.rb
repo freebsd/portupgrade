@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
-# Copyright (c) 2006,2007 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2006-2008 Sergey Matveychuk <sem@FreeBSD.org>
 #
 # All rights reserved.
 #
@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgmisc.rb,v 1.3 2007/02/22 13:36:34 sem Exp $
+# $Id: pkgmisc.rb,v 1.5 2007/04/23 06:17:55 sem Exp $
 
 begin
   require 'features/ruby18/dir'	# for Dir.chdir(dir) { ... }
