@@ -4,10 +4,9 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.3.2 (released 2007-08-10):
+portupgrade 2.3.2 (released 2008-01-13):
 
-* [portsclean] Fix a situation when gcc port installs own libraries
-  and portsclean was confused with them.
+* Bugs fix release
 
 portupgrade 2.3.1 (released 2007-07-03):
 
