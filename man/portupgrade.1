@@ -1,4 +1,4 @@
-.\" $Id: portupgrade.1,v 1.5 2006/11/17 20:58:40 sem Exp $
+.\" $Id: portupgrade.1,v 1.6 2007/08/09 15:33:43 sem Exp $
 .\"
 .Dd June 15, 2001
 .Dt PORTUPGRADE 1
@@ -121,12 +121,7 @@ Run the specified command as root after each installation.
 .Pp
 .It Fl b
 .It Fl -backup-packages
-Keep backup packages of the old versions.  These are kept in a
-temporary directory.  See
-.Ev PKG_TMPDIR
-and
-.Ev TMPDIR
-in the ENVIRONMENT section.
+Keep backup packages of the old versions.
 .Pp
 .It Fl -batch
 Run an upgrading process in a batch mode (with BATCH=yes).
@@ -873,6 +868,8 @@ do not point to a suitable directory.
 Default location of the installed package database.
 .It Pa /usr/ports
 Default location of the ports tree and the ports database files.
+.It Pa /usr/ports/packages/All
+Default location of backup packages saved with -b.
 .Pp
 .It Pa $PREFIX/etc/pkgtools.conf
 Default location of the pkgtools configuration file.
