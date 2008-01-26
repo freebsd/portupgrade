@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/08 11:32:27 $[1]
+MYDATE = %w$Date: 2008/01/12 18:26:52 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -575,156 +575,133 @@ Environment Variables [default]:
 
 	found = false
 
-	catch(:pkg) {
-	  begin
-	    $pkgdb.glob(pattern, false).each do |pkgname|
-	      first ||= pkgname
-
-	      list |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
-	    end
-	  rescue => e
-	    STDERR.puts e.message
-	    exit 1
-	  end
-
-	  if list.empty?
-	    throw :pkg
-	  end
-
-	  list -= $exclude_packages
-
-	  if list.empty?
-	    warning_message "No matching packages left after exclusion: #{arg}"
-	    throw :pkg
-	  end
-
-	  list.each do |i|
-	    $task_options[i] = {
-	      :make_args => $make_args
-	    }
-
-	    if i == first
-	      $task_options[i][:origin] = $origin
-	    end
-	  end
-
-	  upgrade_tasks |= list
-
-	  $origin = nil
-
-	  found = true
-
-	  # Track unistalled ports is appeared after updating
-	  upgrade_tasks.each do |task|
-	    o = $pkgdb.origin(task)
-	    install_tasks |= get_uninstalled_depends(o) if !o.nil?
-	  end
-	}
-
-	next if found
-
 	unless $new
-	  warning_message "No such installed package: #{arg}"
-	  next
-	end
+	  catch(:pkg) {
+	    begin
+	      $pkgdb.glob(pattern, false).each do |pkgname|
+		first ||= pkgname
 
-	pattern = $portsdb.strip(arg) || arg	# allow pkgname_glob
+		list |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
+	      end
+	    rescue => e
+	      STDERR.puts e.message
+	      exit 1
+	    end
 
-	begin
-	  pattern = parse_pattern(pattern)
-	rescue RegexpError => e
-	  warning_message e.message.capitalize
-	  next
-	end
+	    if list.empty?
+	      throw :pkg
+	    end
 
-	stty_sane
+	    list -= $exclude_packages
 
-	ports = $portsdb.glob(pattern).map { |i| i.origin }
+	    if list.empty?
+	      warning_message "No matching packages left after exclusion: #{arg}"
+	      throw :pkg
+	    end
 
-	unique = false
-
-	case ports.size
-	when 0
-	  if $portsdb.exist?(arg)
-	    # The specified port does not have an entry in the INDEX but
-	    # the port directory actually exists.
-
-	    unique = true
-
-	    ports << arg
-	  else
-	    warning_message "No such installed package or port: #{arg}"
-	    next
-	  end
-	when 1
-	  unique = true
-	else
-	  progress_message "Found #{ports.size} ports matching '#{arg}':"
-	  ports.each { |origin| puts "\t#{origin}" }
-	end
-
-	ports.each do |origin|
-	  if pkgnames = $pkgdb.deorigin(origin)
-	    warning_message "Found already installed package(s) of '#{origin}': " + pkgnames.join(' ')
-	    interactive = true
-	    yes_by_default = false
-	  else
-	    interactive = $interactive || !unique
-	    yes_by_default = true
-	  end
-
-	  if $noexecute
-	    puts "Install '#{origin}'? [no]" if interactive
-	    next
-	  elsif $yestoall
-	    puts "Install '#{origin}'? [yes]" if interactive
-	  elsif interactive
-	    prompt_yesno("Install '#{origin}'?", yes_by_default) or next	# "
-	  end
-
-	  make_args = get_make_args(origin)
-	  make_env = get_make_env(origin)
-
-	  install_tasks << origin
-	  $task_options[origin] = {
-	    :make_args => make_args
-	  }
-	  # Track all uninstalled
-	  get_uninstalled_depends(origin).each do |dep|
-	    make_args = get_make_args(dep)
-	    make_env = get_make_env(dep)
-
-	    install_tasks << dep
-	    $task_options[dep] = {
-	      :make_args => make_args
-	    }
-	  end
-
-	  if $upward_recursive
-	    get_all_depends(origin).each do |o|
-	      make_args = get_make_args(o)
-
-	      if pkgnames = $pkgdb.deorigin(o)
-		pkgnames.each do |p|
-		  upgrade_tasks << p
-		  $task_options[p] = {
-		    :make_args => make_args,
-		    :origin => o,
-		    :dependency => origin
-		  } unless $task_options.include?(p)
-		end
-	      else
-		install_tasks << o
-		$task_options[o] = {
-		  :make_args => make_args,
-		  :origin => o,
-		  :dependency => origin
-		} unless $task_options.include?(o)
+	    list.each do |i|
+	      if i == first
+		$task_options[i][:origin] = $origin
 	      end
 	    end
+
+	    upgrade_tasks |= list
+
+	    found = true
+
+	    # Track all depends when $upward recursive and all
+	    # not istalled ports are appeared after updating
+	    not_need_upgrade = []
+	    upgrade_tasks.each do |task|
+	      pkg = PkgInfo.new(task)
+	      origin = $pkgdb.origin(task)
+	      if !origin.nil?
+		name = get_pkgname(origin)
+		name =~ /^(.+)-([^-]+)$/
+		newversion = PkgVersion.new($2)
+		if newversion <= pkg.version && !$force
+		  not_need_upgrade << task
+		  next
+		end
+		if $upward_recursive
+		  depends = []
+		  get_all_depends(origin).each do |d|
+		    depends << $pkgdb.deorigin(d).to_s
+		  end
+		  upgrade_tasks |= depends
+		end
+		install_tasks |= get_notinstalled_depends(origin)
+	      end
+	    end
+	    upgrade_tasks -= not_need_upgrade
+	  }
+	  unless found
+	    warning_message "No such installed package: #{arg}"
+	  end
+
+	else		# User wants install, not upgdate
+
+	  pattern = $portsdb.strip(arg) || arg	# allow pkgname_glob
+
+	  begin
+	    pattern = parse_pattern(pattern)
+	  rescue RegexpError => e
+	    warning_message e.message.capitalize
+	    next
+	  end
+
+	  stty_sane
+
+	  ports = $portsdb.glob(pattern).map { |i| i.origin }
+
+	  unique = false
+
+	  case ports.size
+	  when 0
+	    if $portsdb.exist?(arg)
+	      # The specified port does not have an entry in the INDEX but
+	      # the port directory actually exists.
+
+	      unique = true
+
+	      ports << arg
+	    else
+	      warning_message "No such package or port: #{arg}"
+	      next
+	    end
+	  when 1
+	    unique = true
+	  else
+	    progress_message "Found #{ports.size} ports matching '#{arg}':"
+	    ports.each { |origin| puts "\t#{origin}" }
+	  end
+
+	  ports.each do |origin|
+	    if pkgnames = $pkgdb.deorigin(origin)
+	      warning_message "Found already installed package(s) of '#{origin}': " + pkgnames.join(' ')
+	      next
+	    else
+	      interactive = $interactive || !unique
+	      yes_by_default = true
+	    end
+
+	    if $noexecute
+	      puts "Install '#{origin}'? [no]" if interactive
+	      next
+	    elsif $yestoall
+	      puts "Install '#{origin}'? [yes]" if interactive
+	    elsif interactive
+	      prompt_yesno("Install '#{origin}'?", yes_by_default) or next	# "
+	    end
+
+	    install_tasks << origin
+	    # Track all uninstalled
+	    get_uninstalled_depends(origin).each do |dep|
+	      install_tasks << dep
+	    end
 	  end
 	end
-      end
+      end	# Arguments parsing done
 
       if $package && !$fetch_only
 	t = $pkgdb.tsort(upgrade_tasks)
@@ -743,28 +720,8 @@ Environment Variables [default]:
       exit 64
     end
 
-    upgrade_tasks -= $exclude_packages
-
     ntasks = upgrade_tasks.size + install_tasks.size
     ctask = 0
-
-#    if ! $jet_mode
-#      config_tasks = upgrade_tasks.dup
-#      config_tasks.concat(install_tasks)
-#
-#      config_tasks.each do |pname|
-#	unless pname.index('/')
-#	  pkg = PkgInfo.new(pname)
-#	  pname = pkg.origin
-#	  puts pname
-#	end
-#      end
-#      
-#      config_tasks.sort!
-#      config_tasks.each do |pname|
-#	do_config(pname)
-#      end
-#    end
 
     $current_pkgname = ''
     install_tasks.each do |origin| 
@@ -846,17 +803,17 @@ def get_all_depends(origin, parents_list = nil)
   end
 end
 
-def get_uninstalled_depends(origin)
-  uninstalled = Array.new
+def get_notinstalled_depends(origin)
+  notinstalled = Array.new
 
   get_all_depends(origin).each do |dep|
     next if alt_dep('', dep)
     if !$pkgdb.deorigin(dep)
-      uninstalled.push(dep)
+      notinstalled.push(dep)
     end
   end
   
-  uninstalled
+  notinstalled
 end
 
 # raises:
@@ -901,12 +858,8 @@ end
 def do_upgrade(pkgname)
   pkg = PkgInfo.new(pkgname)
 
-  options = $task_options[pkgname]
-  $origin = options[:origin]
-  $make_args = options[:make_args]
-  dependency = options[:dependency]
+  origin = $task_options[pkgname][:origin]
 
-  origin = $origin
   if !origin || !File.directory?($portsdb.ports_dir()+'/'+origin)
     if !$ignore_moved and \
        !config_ignore_moved?(pkg) and \
@@ -917,7 +870,7 @@ def do_upgrade(pkgname)
 	end
       else
 	warning_message "Package '#{pkg.name}' has been removed from ports tree."
-	$results << PkgResult.new($origin, :ignored, pkgname)
+	$results << PkgResult.new(origin, :ignored, pkgname)
 	return
       end
     else
@@ -926,8 +879,6 @@ def do_upgrade(pkgname)
   end
 
   if origin
-    $make_args = options[:make_args] = get_make_args(origin, pkgname)
-
     if result = $results[origin]
       progress_message "Skipping '#{origin}' (#{pkgname}) because it has already #{result.phrase(true)}"
 
@@ -1029,15 +980,6 @@ def do_install(origin)
   end
 
   stty_sane
-
-  if !$task_options.key?(origin)
-    # When the port to install is not given from the command line
-    $task_options[origin] = {
-      :make_args => get_make_args(origin)
-    }
-  end
-
-  $make_args = $task_options[origin][:make_args]
 
   use_packages, use_packages_only = $use_packages, $use_packages_only
 
