@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/12 18:26:52 $[1]
+MYDATE = %w$Date: 2008/01/26 14:30:36 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -167,8 +167,10 @@ def init_global
   $backup_packages = false
   $batch_mode = false
   $beforebuild = ''
-  $clean = true			# now cleaned by default
-  $cleanup = true		# not cleaned up by default
+  $clean = true
+  $cleanup = true
+  $config = false
+  $force_config = false
   $current_pkgname = ''
   $depends = Hash.new
   $distclean = 0
@@ -204,7 +206,7 @@ end
 
 def main(argv)
   usage = <<-"EOF"
-usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
+usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
         [-L format] [-S command] [-x pkgname_glob]
         [[-o origin] [-m make_args] [-M make_env] pkgname_glob ...]
   EOF
@@ -256,14 +258,15 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
       $beforebuild.strip!
     }
 
-    opts.def_option("-c", "--clean",
-		    "Do \"make clean\" before each build [default]") {
-      |$clean|
+    opts.def_option("-c", "--config",
+		    "Run \"make config-conditional\" before everything for all tasks") {
+      |$config|
     }
 
-    opts.def_option("-C", "--cleanup",
-		    "Do \"make clean\" after each installation [default]") {
-      |$cleanup|
+    opts.def_option("-C", "--force-config",
+		    "Run \"make config\" before everything for all tasks") {
+      |$force_config|
+      $config = true
     }
 
     opts.def_option("-D", "--distclean",
@@ -299,11 +302,6 @@ usage: #{MYNAME} [-habcCDDefFijklnOpPPqrRsuvwWy] [-A command] [-B command]
 		    "Turn on interactive mode") {
       |$interactive|
       $verbose = true
-    }
-
-    opts.def_option("-j", "--jet-mode",
-		    "Turn on jet mode. It is not implemented yet") {
-      |$jet_mode|
     }
 
     opts.def_option("-k", "--keep-going",
@@ -759,6 +757,8 @@ def get_all_depends(origin, parents_list = nil)
     portdir = $portsdb.portdir(origin)
     return nil if not File.directory?(portdir)
 
+    run_make_config(portdir, origin) if $config
+
     first = false
     if parents_list.nil?
       parents_list = Set.new
@@ -817,17 +817,11 @@ def get_notinstalled_depends(origin)
 end
 
 # raises:
-#   PortDirError, ConfigError
-def run_make_config(origin)
-  portdir = $portsdb.portdir(origin)
-
-  if not File.directory?(portdir)
-    warning_message "Port directory not found: #{origin}"
-    raise PortDirError
-  end
-
+#   ConfigError
+def run_make_config(portdir, origin)
   make_args = get_make_args(origin)
   make_env = get_make_env(origin)
+
   cmdargs = make_env << 'make'
 
   cmdargs.concat(shellwords($make_args))
@@ -836,22 +830,15 @@ def run_make_config(origin)
     cmdargs << 'ECHO_MSG=/usr/bin/true'
   end
 
-  cmdargs << 'config-conditional'
+  if $force_config
+    cmdargs << 'config'
+  else
+    cmdargs << 'config-conditional'
+  end
 
-  progress_message "Run options config for #{origin}"
   if ! system "cd #{portdir} && #{shelljoin(*cmdargs)}"
     warning_message "make config failed for #{origin}"
     raise ConfigError
-  end
-end
-
-def do_config(origin)
-  run_make_config(origin)
-
-  make_args = get_make_args(origin)
-  make_env = get_make_env(origin)
-  $portsdb.all_depends_list!(origin, shelljoin(*make_env), make_args).each do |o|
-    run_make_config(o)
   end
 end
 
