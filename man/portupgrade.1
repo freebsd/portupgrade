@@ -1,4 +1,4 @@
-.\" $Id: portupgrade.1,v 1.6 2007/08/09 15:33:43 sem Exp $
+.\" $Id: portupgrade.1,v 1.7 2008/01/12 18:57:30 sem Exp $
 .\"
 .Dd June 15, 2001
 .Dt PORTUPGRADE 1
@@ -9,7 +9,7 @@
 .Nd tools to upgrade installed packages or install new ones via ports or packages
 .Sh SYNOPSIS
 .Nm
-.Op Fl habcCDDefFijknNOpPPqrRsuvwWy
+.Op Fl habcCDDefFiknNOpPPqrRsuvwWy
 .Op Fl A Ar command
 .Op Fl B Ar command
 .Op Fl l Ar file
@@ -138,20 +138,18 @@ failure, the port/package will be skipped.  Here is some typical uses:
 .Dl portupgrade -aB 'test \&! `make -V IS_INTERACTIVE`'
 .Pp
 .It Fl c
-.It Fl -clean
-Do
-.Dq Li "make clean"
-before each build.  This is the default behavior.  See the
+.It Fl -config
+Run
+.Dq Li "make config-conditional"
+before everything for all tasks.
 .Fl w
 option below.
 .Pp
 .It Fl C
-.It Fl -cleanup
-Do
-.Dq Li "make clean"
-after each installation.  This is the default behavior.  See the
-.Fl W
-option below.
+.It Fl -force-config
+Run
+.Dq Li "make config"
+before everything for all tasks.
 .Pp
 .It Fl D
 .It Fl -distclean
@@ -191,10 +189,6 @@ Turn on interactive mode.  You are asked for approval before each
 suggested installation or upgrade.  This option implies
 .Fl v .
 Pp
-.It Fl j
-.It Fl -jet-mode
-Turn on jet mode: is not implemented yet.
-.Pp
 .It Fl k
 .It Fl -keep-going
 Force the upgrade of a package even if some of the requisite packages
