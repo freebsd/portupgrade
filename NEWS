@@ -4,6 +4,16 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.0 (released 2008-01-26):
+
+* [portupgrade] All dependencies run under portupgrade control now.
+
+* [portupgrade] -c and -C options was changed. Now portupgrade
+  run `make config-conditional` and `make config` accordingly.
+
+* [pkgdb] Bug fix: remove +REQUIRED_BY file if there are no ports
+  require this one.
+
 portupgrade 2.3.2 (released 2008-01-13):
 
 * Bugs fix release
