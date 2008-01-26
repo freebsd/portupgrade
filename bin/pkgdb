@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2007/03/02 07:48:18 $[1]
+MYDATE = %w$Date: 2008/01/08 11:32:27 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -444,6 +444,7 @@ def fix_db_phase2()
       end
     else
       indep_pkgnames << pkgname
+      File.unlink(req_file) if File.exist?(req_file)
     end
   end
 
