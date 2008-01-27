@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/27 17:56:30 $[1]
+MYDATE = %w$Date: 2008/01/27 18:56:19 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -700,7 +700,7 @@ Environment Variables [default]:
 
 	    install_tasks << origin
 	    # Track all uninstalled
-	    get_uninstalled_depends(origin).each do |dep|
+	    get_notinstalled_depends(origin).each do |dep|
 	      install_tasks << dep
 	    end
 	  end
