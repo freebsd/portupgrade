@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.25 2008/01/08 11:32:27 sem Exp $
+# $Id: pkgtools.rb,v 1.26 2008/01/26 17:40:46 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.4.0"
@@ -960,7 +960,7 @@ class PkgResult
   end
 
   def ok?
-    done? || ignored?
+    done?
   end
 
   def failed?
@@ -1038,7 +1038,7 @@ class PkgResult
     if long
       [:done, :ignored, :skipped, :error]
     else
-      [:skipped, :error]
+      [:ignored, :skipped, :error]
     end.map { |r| sign(r, true) }.join(" / ")
   end
 end
@@ -1101,10 +1101,10 @@ class PkgResultSet < SimpleDelegator
       progress_message "Listing the results (" <<
 	PkgResult.legend(true) << ")"
     else
-      find { |r| r.failed? } or return 0
-
-      warning_message "Listing the failed packages (" <<
-	PkgResult.legend() << ")"
+      if find { |r| r.ignored? || r.failed? }
+	warning_message "Listing the failed packages (" <<
+	  PkgResult.legend() << ")"
+      end
     end
 
     errors = write(STDOUT, "\t", verbose)
