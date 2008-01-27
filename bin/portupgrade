@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/26 14:30:36 $[1]
+MYDATE = %w$Date: 2008/01/26 16:01:16 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -614,7 +614,13 @@ Environment Variables [default]:
 	      pkg = PkgInfo.new(task)
 	      origin = $pkgdb.origin(task)
 	      if !origin.nil?
-		name = get_pkgname(origin)
+		begin
+		  name = get_pkgname(origin)
+		rescue IgnoreMarkError => e
+		  $results << PkgResult.new(origin, :ignored)
+		  not_need_upgrade << task
+		  next
+		end
 		name =~ /^(.+)-([^-]+)$/
 		newversion = PkgVersion.new($2)
 		if newversion <= pkg.version && !$force
