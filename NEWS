@@ -4,6 +4,13 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.1 (released 2008-01-29):
+
+* Bugs fix releasse.
+
+* [portupgrade] Throw RecursiveDependencyError exception instead of
+  plain ruby error.
+
 portupgrade 2.4.0 (released 2008-01-26):
 
 * [portupgrade] All dependencies run under portupgrade control now.
