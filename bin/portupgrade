@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/27 22:33:51 $[1]
+MYDATE = %w$Date: 2008/01/28 14:56:08 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -704,7 +704,7 @@ Environment Variables [default]:
 	    end
 
 	    install_tasks << origin
-	    # Track all uninstalled
+	    # Track all not installed
 	    get_notinstalled_depends(origin).each do |dep|
 	      install_tasks << dep
 	    end
@@ -782,7 +782,7 @@ def get_all_depends(origin, parents_list = nil)
     make_env = get_make_env(origin)
     cmdargs = make_env << 'make'
 
-    cmdargs.concat(shellwords($make_args))
+    cmdargs.concat(get_make_args(origin))
 
     `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')} 2>&1`.each do |line|
 	line.split(/\s+/).each do |dep|
@@ -835,7 +835,7 @@ def run_make_config(portdir, origin)
 
   cmdargs = make_env << 'make'
 
-  cmdargs.concat(shellwords($make_args))
+  cmdargs.concat(make_args)
 
   unless $verbose
     cmdargs << 'ECHO_MSG=/usr/bin/true'
@@ -1003,11 +1003,14 @@ def do_install(origin)
 end
 
 def get_make_args(origin, pkgname = nil)
-  if args = config_make_args(origin, pkgname)
-    args + ' ' + $make_args
+  args = []
+  if conf_args = config_make_args(origin, pkgname)
+    args = conf_args.split(' ')
+    args.concat($make_args.split(' '))
   else
-    $make_args
+    args = $make_args.split(' ')
   end
+  args
 end
 
 def get_make_env(origin, is_new = false)
@@ -1141,10 +1144,10 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
 
   if (oldpkg.version < portpkg.version || $force) && $use_packages
     newpkg = catch(:newpkg) {
-      make_args = shellwords($make_args)
+      make_args = get_make_args(origin)
 
       if !make_args.empty?
-        warning_message "Custom MAKE_ARGS or -m option is specified (#{$make_args})"
+        warning_message "Custom MAKE_ARGS or -m option is specified (#{shellwords(make_args)})"
 
         unless $use_packages_only
           warning_message "Skipping package"
@@ -1357,7 +1360,7 @@ def get_pkgname(origin)
   make_env = get_make_env(origin)
   cmdargs = make_env << 'make'
 
-  cmdargs.concat(shellwords($make_args))
+  cmdargs.concat(get_make_args(origin))
 
   output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE 2>&1`.to_a
 
@@ -1571,7 +1574,7 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
 
   cmdargs << 'BATCH=yes' if $batch_mode
 
-  make_args = shellwords($make_args)
+  make_args = get_make_args(origin)
 
   unless make_args.empty?
     cmdargs.concat(make_args)
@@ -1696,7 +1699,7 @@ def install_port(origin, logfile = nil, is_new = false, *teardown_procs)
 
   cmdargs << 'BATCH=yes' if $batch_mode
 
-  make_args = shellwords($make_args)
+  make_args = get_make_args(origin)
 
   unless make_args.empty?
     cmdargs.concat(make_args)
