@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/29 13:38:52 $[1]
+MYDATE = %w$Date: 2008/02/04 10:54:47 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -645,9 +645,6 @@ Environment Variables [default]:
 		  upgrade_tasks |= depends
 		end
 		install_tasks |= get_notinstalled_depends(origin)
-	      else
-		$results << PkgResult.new(origin, :ignored, "there is no origin")
-		not_need_upgrade << task
 	      end
 	    end
 	    upgrade_tasks -= not_need_upgrade
