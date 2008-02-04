@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/28 14:56:08 $[1]
+MYDATE = %w$Date: 2008/01/29 13:38:52 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -626,6 +626,11 @@ Environment Variables [default]:
 		  not_need_upgrade << task
 		  next
 		end
+		if name == ''
+		  warning_message "There are errors in a meta info for #{task}"
+		  warning_message "Run 'pkgdb -F' to interactively fix them."
+		  exit 1
+		end
 		name =~ /^(.+)-([^-]+)$/
 		newversion = PkgVersion.new($2)
 		if newversion <= pkg.version && !$force
@@ -640,6 +645,9 @@ Environment Variables [default]:
 		  upgrade_tasks |= depends
 		end
 		install_tasks |= get_notinstalled_depends(origin)
+	      else
+		$results << PkgResult.new(origin, :ignored, "there is no origin")
+		not_need_upgrade << task
 	      end
 	    end
 	    upgrade_tasks -= not_need_upgrade
