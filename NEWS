@@ -4,6 +4,17 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.3 (released 2008-02-11):
+
+* [portupgrade] Fix dependencies list after we gather it. So we will not
+  try to upgrade dependecies when a specified port is up-to-date.
+
+* [portsclean] Fix a typo in a condition. Now it's work again.
+
+* [portupgrade] Change a semantic of -q option. Now it means 'quiet'.
+  Don't show a message when -N specified and there is already installed
+  package. (For Peter Hofer. DesktopBSD).
+
 portupgrade 2.4.2 (released 2008-02-04):
 
 * A few bugs was fixed.
