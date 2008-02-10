@@ -1,4 +1,4 @@
-.\" $Id: portupgrade.1,v 1.7 2008/01/12 18:57:30 sem Exp $
+.\" $Id: portupgrade.1,v 1.8 2008/01/26 17:40:07 sem Exp $
 .\"
 .Dd June 15, 2001
 .Dt PORTUPGRADE 1
@@ -287,6 +287,9 @@ up-to-date so that
 can check out what the latest version of each port is.
 .Pp
 .It Fl q
+.It Fl -quiet
+Do not display a message when -N specified and there is already installed package.
+.Pp
 .It Fl -noconfig
 Do not read the configuration file -
 .Pa $PREFIX/etc/pkgtools.conf .

@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/02/10 12:04:39 $[1]
+MYDATE = %w$Date: 2008/02/10 22:01:40 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -197,6 +197,7 @@ def init_global
   $package = false
   $pkg_cache = {}
   $pkgdb_update = false
+  $quiet = false
   $recursive = false
   $resultsfile = nil
   $sanity_check = true
@@ -399,7 +400,12 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
       $use_packages = true
     }
 
-    opts.def_option("-q", "--noconfig",
+    opts.def_option("-q", "--quiet",
+		    "Be quiet when -N option specified and the package already installed") {
+      |$quiet|
+    }
+
+    opts.def_option("--noconfig",
 		    "Do not read pkgtools.conf") {
       |$noconfig|
     }
@@ -739,7 +745,9 @@ Environment Variables [default]:
 
 	  ports.each do |origin|
 	    if pkgnames = $pkgdb.deorigin(origin)
-	      warning_message "Found already installed package(s) of '#{origin}': " + pkgnames.join(' ')
+	      if !$quiet
+		warning_message "Found already installed package(s) of '#{origin}': " + pkgnames.join(' ')
+	      end
 	      next
 	    else
 	      interactive = $interactive || !unique
