@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2008/01/08 11:32:27 $[1]
+MYDATE = %w$Date: 2008/01/08 12:09:15 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -338,7 +338,7 @@ def libclean()
 
 	  # Skip system libraries (/lib, /usr/lib)
 	  # XXX Warning on this?
-	  next if /^\/lib/ !~ prev_path || /^\/usr\/lib/ !~ prev_path
+	  next if /^\/lib/ =~ prev_path || /^\/usr\/lib/ =~ prev_path
 
 	  puts "** #{path} is shadowed by #{prev_path}"
 
