@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/02/04 11:34:20 $[1]
+MYDATE = %w$Date: 2008/02/10 12:04:39 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -584,22 +584,11 @@ Environment Variables [default]:
 	      $pkgdb.glob(pattern, false).each do |pkgname|
 		first ||= pkgname
 
-		list |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
+		list |= $pkgdb.recurse(pkgname, $recursive, false, $sanity_check)
 	      end
 	    rescue => e
 	      STDERR.puts e.message
 	      exit 1
-	    end
-
-	    if list.empty?
-	      throw :pkg
-	    end
-
-	    list -= $exclude_packages
-
-	    if list.empty?
-	      warning_message "No matching packages left after exclusion: #{arg}"
-	      throw :pkg
 	    end
 
 	    list.each do |i|
@@ -612,8 +601,8 @@ Environment Variables [default]:
 
 	    found = true
 
-	    # Track all depends when $upward recursive and all
-	    # not istalled ports are appeared after updating
+	    # Check packages for updates and gather dependecies
+	    depends = []
 	    not_need_upgrade = []
 	    upgrade_tasks.each do |task|
 	      pkg = PkgInfo.new(task)
@@ -646,16 +635,66 @@ Environment Variables [default]:
 		  next
 		end
 		if $upward_recursive
-		  depends = []
+		  dep = []
 		  get_all_depends(origin).each do |d|
-		    depends << $pkgdb.deorigin(d).to_s
+		    dep << $pkgdb.deorigin(d).to_s
 		  end
-		  upgrade_tasks |= depends
+		  depends |= dep
 		end
 		install_tasks |= get_notinstalled_depends(origin)
 	      end
 	    end
 	    upgrade_tasks -= not_need_upgrade
+
+	    # Check dependencies for updates
+	    if $upward_recursive
+	      STDERR.print '[Exclude up-to-date packages '
+	      not_need_upgrade = []
+	      depends.each do |task|
+		STDERR.print '.'
+		pkg = PkgInfo.new(task)
+		origin = $pkgdb.origin(task)
+		if !origin.nil?
+		  begin
+		    name = get_pkgname(origin)
+		  rescue IgnoreMarkError => e
+		    $results << PkgResult.new(origin, :ignored, e.message)
+		    not_need_upgrade << task
+		    next
+		  rescue PortDirError => e
+		    $results << PkgResult.new(origin, :ignored, e.message)
+		    not_need_upgrade << task
+		    next
+		  end
+		  if name == ''
+		    warning_message "There are errors in a meta info for #{task}"
+		    warning_message "Run 'pkgdb -F' to interactively fix them."
+		    exit 1
+		  end
+		  name =~ /^(.+)-([^-]+)$/
+		  newversion = PkgVersion.new($2)
+		  if newversion <= pkg.version && !$force
+		    not_need_upgrade << task
+		    next
+		  end
+		end
+	      end
+	      STDERR.puts ' done]'
+	      depends -= not_need_upgrade
+	    end
+	    upgrade_tasks += depends
+
+	    if upgrade_tasks.empty?
+	      throw :pkg
+	    end
+
+	    upgrade_tasks -= $exclude_packages
+
+	    if upgrade_tasks.empty?
+	      warning_message "No matching packages left after exclusion: #{arg}"
+	      throw :pkg
+	    end
+
 	  }
 	  unless found
 	    warning_message "No such installed package: #{arg}"
