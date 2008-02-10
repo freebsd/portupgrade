@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/02/04 10:54:47 $[1]
+MYDATE = %w$Date: 2008/02/04 11:34:20 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -617,11 +617,19 @@ Environment Variables [default]:
 	    not_need_upgrade = []
 	    upgrade_tasks.each do |task|
 	      pkg = PkgInfo.new(task)
-	      origin = $pkgdb.origin(task)
+	      if task == first && $origin
+		origin = $origin
+	      else
+		origin = $pkgdb.origin(task)
+	      end
 	      if !origin.nil?
 		begin
 		  name = get_pkgname(origin)
 		rescue IgnoreMarkError => e
+		  $results << PkgResult.new(origin, :ignored, e.message)
+		  not_need_upgrade << task
+		  next
+		rescue PortDirError => e
 		  $results << PkgResult.new(origin, :ignored, e.message)
 		  not_need_upgrade << task
 		  next
