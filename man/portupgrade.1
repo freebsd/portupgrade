@@ -1,4 +1,4 @@
-.\" $Id: portupgrade.1,v 1.8 2008/01/26 17:40:07 sem Exp $
+.\" $Id: portupgrade.1,v 1.9 2008/02/10 23:20:02 sem Exp $
 .\"
 .Dd June 15, 2001
 .Dt PORTUPGRADE 1
@@ -142,8 +142,6 @@ failure, the port/package will be skipped.  Here is some typical uses:
 Run
 .Dq Li "make config-conditional"
 before everything for all tasks.
-.Fl w
-option below.
 .Pp
 .It Fl C
 .It Fl -force-config
@@ -188,7 +186,7 @@ Do not read MOVED file.
 Turn on interactive mode.  You are asked for approval before each
 suggested installation or upgrade.  This option implies
 .Fl v .
-Pp
+.Pp
 .It Fl k
 .It Fl -keep-going
 Force the upgrade of a package even if some of the requisite packages
@@ -339,17 +337,13 @@ Turn on verbose output.
 .It Fl -noclean
 Do not
 .Dq Li "make clean"
-before each build.  See the
-.Fl c
-option above.
+before each build.
 .Pp
 .It Fl W
 .It Fl -nocleanup
 Do not
 .Dq Li "make clean"
-after each installation.  See the
-.Fl C
-option above.
+after each installation.
 .Pp
 .It Fl -without-env-upgrade
 Do not set UPGRADE_* environment variables.
