@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.30 2008/02/04 15:03:25 sem Exp $
+# $Id: pkgtools.rb,v 1.31 2008/02/10 23:27:52 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.4.3"
@@ -800,6 +800,7 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
       last_correct = false
     end
   end
+  content.close
 
   if newdep == :add && (!pkgdep_undeleted || !deporigin_undeleted)
     # Remove partly undeleted entry
