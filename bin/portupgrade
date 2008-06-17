@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/02/10 23:20:02 $[1]
+MYDATE = %w$Date: 2008/06/17 11:11:38 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1213,7 +1213,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
       make_args = get_make_args(origin)
 
       if !make_args.empty?
-        warning_message "Custom MAKE_ARGS or -m option is specified (#{shellwords(make_args)})"
+        warning_message "Custom MAKE_ARGS or -m option is specified (#{shellwords(make_args.join(','))})"
 
         unless $use_packages_only
           warning_message "Skipping package"
