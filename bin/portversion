@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2007/02/22 13:36:34 $[1]
+MYDATE = %w$Date: 2008/01/08 11:32:27 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -50,6 +50,7 @@ SUGGESTIONS = {
 def init_global
   $command = 'portupgrade'
   $command_output = false
+  $display = :name
   $exclude_packages = []
   $ignore_moved = false
   $inv_limit_chars = nil
@@ -60,6 +61,7 @@ def init_global
   $tempdir = ""
   $test_version = false
   $upward_recursive = false
+  $verbose_output = :default
 end
 
 def main(argv)
@@ -92,6 +94,10 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
       $command = 'portupgrade ' + command_args
     }
 
+    opts.def_option("-F", "--fullname", "Display package full-name.") {
+      $display = :fullname
+    }
+
     opts.def_option("--ignore-moved",
 		    "Ignore MOVED file") {
       |$ignore_moved|
@@ -113,12 +119,20 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
       end
     }
 
+    opts.def_option("-o", "--origin", "Display package origin instead of package name.") {
+      $display = :origin
+    }
+
     opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
       $sanity_check = false
     }
 
     opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
       |$noconfig|
+    }
+
+    opts.def_option("-Q", "--quiet", "Only display package name") {
+      $verbose_output = :quiet
     }
 
     opts.def_option("-r", "--recursive", "Check for all those depending on the given#{NEXTLINE}packages as well") {
@@ -136,6 +150,7 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
 
     opts.def_option("-v", "--verbose", "Be verbose") {
       |$verbose|
+      $verbose_output = :verbose
     }
 
     opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") {
@@ -339,16 +354,19 @@ def check_pkgs(pkgs)
 	held ? '# ' : '',
 	pkg.fullname
     else
-      if $verbose then
+	  case $verbose_output
+	  when :verbose then
 	printf "%-26s  %c  %s %s\n",
-	  pkg.fullname,
+	  pkg.send($display),
 	  sign,
 	  suggestion,
 	  (origin != pkg.origin) ? "(=> '#{origin}')" : ''
-      else
+	  when :default then
 	printf "%-26s  %c\n",
-	  pkg.name,
+	  pkg.send($display),
 	  sign
+	  when :quiet then
+	printf "%s\n", pkg.send($display)
       end
     end
   end
