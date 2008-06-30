@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/06/30 15:38:39 $[1]
+MYDATE = %w$Date: 2008/06/30 17:28:21 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -658,6 +658,7 @@ Environment Variables [default]:
 	      not_need_upgrade = []
 	      depends.each do |task|
 		STDERR.print '.'
+		next if task == ''
 		begin
 		  pkg = PkgInfo.new(task)
 	        rescue ArgumentError => e
