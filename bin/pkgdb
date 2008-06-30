@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2008/06/17 11:17:02 $[1]
+MYDATE = %w$Date: 2008/06/30 23:29:02 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -352,7 +352,7 @@ end
 def fix_db
   progress_message "Checking the package registry database"
 
-  if not File.owned?($pkgdb_dir) && Process.uid > 0
+  if ! File.owned?($pkgdb_dir) && Process.uid > 0
     if $force
       warning_message "You do not own #{$pkgdb_dir}. (proceeding anyway)"
     else
