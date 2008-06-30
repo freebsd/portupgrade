@@ -4,6 +4,26 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.4 (released 2008-07-01):
+
+* [pkgtools.rb] Close +CONTENTS file. It made a few problems before.
+
+* [portupgrade.1] Some leftovers removed. Fix .Pp tag.
+
+* [portupgrade] Fix a failure when -PP specified for some ports.
+
+* [portversion] Add -F to show a package full name (with a version number)
+  -o to show an origin of a package and -q for quiet output.
+
+* [portupgrade, pkgmisc.rb] Fix a bug in make arguments quoting. If you
+  had an argument with spaces (e.g. WITH_MODULES="module1 module2"), it
+  was parsed wrong.
+
+* [portupgrade] Allow upgrade dependencies if -R or -r options specified
+  but main port is up-to-date.
+
+* [pkgdb.rb, portsdb.rb] If DB can't be updated, remove it and try again.
+
 portupgrade 2.4.3 (released 2008-02-11):
 
 * [portupgrade] Fix dependencies list after we gather it. So we will not
