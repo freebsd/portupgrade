@@ -28,6 +28,8 @@ portupgrade 2.4.4 (released 2008-07-01):
 
 * [portupgrade] If 'make config' fails, show a warning and ignore it.
 
+* [pkgdb] Do not show 'You do not own pkgdb dir' for root.
+
 portupgrade 2.4.3 (released 2008-02-11):
 
 * [portupgrade] Fix dependencies list after we gather it. So we will not
