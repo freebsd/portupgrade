@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/06/17 12:11:14 $[1]
+MYDATE = %w$Date: 2008/06/30 15:38:39 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -634,18 +634,18 @@ Environment Variables [default]:
 		  warning_message "Run 'pkgdb -F' to interactively fix them."
 		  exit 1
 		end
-		name =~ /^(.+)-([^-]+)$/
-		newversion = PkgVersion.new($2)
-		if newversion <= pkg.version && !$force
-		  not_need_upgrade << task
-		  next
-		end
 		if $upward_recursive
 		  dep = []
 		  get_all_depends(origin).each do |d|
 		    dep << $pkgdb.deorigin(d).to_s
 		  end
 		  depends |= dep
+		end
+		name =~ /^(.+)-([^-]+)$/
+		newversion = PkgVersion.new($2)
+		if newversion <= pkg.version && !$force
+		  not_need_upgrade << task
+		  next
 		end
 		install_tasks |= get_notinstalled_depends(origin)
 	      end
