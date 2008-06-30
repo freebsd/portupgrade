@@ -24,6 +24,10 @@ portupgrade 2.4.4 (released 2008-07-01):
 
 * [pkgdb.rb, portsdb.rb] If DB can't be updated, remove it and try again.
 
+* [portupgrade] setproctitle with a port name when 'make config' runs.
+
+* [portupgrade] If 'make config' fails, show a warning and ignore it.
+
 portupgrade 2.4.3 (released 2008-02-11):
 
 * [portupgrade] Fix dependencies list after we gather it. So we will not
