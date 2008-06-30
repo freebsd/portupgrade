@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdb.rb,v 1.13 2007/02/26 16:00:26 sem Exp $
+# $Id: pkgdb.rb,v 1.14 2008/01/08 11:32:27 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -494,6 +494,7 @@ class PkgDB
 
     true
   rescue => e
+    File.unlink(@db_file) if File.exist?(@db_file)
     raise DBError, "#{e.message}: Cannot update the pkgdb!]"
   ensure
     close_db
