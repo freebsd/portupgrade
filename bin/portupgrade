@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/06/17 11:11:38 $[1]
+MYDATE = %w$Date: 2008/06/17 12:11:14 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1076,7 +1076,30 @@ def get_make_args(origin, pkgname = nil)
   else
     args = $make_args.split(' ')
   end
-  args
+  quoted = 0
+  n = 0
+  is_quoted = false
+  while n < args.length
+    if /\"/ =~ args[n]
+      if is_quoted
+        args[quoted] << " " << args[n]
+        args[n] = nil
+        is_quoted = false
+      else
+        quoted = n
+        is_quoted = true
+        n+=1
+        next
+      end
+    end
+
+    if is_quoted
+      args[quoted] << " " << args[n]
+      args[n] = nil
+    end
+    n+=1
+  end
+  args.compact
 end
 
 def get_make_env(origin, is_new = false)
