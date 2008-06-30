@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/06/30 17:28:21 $[1]
+MYDATE = %w$Date: 2008/06/30 17:35:05 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -647,7 +647,8 @@ Environment Variables [default]:
 		  not_need_upgrade << task
 		  next
 		end
-		install_tasks |= get_notinstalled_depends(origin)
+		# XXX It makes more problems than solves
+		#install_tasks |= get_notinstalled_depends(origin)
 	      end
 	    end
 	    upgrade_tasks -= not_need_upgrade
