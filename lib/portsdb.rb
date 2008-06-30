@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.14 2007/02/26 12:10:25 sem Exp $
+# $Id: portsdb.rb,v 1.15 2008/01/08 11:32:27 sem Exp $
 
 require 'singleton'
 require 'tempfile'
@@ -556,6 +556,7 @@ class PortsDB
     @origins = []
     @pkgnames = []
 
+    try_again = false
     begin
       open_db_for_rebuild!
 
@@ -627,16 +628,29 @@ class PortsDB
       STDERR.putc(?.)
       @db[':db_version'] = Marshal.dump(DB_VERSION)
     rescue => e
-      File.unlink(@db_file) if File.exist?(@db_file)
-      raise DBError, "#{e.message}: Cannot update the portsdb! (#{@db_file})]"
+      if File.exist?(@db_file)
+	begin
+	  STDERR.puts " error] Remove and try again."
+	  File.unlink(@db_file)
+	  try_again = true
+	rescue => e
+	  raise DBError, "#{e.message}: Cannot update the portsdb! (#{@db_file})]"
+	end
+      else
+	raise DBError, "#{e.message}: Cannot update the portsdb! (#{@db_file})]"
+      end
     ensure
       close_db
     end
 
-    STDERR.puts " done]"
-    STDERR.sync = prev_sync
+    if try_again
+      update_db(force)
+    else
+      STDERR.puts " done]"
+      STDERR.sync = prev_sync
+      true
+    end
 
-    true
   end
 
   def port(key)

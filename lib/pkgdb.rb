@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdb.rb,v 1.14 2008/01/08 11:32:27 sem Exp $
+# $Id: pkgdb.rb,v 1.15 2008/06/30 17:51:44 sem Exp $
 
 require 'singleton'
 require 'pkgtsort'
@@ -368,136 +368,153 @@ class PkgDB
 
     @installed_pkgs = installed_pkgs!.freeze
 
-    if rebuild
-      open_db_for_rebuild!
+    try_again = false
+    begin
+      if rebuild
+	open_db_for_rebuild!
 
-      new_pkgs = @installed_pkgs
+	new_pkgs = @installed_pkgs
 
-      deleted_pkgs = []
+	deleted_pkgs = []
 
-      @installed_ports = []
-    else
-      begin
-	open_db_for_update!
+	@installed_ports = []
+      else
+	begin
+	  open_db_for_update!
 
-	s = @db[':origins']
-	s.is_a?(String) or raise "origins - not a string (#{s.class})"
-	@installed_ports = s.split
+	  s = @db[':origins']
+	  s.is_a?(String) or raise "origins - not a string (#{s.class})"
+	  @installed_ports = s.split
 
-	s = @db[':pkgnames']
-	s.is_a?(String) or raise "pkgnames - not a string (#{s.class})"
-	prev_installed_pkgs = s.split
+	  s = @db[':pkgnames']
+	  s.is_a?(String) or raise "pkgnames - not a string (#{s.class})"
+	  prev_installed_pkgs = s.split
 
-	new_pkgs = @installed_pkgs - prev_installed_pkgs
-	deleted_pkgs = prev_installed_pkgs - @installed_pkgs
+	  new_pkgs = @installed_pkgs - prev_installed_pkgs
+	  deleted_pkgs = prev_installed_pkgs - @installed_pkgs
 
-	db_mtime = date_db_file()
+	  db_mtime = date_db_file()
 
-	(@installed_pkgs & prev_installed_pkgs).each do |pkg|
-	  pkg_mtime = date_installed(pkg)
+	  (@installed_pkgs & prev_installed_pkgs).each do |pkg|
+	    pkg_mtime = date_installed(pkg)
 
-	  if db_mtime < pkg_mtime
-	    new_pkgs << pkg
-	    deleted_pkgs << pkg
+	    if db_mtime < pkg_mtime
+	      new_pkgs << pkg
+	      deleted_pkgs << pkg
+	    end
 	  end
-	end
 
-	deleted_pkgs.sort!
-      rescue => e
-	STDERR.print "#{e.message}; rebuild needed] "
-	return update_db(true)
-      end
-    end
-
-    STDERR.printf "- %d packages found (-%d +%d) ",
-      @installed_pkgs.size, deleted_pkgs.size, new_pkgs.size
-
-    if @installed_pkgs.size == 0
-      STDERR.puts " nothing to do]"
-      @db[':mtime'] = Marshal.dump(Time.now)
-      @db[':origins'] = ' '
-      @db[':pkgnames'] = ' '
-      @db[':db_version'] = Marshal.dump(DB_VERSION)
-
-      return true
-    end
-
-    unless deleted_pkgs.empty?
-      STDERR.print '(...)'
-
-      # NOTE: you cannot delete keys while you enumerate the database elements
-      @db.select { |path, pkgs|
-	path[0] == ?/ && pkgs.split.find { |pkg| deleted_pkgs.qinclude?(pkg) }
-      }.each do |path, pkgs|
-	path = File.realpath(path)
-
-	pkgs = pkgs.split - deleted_pkgs
-
-	if pkgs.empty?
-	  @db.delete(path)
-	else
-	  @db[path] = pkgs.join(' ')
+	  deleted_pkgs.sort!
+	rescue => e
+	  STDERR.print "#{e.message}; rebuild needed] "
+	  return update_db(true)
 	end
       end
 
-      deleted_pkgs.each do |pkg|
-	delete_origin(pkg)
-      end
-    end
+      STDERR.printf "- %d packages found (-%d +%d) ",
+	@installed_pkgs.size, deleted_pkgs.size, new_pkgs.size
 
-    n=0
-    new_pkgs.sort { |a, b|
-      date_installed(a) <=> date_installed(b)
-    }.each do |pkg|
-      STDERR.putc ?.
+      if @installed_pkgs.size == 0
+	STDERR.puts " nothing to do]"
+	@db[':mtime'] = Marshal.dump(Time.now)
+	@db[':origins'] = ' '
+	@db[':pkgnames'] = ' '
+	@db[':db_version'] = Marshal.dump(DB_VERSION)
 
-      n+=1
-      if n % 100 == 0
-	STDERR.print n
+	return true
       end
 
-      begin
-	pkginfo = PkgInfo.new(pkg)
+      unless deleted_pkgs.empty?
+	STDERR.print '(...)'
 
-	if origin = pkginfo.origin
-	  add_origin(pkg, origin)
-	end
-
-	pkginfo.files.each do |path|
+	# NOTE: you cannot delete keys while you enumerate the database elements
+	@db.select { |path, pkgs|
+	  path[0] == ?/ && pkgs.split.find { |pkg| deleted_pkgs.qinclude?(pkg) }
+	}.each do |path, pkgs|
 	  path = File.realpath(path)
 
-	  if @db.key?(path)
-	    pkgs = @db[path].split
-	    pkgs << pkg if !pkgs.include?(pkg)
-	    @db[path] = pkgs.join(' ')
+	  pkgs = pkgs.split - deleted_pkgs
+
+	  if pkgs.empty?
+	    @db.delete(path)
 	  else
-	    @db[path] = pkg
+	    @db[path] = pkgs.join(' ')
 	  end
 	end
-      rescue => e
-	STDERR.puts "", e.message + ": skipping..."
-	next
+
+	deleted_pkgs.each do |pkg|
+	  delete_origin(pkg)
+	end
       end
+
+      n=0
+      new_pkgs.sort { |a, b|
+	date_installed(a) <=> date_installed(b)
+      }.each do |pkg|
+	STDERR.putc ?.
+
+	n+=1
+	if n % 100 == 0
+	  STDERR.print n
+	end
+
+	begin
+	  pkginfo = PkgInfo.new(pkg)
+
+	  if origin = pkginfo.origin
+	    add_origin(pkg, origin)
+	  end
+
+	  pkginfo.files.each do |path|
+	    path = File.realpath(path)
+
+	    if @db.key?(path)
+	      pkgs = @db[path].split
+	      pkgs << pkg if !pkgs.include?(pkg)
+	      @db[path] = pkgs.join(' ')
+	    else
+	      @db[path] = pkg
+	    end
+	  end
+	rescue => e
+	  STDERR.puts "", e.message + ": skipping..."
+	  next
+	end
+      end
+
+      @installed_ports.uniq!
+      @installed_ports.sort!
+
+      @db[':mtime'] = Marshal.dump(Time.now)
+      @db[':origins'] = @installed_ports.join(' ')
+      @db[':pkgnames'] = @installed_pkgs.join(' ')
+      @db[':db_version'] = Marshal.dump(DB_VERSION)
+
+      STDERR.puts " done]"
+
+      mark_fixme
+
+      true
+    rescue => e
+      if File.exist?(@db_file)
+	begin
+	  STDERR.puts " error] Remove and try again."
+	  File.unlink(@db_file)
+	  try_again = true
+	rescue => e
+	  raise DBError, "#{e.message}: Cannot update the portsdb! (#{@db_file})]"
+	end
+      else
+	raise DBError, "#{e.message}: Cannot update the pkgdb!]"
+      end
+    ensure
+      close_db
     end
-
-    @installed_ports.uniq!
-    @installed_ports.sort!
-
-    @db[':mtime'] = Marshal.dump(Time.now)
-    @db[':origins'] = @installed_ports.join(' ')
-    @db[':pkgnames'] = @installed_pkgs.join(' ')
-    @db[':db_version'] = Marshal.dump(DB_VERSION)
-
-    STDERR.puts " done]"
-
-    mark_fixme
-
-    true
-  rescue => e
-    File.unlink(@db_file) if File.exist?(@db_file)
-    raise DBError, "#{e.message}: Cannot update the pkgdb!]"
-  ensure
-    close_db
+    if try_again
+      update_db(force)
+    else
+      true
+    end
   end
 
   def open_db
