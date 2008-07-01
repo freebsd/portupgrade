@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/06/30 17:37:31 $[1]
+MYDATE = %w$Date: 2008/06/30 23:22:24 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -1074,6 +1074,7 @@ def do_install(origin)
   ensure
     $use_packages, $use_packages_only = use_packages, use_packages_only
   end
+  $pkgdb.autofix
 end
 
 def get_make_args(origin, pkgname = nil)
