@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgmisc.rb,v 1.6 2008/01/08 11:32:27 sem Exp $
+# $Id: pkgmisc.rb,v 1.7 2008/06/30 15:38:39 sem Exp $
 
 begin
   require 'features/ruby18/dir'	# for Dir.chdir(dir) { ... }
@@ -143,7 +143,7 @@ def init_tmpdir
 
   at_exit {
     begin
-      Dir.delete(tmpdir)
+      xsystem("rm -r #{tmpdir}")
     rescue
       warning_message "Could not clean up temporary directory: " + $!
     end
