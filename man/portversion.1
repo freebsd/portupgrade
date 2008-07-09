@@ -1,4 +1,4 @@
-.\" $Id: portversion.1,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+.\" $Id: portversion.1,v 1.1 2006/07/02 15:23:39 sem Exp $
 .\"
 .Dd June 15, 2001
 .Dt PORTVERSION 1
@@ -8,7 +8,7 @@
 .Nd a tool to compare the versions of installed packages with the ones in the ports tree
 .Sh SYNOPSIS
 .Nm
-.Op Fl hrOqRv
+.Op Fl hFOoQqRrv
 .Op Fl l Ar limit_chars
 .Op Fl L Ar inv_limit_chars
 .Op Fl x Ar pkgname_glob
@@ -142,6 +142,10 @@ to be used in the command output.
 .It Fl -ignore-moved
 Do not read MOVED file.
 .Pp
+.It Fl F
+.It Fl -fullname
+Display a package full name.
+.Pp
 .It Fl l Ar CHARS
 .It Fl -limit Ar CHARS
 Only include the packages with the specified status flags.
@@ -160,9 +164,17 @@ If you are sure you have run
 .Dq Li "pkgdb -F"
 in advance, you can specify this option to omit the sanity checks.
 .Pp
+.It Fl o
+.It Fl -origin
+Display package origin instead of package name.
+.Pp
 .It Fl q
 .It Fl -noconfig
 Do not read the configuration file. ($PREFIX/etc/pkgtools.conf)
+.Pp
+.It Fl Q
+.It Fl -quiet
+Do not display status chars.
 .Pp
 .It Fl r
 .It Fl -recursive

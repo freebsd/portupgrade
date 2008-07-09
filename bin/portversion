@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/01/08 11:32:27 $[1]
+MYDATE = %w$Date: 2008/06/23 13:10:30 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -94,7 +94,7 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
       $command = 'portupgrade ' + command_args
     }
 
-    opts.def_option("-F", "--fullname", "Display package full-name.") {
+    opts.def_option("-F", "--fullname", "Display a package full name") {
       $display = :fullname
     }
 
@@ -119,11 +119,11 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
       end
     }
 
-    opts.def_option("-o", "--origin", "Display package origin instead of package name.") {
+    opts.def_option("-o", "--origin", "Display package origin instead of package name") {
       $display = :origin
     }
 
-    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies.") {
+    opts.def_option("-O", "--omit-check", "Omit sanity checks for dependencies") {
       $sanity_check = false
     }
 
@@ -131,7 +131,7 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
       |$noconfig|
     }
 
-    opts.def_option("-Q", "--quiet", "Only display package name") {
+    opts.def_option("-Q", "--quiet", "Do not display status chars") {
       $verbose_output = :quiet
     }
 
