@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.32 2008/06/17 10:20:38 sem Exp $
+# $Id: pkgtools.rb,v 1.33 2008/06/30 21:12:00 sem Exp $
 
 PREFIX = "/usr/local"
 Version = "2.4.4"
@@ -694,6 +694,7 @@ end
 def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
   pkgdir = $pkgdb.pkgdir(pkgname)
   return if pkgdir.nil? || !File.directory?(pkgdir)
+  changed = false
 
   pkgver_re = %r{-\d\S*$}
   file = $pkgdb.pkg_contents(pkgname)
@@ -732,6 +733,7 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
 
       if pkgdeps.include?(pkgdep)	# remove duplicates
 	deporigin = :delete
+	changed = true
 	next
       end
 
@@ -752,6 +754,7 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
 
 	  pkgdeps << newdep
 	end
+	changed = true
       else
 	depends_lines << line
       end
@@ -759,10 +762,12 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
       case deporigin
       when :commentout
 	depends_lines << "@comment DELETED:DEPORIGIN:#{$1}\n"
+	changed = true
       when :keep
 	depends_lines << line
       else # :delete, nil
 	# no output
+	changed = true
       end
 
       deporigin = nil
@@ -776,12 +781,14 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
 	  depends_lines << "@pkgdep #{dep}\n"
 	  pkgdep_undeleted = true
 	  last_correct = true
+	  changed = true
 	  next
 	elsif keyword == "DEPORIGIN:" && data == neworigin
 	  # Undelete DEPORIGIN only if we sure the last line is correct
 	  if last_correct
 	    depends_lines << "@comment DEPORIGIN:#{neworigin}\n"
 	    deporigin_undeleted = true
+	    changed = true
 	    next
 	  end
 	end
@@ -810,17 +817,20 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
     # and just add correct lines
     depends_lines << "@pkgdep #{dep}\n"
     depends_lines << "@comment DEPORIGIN:#{neworigin}\n"
+    changed = true
   end
 
-  lines = head_lines + depends_lines + tail_lines
-  w = Tempfile.new(File.basename(file))
-  w.print(*lines)
-  w.close
-  tmpfile = w.path
+  if changed
+    lines = head_lines + depends_lines + tail_lines
+    w = Tempfile.new(File.basename(file))
+    w.print(*lines)
+    w.close
+    tmpfile = w.path
 
-  progress_message "Modifying #{file}" if $verbose
+    progress_message "Modifying #{file}" if $verbose
 
-  install_data(tmpfile, file)
+    install_data(tmpfile, file)
+  end
 rescue => e
   raise "Failed to rewrite #{file}: " + e.message
 end
@@ -887,7 +897,7 @@ def filter_file(command, file, backup = false)
 
   xsystem("#{command} < #{file} > #{tmpfile}")
 
-  progress_message "Modifying #{file}" if $verbose
+  progress_message "Filtering #{file}" if $verbose
 
   install_data(tmpfile, file, backup)
 end
