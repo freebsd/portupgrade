@@ -1,0 +1,265 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+# Copyright (c) 2008 Sergey Matveychuk <sem@FreeBSD.org>
+#
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+MYREVISION = %w$Rev: 71 $[1]
+MYDATE = %w$Date: 2008/07/09 15:31:18 $[1]
+MYNAME = File.basename($0)
+
+require "optparse"
+require "pkgtools"
+
+COLUMNSIZE = 24
+NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
+
+def init_global
+  $divider = 1024
+  $exclude_packages = []
+  $quiet = false
+  $recursive = false
+  $total = false
+  $upward_recursive = false
+end
+
+def main(argv)
+  usage = <<-"EOF"
+usage: #{MYNAME} [-hbkmRrqs] [pkgname_glob ...]
+  EOF
+
+  banner = <<-"EOF"
+#{MYNAME} #{Version} (#{MYDATE})
+
+#{usage}
+  EOF
+
+  dry_parse = true
+
+  OptionParser.new(banner, COLUMNSIZE) do |opts|
+    opts.def_option("-h", "--help", "Show this message") {
+      print opts
+      exit 0
+    }
+
+    opts.def_option("-b", "--bytes", "Display size in bytes") {
+      $divider = 1
+    }
+
+    opts.def_option("-k", "--kbytes", "Display size in kilobytes (default)") {
+      $divider = 1024
+    }
+
+    opts.def_option("-m", "--mbytes", "Display size in Megabytes") {
+      $divider = 1024*1024
+    }
+
+    opts.def_option("-t", "--total", "Display a grand total") {
+      |$total|
+    }
+
+    opts.def_option("-q", "--quiet", "Display only grand total") {
+      |$quiet|
+      $total = true
+    }
+
+    opts.def_option("-r", "--recursive", "Check for all those depending on the given#{NEXTLINE}packages as well") {
+      |$recursive|
+    }
+
+    opts.def_option("-R", "--upward-recursive", "Check for all those required by the given#{NEXTLINE}packages as well") {
+      |$upward_recursive|
+    }
+
+    opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") {
+      |arg|
+      begin
+	pattern = parse_pattern(arg)
+      rescue RegexpError => e
+	warning_message e.message.capitalize
+	break
+      end
+
+      $exclude_packages |= $pkgdb.glob(pattern, false) unless dry_parse
+    }
+    
+    opts.def_tail_option '
+pkgname_glob is one of these: a full pkgname, a pkgname w/o version,
+a shell glob pattern in which you can use wildcards *, ?, and [..],
+an extended regular expression preceded by a colon (:), or a date range
+specification preceded by either < or >.  See pkg_glob(1) for details.
+If none is given, all the installed packages are checked.
+
+Environment Variables [default]:
+    PKGTOOLS_CONF            configuration file [$PREFIX/etc/pkgtools.conf]
+    PKG_DBDIR                packages DB directory [/var/db/pkg]
+    PORTSDIR                 ports directory [/usr/ports]
+    PORTS_DBDIR              ports db directory [$PORTSDIR]
+    PORTS_INDEX              ports index file [$PORTSDIR/INDEX]'
+
+    all = '*'
+
+    argv << all
+
+    tasks = []
+
+    begin
+      init_global
+      init_pkgtools_global
+
+      rest = opts.order(*argv)
+
+      unless $noconfig
+	init_global
+	load_config
+      else
+	argv = rest
+      end
+
+      dry_parse = false
+
+      opts.order!(argv)
+
+      opts.order(*argv) do |arg|
+	next if arg.empty?
+
+	if arg.equal? all
+	  pattern = arg
+
+	  $recursive = false
+	  $upward_recursive = false
+	else
+	  all.replace ''
+
+	  pattern = $pkgdb.strip(arg, true)
+
+	  if pattern.nil?
+	    pattern = arg
+
+	    if pattern.include?('/')
+	      # `|| arg' just in case
+	      pattern = $pkgdb.strip(pattern) || arg
+	    end
+	  end
+
+	  begin
+	    pattern = parse_pattern(pattern)
+	  rescue RegexpError => e
+	    warning_message e.message.capitalize
+	    next
+	  end
+	end
+
+	list = []
+
+	begin
+	  $pkgdb.glob(pattern, false).each do |pkgname|
+	    list |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
+	  end
+	rescue => e
+	  STDERR.puts e.message
+	  exit 1
+	end
+
+	if list.empty?
+	  warning_message "No matching package found: #{arg}"
+	  next
+	end
+
+	list -= $exclude_packages
+
+	if list.empty?
+          warning_message "No matching packages left after exclusion: #{arg}"
+	  next
+	end
+
+	tasks |= list
+      end
+    rescue OptionParser::ParseError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    rescue ArgumentError => e
+      STDERR.puts "#{MYNAME}: #{e}", usage
+      exit 64
+    end
+
+    tasks -= $exclude_packages
+
+    pkgs_size tasks.sort.collect {|pkgname| PkgInfo.new(pkgname) }
+
+    if $command_output
+      printf %Q`\nif [ X"$pkgs" != X"" ]; then\n  %s "$@" $pkgs\nfi\n`, $command
+    end
+  end
+
+  0
+end
+
+def pkgs_size(pkgs)
+  total_bytes = 0
+  pkgs.each do |pkg|
+    if !$ignore_moved and \
+       !config_ignore_moved?(pkg) and \
+       (moved = $portsdb.moved.trace(pkg.origin)) and \
+       (o = moved.last.to)
+      origin = o
+    else
+      origin = pkg.origin
+    end
+
+    size = 0
+    begin
+      IO.popen("#{PkgDB::command(:pkg_info)} -qL #{pkg}") do |r|
+	r.each do |line|
+	  line.chomp!
+	  size += File.size(line)
+	end
+      end
+    rescue => e
+      warning_message "Package PLIST error: "+e.message
+      return
+    end
+
+    total_bytes += size
+    size /= $divider
+    puts "#{size}\t#{pkg}"
+  end
+
+  total_bytes /= $divider
+  if $total
+    puts "#{total_bytes}"
+  end
+rescue PortsDB::IndexFileError
+  warning_message "Error reading the ports INDEX."
+rescue PortsDB::DBError
+  warning_message "Error reading the ports database."
+end
+
+if $0 == __FILE__
+  set_signal_handlers
+
+  exit(main(ARGV) || 1)
+end

@@ -4,13 +4,15 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.5 (released 2008-07-09):
+portupgrade 2.4.5 (released 2008-07-10):
 
 * [portversion, portversion.1] Document new options.
 
 * [pkgtools.rb] Do not touch +CONTENTS file if it's not necessary.
 
 * [pkgmisc.rb] Remove temporary dir with `rm -r'. It could be inner dirs there.
+
+* [pkgdu] A new utility to display disk usage of installed packages.
 
 portupgrade 2.4.4 (released 2008-07-01):
 

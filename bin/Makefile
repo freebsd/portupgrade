@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+# $Id: Makefile,v 1.2 2006/07/02 15:23:35 sem Exp $
 
 SCRIPTSDIR?=	${PREFIX}/sbin
 
@@ -8,6 +8,7 @@ SCRIPTS=	${BUILDDIR}/pkg_fetch \
 		${BUILDDIR}/pkg_glob \
 		${BUILDDIR}/pkg_sort \
 		${BUILDDIR}/pkgdb \
+		${BUILDDIR}/pkgdu \
 		${BUILDDIR}/portcvsweb \
 		${BUILDDIR}/portsclean \
 		${BUILDDIR}/portsdb \
