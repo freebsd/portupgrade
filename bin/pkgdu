@@ -28,7 +28,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/07/09 15:31:18 $[1]
+MYDATE = %w$Date: 2008/07/10 13:17:02 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -240,7 +240,7 @@ def pkgs_size(pkgs)
       end
     rescue => e
       warning_message "Package PLIST error: "+e.message
-      return
+      next
     end
 
     total_bytes += size
