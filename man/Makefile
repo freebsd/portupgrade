@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2006/07/02 15:30:38 sem Exp $
+# $Id: Makefile,v 1.3 2008/07/10 13:17:02 sem Exp $
 
 MANDIR=		${PREFIX}/man/man
 
@@ -10,7 +10,7 @@ MAN1=		pkg_deinstall.1 \
 		pkgdu.1 \
 		portcvsweb.1 \
 		portsclean.1 \
-		portsdu.1 \
+		portsdb.1 \
 		portupgrade.1 \
 		portversion.1
 
