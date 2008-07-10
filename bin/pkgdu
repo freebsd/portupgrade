@@ -28,7 +28,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/07/10 13:17:02 $[1]
+MYDATE = %w$Date: 2008/07/10 13:19:53 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -244,8 +244,10 @@ def pkgs_size(pkgs)
     end
 
     total_bytes += size
-    size /= $divider
-    puts "#{size}\t#{pkg}"
+    if !$quiet
+      size /= $divider
+      puts "#{size}\t#{pkg}"
+    end
   end
 
   total_bytes /= $divider
