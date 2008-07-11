@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.6 (released 2008-07-11):
+
+* Fix man pages install.
+
 portupgrade 2.4.5 (released 2008-07-10):
 
 * [portversion, portversion.1] Document new options.
