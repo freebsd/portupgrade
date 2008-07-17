@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+# $Id: Makefile,v 1.2 2006/07/02 15:30:37 sem Exp $
 
 ETCDIR?=	${PREFIX}/etc
 
@@ -22,8 +22,8 @@ CLEANDIRS=	${BUILDDIR}
 ${script}: ${script:T}
 	@mkdir -p ${BUILDDIR}
 	${RUBY} -p \
-		-e 'sub(%r:/usr/local:, "${PREFIX}")' \
-		-e 'sub(%r:(/etc/rc\.subr):, "${PREFIX}\\1") if !File.exist?("/etc/rc.subr")' \
+		-e '$$_.sub(%r:/usr/local:, "${PREFIX}")' \
+		-e '$$_.sub(%r:(/etc/rc\.subr):, "${PREFIX}\\1") if !File.exist?("/etc/rc.subr")' \
 		${.ALLSRC} > ${.TARGET}
 .endfor
 

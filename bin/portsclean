@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2008/01/08 12:09:15 $[1]
+MYDATE = %w$Date: 2008/02/10 22:43:29 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -72,8 +72,8 @@ usage: #{MYNAME} [-hCDDiLnPPQQq]
       exit 0
     }
 
-    opts.def_option("-C", "--workclean", "Clean up working directories") {
-      |$workclean|
+    opts.def_option("-C", "--workclean", "Clean up working directories") { |v|
+      $workclean = v
     }
 
     opts.def_option("-D", "--distclean", "Clean up distfiles which are not referenced from any#{NEXTLINE}port in the ports tree;#{NEXTLINE}Specified twice, clean up distfiles which are not#{NEXTLINE}referenced from any port that is currently installed") {
@@ -86,12 +86,12 @@ usage: #{MYNAME} [-hCDDiLnPPQQq]
       end
     }
 
-    opts.def_option("-L", "--libclean", "Clean up old shared libraries") {
-      |$libclean|
+    opts.def_option("-L", "--libclean", "Clean up old shared libraries") { |v|
+      $libclean = v
     }
 
-    opts.def_option("-n", "--noexecute", "Do not actually delete files") {
-      |$noexecute|
+    opts.def_option("-n", "--noexecute", "Do not actually delete files") { |v|
+      $noexecute = v
       if $noexecute
 	$interactive = false
       end
@@ -115,8 +115,8 @@ usage: #{MYNAME} [-hCDDiLnPPQQq]
       end
     }
 
-    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
-      |$noconfig|
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") { |v|
+      $noconfig = v
     }
 
     opts.def_tail_option '
@@ -310,7 +310,7 @@ def libclean()
 
   libtable = {}
 
-  `/sbin/ldconfig -elf -r`.each do |line|
+  `/sbin/ldconfig -elf -r`.each_line do |line|
     line.strip!
 
     case line

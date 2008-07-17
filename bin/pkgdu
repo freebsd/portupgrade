@@ -28,7 +28,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/07/10 13:19:53 $[1]
+MYDATE = %w$Date: 2008/07/10 13:24:11 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -77,25 +77,24 @@ usage: #{MYNAME} [-hbkmRrqs] [pkgname_glob ...]
       $divider = 1024*1024
     }
 
-    opts.def_option("-t", "--total", "Display a grand total") {
-      |$total|
+    opts.def_option("-t", "--total", "Display a grand total") { |v|
+      $total = v
     }
 
-    opts.def_option("-q", "--quiet", "Display only grand total") {
-      |$quiet|
+    opts.def_option("-q", "--quiet", "Display only grand total") { |v|
+      $quiet = v
       $total = true
     }
 
-    opts.def_option("-r", "--recursive", "Check for all those depending on the given#{NEXTLINE}packages as well") {
-      |$recursive|
+    opts.def_option("-r", "--recursive", "Check for all those depending on the given#{NEXTLINE}packages as well") { |v|
+      $recursive = v
     }
 
-    opts.def_option("-R", "--upward-recursive", "Check for all those required by the given#{NEXTLINE}packages as well") {
-      |$upward_recursive|
+    opts.def_option("-R", "--upward-recursive", "Check for all those required by the given#{NEXTLINE}packages as well") { |v|
+      $upward_recursive = v
     }
 
-    opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") {
-      |arg|
+    opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") { |arg|
       begin
 	pattern = parse_pattern(arg)
       rescue RegexpError => e

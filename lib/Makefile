@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1.1.1 2006/06/13 12:59:00 sem Exp $
+# $Id: Makefile,v 1.2 2006/08/14 17:34:11 sem Exp $
 
 BUILDDIR=	.build
 
@@ -24,7 +24,7 @@ ${file}: ${file:T}
 	${RUBY} -wc ${.ALLSRC}
 	@mkdir -p ${BUILDDIR}
 	${RUBY} -p \
-		-e 'sub %r:/usr/local:, "${PREFIX}"' \
+		-e '$$_.sub %r:/usr/local:, "${PREFIX}"' \
 		${.ALLSRC} > ${.TARGET}
 .endfor
 

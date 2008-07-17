@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 #
-# $Id: test_pkgdb.rb 1028 2004-07-20 11:14:02Z knu $
+# $Id: test_pkgdb.rb,v 1.1.1.1 2006/06/13 12:59:01 sem Exp $
 $:.push("..")
 
 require 'find'
@@ -16,7 +16,7 @@ class TestPkgDB < Test::Unit::TestCase
     pkgdb = PkgDB.instance.setup('/var/db/pkg')
     ruby_pkgname = ''
     Find.find('/var/db/pkg') do |path|
-      if FileTest.directory?(path) && /ruby-1.8/ =~ path
+      if FileTest.directory?(path) && /ruby-1.9/ =~ path
 	ruby_pkgname = File.basename(path)
       end
     end

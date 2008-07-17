@@ -29,7 +29,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/06/23 13:10:30 $[1]
+MYDATE = %w$Date: 2008/07/09 15:31:18 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -85,12 +85,11 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
       exit 0
     }
 
-    opts.def_option("-c", "--command-output", "Enable command output") {
-      |$command_output|
+    opts.def_option("-c", "--command-output", "Enable command output") { |v|
+      $command_output = v
     }
 
-    opts.def_option("-C", "--command-args=ARGS", "Specify the arguments for portupgrade in command#{NEXTLINE}output (default: none)") {
-      |command_args|
+    opts.def_option("-C", "--command-args=ARGS", "Specify the arguments for portupgrade in command#{NEXTLINE}output (default: none)") { |command_args|
       $command = 'portupgrade ' + command_args
     }
 
@@ -99,20 +98,20 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
     }
 
     opts.def_option("--ignore-moved",
-		    "Ignore MOVED file") {
-      |$ignore_moved|
+		    "Ignore MOVED file") { |v|
+      $ignore_moved = v
     }
 
-    opts.def_option("-l", "--limit=CHARS", "Only include the packages with the specified#{NEXTLINE}status flags") {
-      |$limit_chars|
+    opts.def_option("-l", "--limit=CHARS", "Only include the packages with the specified#{NEXTLINE}status flags") { |v|
+      $limit_chars = v
       # XXX: workaround: optparse treats `-l=' as '-l ""'
       if $limit_chars.empty?
 	$limit_chars = '='
       end
     }
 
-    opts.def_option("-L", "--inv-limit=CHARS", "Exclude the packages with the specified#{NEXTLINE}status flags") {
-      |$inv_limit_chars|
+    opts.def_option("-L", "--inv-limit=CHARS", "Exclude the packages with the specified#{NEXTLINE}status flags") { |v|
+      $inv_limit_chars = v
       # XXX: workaround: optparse treats `-L=' as '-L ""'
       if $inv_limit_chars.empty?
 	$inv_limit_chars = '='
@@ -127,34 +126,33 @@ usage: #{MYNAME} [-hOqv] [-l limit_chars] [-L inv_limit_chars]
       $sanity_check = false
     }
 
-    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
-      |$noconfig|
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") { |v|
+      $noconfig = v
     }
 
     opts.def_option("-Q", "--quiet", "Do not display status chars") {
       $verbose_output = :quiet
     }
 
-    opts.def_option("-r", "--recursive", "Check for all those depending on the given#{NEXTLINE}packages as well") {
-      |$recursive|
+    opts.def_option("-r", "--recursive", "Check for all those depending on the given#{NEXTLINE}packages as well") { |v|
+      $recursive
     }
 
-    opts.def_option("-R", "--upward-recursive", "Check for all those required by the given#{NEXTLINE}packages as well") {
-      |$upward_recursive|
+    opts.def_option("-R", "--upward-recursive", "Check for all those required by the given#{NEXTLINE}packages as well") { |v|
+      $upward_recursive = v
     }
 
-    opts.def_option("-t", "--test=VERSION", "Compare the version with the following one(s),#{NEXTLINE}and print the result(s)") {
-      |$test_version|
+    opts.def_option("-t", "--test=VERSION", "Compare the version with the following one(s),#{NEXTLINE}and print the result(s)") { |v|
+      $test_version = v
       $test_version = PkgVersion.new($test_version)
     }
 
-    opts.def_option("-v", "--verbose", "Be verbose") {
-      |$verbose|
+    opts.def_option("-v", "--verbose", "Be verbose") { |v|
+      $verbose = v
       $verbose_output = :verbose
     }
 
-    opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") {
-      |arg|
+    opts.def_option("-x", "--exclude=GLOB", "Exclude packages matching the specified glob#{NEXTLINE}pattern") { |arg|
       begin
 	pattern = parse_pattern(arg)
       rescue RegexpError => e

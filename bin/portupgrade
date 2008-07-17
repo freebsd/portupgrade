@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/06/30 23:22:24 $[1]
+MYDATE = %w$Date: 2008/07/01 11:32:25 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -234,44 +234,44 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-a", "--all",
-		    "Do with all the installed packages") {
-      |$all|
+		    "Do with all the installed packages") { |v|
+      $all = v
       $recursive = false
       $upward_recursive = false
     }
 
     opts.def_option("-A", "--afterinstall=CMD",
-		    "Run the command after each installation") {
-      |$afterinstall|
+		    "Run the command after each installation") { |v|
+      $afterinstall = v
       $afterinstall.strip!
     }
 
     opts.def_option("-b", "--backup-packages",
-		    "Keep backup packages of the old versions") {
-      |$backup_packages|
+		    "Keep backup packages of the old versions") { |v|
+      $backup_packages = v
     }
 
     opts.def_option("--batch",
 		    "Run an upgrading process in a batch mode" << NEXTLINE <<
-    		    "(with BATCH=yes)") {
-      |$batch_mode|
+    		    "(with BATCH=yes)") { |v|
+      $batch_mode = v
     }
 
     opts.def_option("-B", "--beforebuild=CMD",
 		    "Run the command before each build; If the command" << NEXTLINE <<
-		    "exits in failure, then the port will be skipped") {
-      |$beforebuild|
+		    "exits in failure, then the port will be skipped") { |v|
+      $beforebuild = v
       $beforebuild.strip!
     }
 
     opts.def_option("-c", "--config",
-		    "Run \"make config-conditional\" before everything for all tasks") {
-      |$config|
+		    "Run \"make config-conditional\" before everything for all tasks") { |v|
+      $config = v
     }
 
     opts.def_option("-C", "--force-config",
-		    "Run \"make config\" before everything for all tasks") {
-      |$force_config|
+		    "Run \"make config\" before everything for all tasks") { |v|
+      $force_config = v
       $config = true
     }
 
@@ -283,43 +283,42 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-e", "--emit-summaries",
-		    "Emit summary info after each port processing" << NEXTLINE ) {
-      |$emit_summaries|
+		    "Emit summary info after each port processing" << NEXTLINE ) { |v|
+      $emit_summaries = v
     }
 
     opts.def_option("-f", "--force",
 		    "Force the upgrade of a port even if it is to be a" << NEXTLINE <<
-		    "downgrade or just a reinstall, or the port is held") {
-      |$force|
+		    "downgrade or just a reinstall, or the port is held") { |v|
+      $force = v
     }
 
     opts.def_option("-F", "--fetch-only",
 		    "Only fetch distfiles or packages (if -P is given);" << NEXTLINE <<
-		    "Do not build or install anything") {
-      |$fetch_only|
+		    "Do not build or install anything") { |v|
+      $fetch_only = v
     }
 
     opts.def_option("--ignore-moved",
-		    "Ignore MOVED file") {
-      |$ignore_moved|
+		    "Ignore MOVED file") { |v|
+      $ignore_moved = v
     }
 
     opts.def_option("-i", "--interactive",
-		    "Turn on interactive mode") {
-      |$interactive|
+		    "Turn on interactive mode") { |v|
+      $interactive = v
       $verbose = true
     }
 
     opts.def_option("-k", "--keep-going",
 		    "Force the upgrade of a port even if some of the" << NEXTLINE <<
-		    "requisite ports have failed to upgrade") {
-      |$keep_going|
+		    "requisite ports have failed to upgrade") { |v|
+      $keep_going = v
     }
 
     opts.def_option("-l", "--results-file=FILE",
 		    "Specify a file name to save the results to" << NEXTLINE <<
-		    "(default: do not save results)") {
-      |resultsfile|
+		    "(default: do not save results)") { |resultsfile|
       $resultsfile = File.expand_path(resultsfile)
     }
 
@@ -327,8 +326,7 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
 		    "Specify a printf(3) style format to determine the" << NEXTLINE <<
 		    "log file name for each port; '%s::%s' is appended" << NEXTLINE <<
 		    "if it does not contain a %; category and portname" << NEXTLINE <<
-		    "are given as arguments (default: do not save logs)") {
-      |fmt|
+		    "are given as arguments (default: do not save logs)") { |fmt|
       fmt.include?(?%) or fmt << '%s::%s'
 
       $logfilename_format = File.expand_path(fmt)
@@ -336,14 +334,13 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
 
     opts.def_option("-m", "--make-args=ARGS",
 		    "Specify arguments to append to each make(1)" << NEXTLINE <<
-		    "command line") {
-      |$make_args|
-    }
+		    "command line") { |v|
+      $make_args = v
+    } 
 
     opts.def_option("-M", "--make-env=ARGS",
 		    "Specify arguments to prepend to each make(1)" << NEXTLINE <<
-		    "command line") {
-      |make_env|
+		    "command line") { |make_env|
       $make_env = shellwords(make_env) unless make_env.empty?
 
       if $make_env[0].include?('=')
@@ -353,8 +350,8 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
 
     opts.def_option("-n", "--noexecute",
 		    "Do not upgrade any ports, but just show what would" << NEXTLINE <<
-		    "be done") {
-      |$noexecute|
+		    "be done") { |v|
+      $noexecute = v
       $verbose = true
       $interactive = true
       $yestoall = false
@@ -363,13 +360,12 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     opts.def_option("-N", "--new",
 		    "Install a new one when a specified package is" << NEXTLINE <<
 		    "not installed, after upgrading all the dependent" << NEXTLINE <<
-		    "packages (default: #{MYNAME == 'portinstall' ? 'on' : 'off'})") {
-      |$new|
+		    "packages (default: #{MYNAME == 'portinstall' ? 'on' : 'off'})") { |v|
+      $new = v
     }
 
     opts.def_option("-o", "--origin=ORIGIN",
-		    "Specify a port to upgrade the following pkg with") {
-      |origin|
+		    "Specify a port to upgrade the following pkg with") { |origin|
       $origin = $portsdb.strip(origin) || origin
     }
 
@@ -380,8 +376,8 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-p", "--package",
-		    "Build package when each port is installed") {
-      |$package|
+		    "Build package when each port is installed") { |v|
+      $package = v
     }
 
     opts.def_option("-P", "--use-packages",
@@ -395,19 +391,19 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("--use-packages-only",
-		    "Or -PP; Use no ports but packages only") {
-      |$use_packages_only|
+		    "Or -PP; Use no ports but packages only") { |v|
+      $use_packages_only = v
       $use_packages = true
     }
 
     opts.def_option("-q", "--quiet",
-		    "Be quiet when -N option specified and the package already installed") {
-      |$quiet|
+		    "Be quiet when -N option specified and the package already installed") { |v|
+      $quiet = v
     }
 
     opts.def_option("--noconfig",
-		    "Do not read pkgtools.conf") {
-      |$noconfig|
+		    "Do not read pkgtools.conf") { |v|
+      $noconfig = v
     }
 
     opts.def_option("-r", "--recursive",
@@ -424,14 +420,13 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-s", "--sudo",
-		    "Run commands under sudo(8) where needed") {
-      |$sudo|
+		    "Run commands under sudo(8) where needed") { |v|
+      $sudo = v
     }
 
     opts.def_option("-S", "--sudo-command=CMD",
 		    "Specify an alternative to sudo(8)" << NEXTLINE <<
-		    "e.g. 'su root -c \"%s\"' (default: sudo)") {
-      |sudo_command|
+		    "e.g. 'su root -c \"%s\"' (default: sudo)") { |sudo_command|
       $sudo_args = shellwords(sudo_command)
     }
 
@@ -441,31 +436,28 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-v", "--verbose",
-		    "Be verbose") {
-      |$verbose|
+		    "Be verbose") { |v|
+      $verbose = v
     }
 
     opts.def_option("-w", "--noclean",
-		    "Do not \"make clean\" before each build") {
-      |noclean|
+		    "Do not \"make clean\" before each build") { |noclean|
       $clean = false
     }
 
     opts.def_option("-W", "--nocleanup",
-		    "Do not \"make clean\" after each installation") {
-      |nocleanup|
+		    "Do not \"make clean\" after each installation") { |nocleanup|
       $cleanup = false
     }
 
     opts.def_option("--without-env-upgrade",
-      		    "Do not set UPGRADE_* environment variables") {
-      |$without_env_upgrade|
+      		    "Do not set UPGRADE_* environment variables") { |v|
+      $without_env_upgrade = v
     }
 
     opts.def_option("-x", "--exclude=GLOB",
 		    "Exclude packages matching the specified glob" << NEXTLINE <<
-		    "pattern") {
-      |arg|
+		    "pattern") { |arg|
       begin
 	pattern = parse_pattern(arg)
       rescue RegexpError => e
@@ -477,8 +469,8 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
     }
 
     opts.def_option("-y", "--yes",
-		    "Answer yes to all the questions") {
-      |$yestoall|
+		    "Answer yes to all the questions") { |v|
+      $yestoall = v
       $verbose = true
       $noexecute = false
     }
@@ -873,14 +865,12 @@ def get_all_depends(origin, parents_list = nil)
     depends.each do |dep|
       children_deps.merge(get_all_depends(dep, parents_list)) if !dep.nil?
     end
-    if children_deps.nil?
-      next
-    else
+    if !children_deps.nil?
       depends.merge(children_deps)
     end
 
     STDERR.puts ' done]' if first
-    $depends[origin] = depends.to_a.compact
+    $depends[origin] = depends.scan(/.*\n/).compact
   else
     $depends[origin]
   end
@@ -1147,8 +1137,8 @@ def get_beforebuild_command(origin)
   commands[commands.size, 0] = config_beforebuild(origin)	# maybe nil
 
   commands.uniq!
-  commands.each { |cmd| cmd.sub!(/^[;\s]+/, '') }
-  commands.reject! { |cmd| cmd.empty? }
+  commands.each { |cmd| cmd.sub!(/^[;\s]+/, '') if !cmd.nil? }
+  commands.reject! { |cmd| cmd.nil? || cmd.empty? }
 
   if commands.empty?
     nil
@@ -1163,8 +1153,8 @@ def get_afterinstall_command(origin)
   commands[0, 0] = config_afterinstall(origin)	# maybe nil
 
   commands.uniq!
-  commands.each { |cmd| cmd.sub!(/^[;\s]+/, '') }
-  commands.reject! { |cmd| cmd.empty? }
+  commands.each { |cmd| cmd.sub!(/^[;\s]+/, '') if !cmd.nil? }
+  commands.reject! { |cmd| cmd.nil? || cmd.empty? }
 
   if commands.empty?
     nil
@@ -1460,7 +1450,7 @@ def get_pkgname(origin)
 
   cmdargs.concat(get_make_args(origin))
 
-  output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE 2>&1`.to_a
+  output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE 2>&1`.scan(/.*\n/)
 
   if output.size != 3
     warning_message "Makefile possibly broken: #{origin}:"
@@ -1936,7 +1926,7 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
 
   if str = backquote!(PkgDB::command(:pkg_create), '-vb', pkgname,
 		      File.join($tmpdir, pkgname + $portsdb.pkg_sufx))
-    str.each { |line|
+    str.each_line { |line|
       if /^Creating .*tar ball in \'(.*)\'/ =~ line
 	backup_pkgfile = $1
 	break

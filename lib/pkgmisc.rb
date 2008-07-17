@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgmisc.rb,v 1.7 2008/06/30 15:38:39 sem Exp $
+# $Id: pkgmisc.rb,v 1.8 2008/07/09 15:02:58 sem Exp $
 
 begin
   require 'features/ruby18/dir'	# for Dir.chdir(dir) { ... }
@@ -107,7 +107,7 @@ class File
     module LIBC
       PATH_MAX = 1024
 
-      extend DL::Importable
+      extend DL::Importer
       dlload "libc.so"
       extern "const char *realpath(char *, char *)"
     end

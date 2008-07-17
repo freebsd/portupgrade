@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2006/07/02 15:23:35 sem Exp $
+# $Id: Makefile,v 1.3 2008/07/10 13:17:02 sem Exp $
 
 SCRIPTSDIR?=	${PREFIX}/sbin
 
@@ -28,7 +28,7 @@ ${script}: ${script:T}
 	${RUBY} -pe ' \
 		if $$. == 1; \
 		 if /^#!/; \
-		  sub /^#!\s*\S*(\benv\s+)?\bruby/, "#!${RUBY}"; \
+		  $$_.sub(/^#!\s*\S*(\benv\s+)?\bruby/, "#!${RUBY}"); \
 		 else; \
 		  $$_ = "#!${RUBY}\n" + $$_; \
 		 end; \

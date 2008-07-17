@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 #
-# $Id: test_portsdb.rb 1028 2004-07-20 11:14:02Z knu $
+# $Id: test_portsdb.rb,v 1.1.1.1 2006/06/13 12:59:01 sem Exp $
 $:.push("..")
 
 require 'test/unit'
 
+require 'pkgtools'
 require 'pkgdb'
 require 'portsdb'
 

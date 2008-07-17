@@ -30,7 +30,7 @@
 #
 
 MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2008/06/30 23:55:15 $[1]
+MYDATE = %w$Date: 2008/07/01 13:32:07 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -74,8 +74,7 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
       exit 0
     }
 
-    opts.def_option("-c", "--collate=PKGNAME", "Show files installed by the given packge#{NEXTLINE}that have been overwritten by other packages") {
-      |pkgname|
+    opts.def_option("-c", "--collate=PKGNAME", "Show files installed by the given packge#{NEXTLINE}that have been overwritten by other packages") { |pkgname|
       pkgname = $pkgdb.strip(pkgname, true)
 
       begin
@@ -99,17 +98,17 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
       end unless dry_parse
     }
 
-    opts.def_option("-f", "--force", "Force;#{NEXTLINE}Specified with -u, update database#{NEXTLINE}regardless of timestamps#{NEXTLINE}Specified with -F, fix held packages too") {
-      |$force|
+    opts.def_option("-f", "--force", "Force;#{NEXTLINE}Specified with -u, update database#{NEXTLINE}regardless of timestamps#{NEXTLINE}Specified with -F, fix held packages too") { |v|
+      $force = v
     }
 
-    opts.def_option("-F", "--fix", "Fix the package database interactively") {
-      |$fix_db|
+    opts.def_option("-F", "--fix", "Fix the package database interactively") { |v|
+      $fix_db = v
       $interactive = true if ! $automatic
     }
 
-    opts.def_option("-a", "--auto", "Turn on automatic mode when -F is also specified") {
-      |$automatic|
+    opts.def_option("-a", "--auto", "Turn on automatic mode when -F is also specified") { |v|
+      $automatic = v
       $interactive = false if $fix_db
     }
 
@@ -118,16 +117,15 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
     }
 
     opts.def_option("-i", "--interactive",
-		    "Turn on interactive mode") {
-      |$interactive|
+		    "Turn on interactive mode") { |v|
+      $interactive = v
     }
 
-    opts.def_option("-L", "--fix-lost", "Check and restore lost dependencies#{NEXTLINE}against the ports tree") {
-      |$check_lost|
+    opts.def_option("-L", "--fix-lost", "Check and restore lost dependencies#{NEXTLINE}against the ports tree") { |v|
+      $check_lost = v
     }
 
-    opts.def_option("-o", "--origin=PKGNAME[=ORIGIN]", "Look up or change the origin of the given#{NEXTLINE}package") {
-      |arg|
+    opts.def_option("-o", "--origin=PKGNAME[=ORIGIN]", "Look up or change the origin of the given#{NEXTLINE}package") { |arg|
       pkgname, origin = arg.split('=', 2)
       spkgname = $pkgdb.strip(pkgname, true)
       unless dry_parse
@@ -149,8 +147,8 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
       end
     }
 
-    opts.def_option("-O", "--omit-check", "Specified with -F, turn off checks#{NEXTLINE}dependencies against the ports tree. Useful#{NEXTLINE}if you need a speed-up") {
-      |$omit_check|
+    opts.def_option("-O", "--omit-check", "Specified with -F, turn off checks#{NEXTLINE}dependencies against the ports tree. Useful#{NEXTLINE}if you need a speed-up") { |v|
+      $omit_check = v
     }
 
     opts.def_option("-Q", "--quiet", "Do not write anything to stdout;#{NEXTLINE}Specified twice, stderr neither") {
@@ -163,12 +161,11 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
       end
     }
 
-    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") {
-      |$noconfig|
+    opts.def_option("-q", "--noconfig", "Do not read pkgtools.conf") { |v|
+      $noconfig = v
     }
 
-    opts.def_option("-s", "--substitute=/OLD/NEW/", "Substitute all the dependencies recorded#{NEXTLINE}as OLD with NEW") {
-      |expr|
+    opts.def_option("-s", "--substitute=/OLD/NEW/", "Substitute all the dependencies recorded#{NEXTLINE}as OLD with NEW") { |expr|
       if expr.empty?
 	warning_message "Illegal expression: " + expr
 	print opts
@@ -201,12 +198,12 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
       $automatic = automatic
     }
 
-    opts.def_option("-u", "--update", "Update the package database") {
-      |$update_db|
+    opts.def_option("-u", "--update", "Update the package database") { |v|
+      $update_db = v
     }
 
-    opts.def_option("-v", "--verbose", "Be verbose") {
-      |$verbose|
+    opts.def_option("-v", "--verbose", "Be verbose") { |v|
+      $verbose = v
     }
 
     opts.def_tail_option '
