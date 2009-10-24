@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdbtools.rb,v 1.6 2007/02/22 13:36:34 sem Exp $
+# $FreeBSD: projects/pkgtools/lib/pkgdbtools.rb,v 1.8 2009-10-24 22:35:55 stas Exp $
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)
@@ -195,10 +195,8 @@ module PkgDBTools
     else
       if mode == 'w+'
 	File.unlink(@db_file) if File.exist?(@db_file)
-	db = DBM.open(@db_filebase, mode.to_i)
-      else
-	db = DBM.open(@db_filebase)
       end
+      db = DBM.open(@db_filebase)
     end
     db
   end
