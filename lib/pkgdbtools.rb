@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgdbtools.rb,v 1.8 2009-10-24 22:35:55 stas Exp $
+# $FreeBSD: projects/pkgtools/lib/pkgdbtools.rb,v 1.9 2009-10-26 14:00:59 stas Exp $
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)
@@ -158,17 +158,17 @@ module PkgDBTools
     count = 0
     while FileTest.exist?(@lock_file)
       if Time::now() - File.stat(@lock_file).mtime > 120
-	puts "** Stale lock file was found. Removed."
+	STDERR.puts "** Stale lock file was found. Removed."
 	PkgDBTools.remove_lock(@lock_file, true)
 	break
       end
       if count == 0
-	puts "** Database file locked. Waiting."
+	STDERR.puts "** Database file locked. Waiting."
       end
       sleep 1
       count += 1
       if count > 120
-	puts "** Timeout. The lock looks dead. Remove it."
+	STDERR.puts "** Timeout. The lock looks dead. Remove it."
 	PkgDBTools.remove_lock(@lock_file, true)
       end
     end
