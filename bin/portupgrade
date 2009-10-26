@@ -28,6 +28,8 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
+# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.62 2009-10-26 14:47:49 stas Exp $
+#
 
 MYREVISION = %w$Rev: 71 $[1]
 MYDATE = %w$Date: 2008/07/01 11:32:25 $[1]
@@ -1450,16 +1452,22 @@ def get_pkgname(origin)
 
   cmdargs.concat(get_make_args(origin))
 
-  output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE 2>&1`.scan(/.*\n/)
+  output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE -V ECHO_MSG 2>&1`.scan(/.*\n/)
 
-  if output.size != 3
+  if output.size != 4
     warning_message "Makefile possibly broken: #{origin}:"
     output.each { |line| STDERR.print "\t" + line }
     raise MakefileBrokenError
   end
 
-  ignore = output[1].chomp
+  ignore_message = output[1].chomp
   no_ignore = !output[2].chomp.empty?
+  echo_cmd = output[3].chomp
+  ignore = `#{echo_cmd} "#{ignore_message}"`
+
+  # Some packages ouptut a ':\n ' to try to look nice when using the normal
+  # ports build process. That looks really bad here, so we undo that.
+  ignore.slice!(0..2) if (ignore.match /^:\n /)
 
   if not ignore.empty?
     warning_message "Port marked as IGNORE: #{origin}:"
