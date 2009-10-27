@@ -28,7 +28,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.63 2009-10-27 14:59:37 stas Exp $
+# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.64 2009-10-27 16:59:20 stas Exp $
 #
 
 MYREVISION = %w$Rev: 71 $[1]
@@ -656,7 +656,7 @@ Environment Variables [default]:
 	      not_need_upgrade = []
 	      depends.each do |task|
 		STDERR.print '.'
-		next if task == ''
+		next if task.nil? or task.empty?
 		begin
 		  pkg = PkgInfo.new(task)
 	        rescue ArgumentError => e
@@ -926,8 +926,12 @@ def do_upgrade(pkgname)
   pkg = PkgInfo.new(pkgname)
 
   origin = $task_options[pkgname][:origin]
+  if origin.nil? then
+    warning_message "Cannot find origin for #{pkgname}"
+    return
+  end
 
-  if !origin || !File.directory?($portsdb.ports_dir()+'/'+origin)
+  if not File.directory?($portsdb.ports_dir() + '/' + origin)
     if !$ignore_moved and \
        !config_ignore_moved?(pkg) and \
        (moved = $portsdb.moved.trace(pkg.origin))
@@ -1024,6 +1028,10 @@ def do_upgrade(pkgname)
 end
 
 def do_install(origin)
+  if origin.nil? then
+    warning_message "NIL origin passed to do_install"
+    return
+  end
   if result = $results[origin]
     progress_message "Skipping '#{origin}' because it has already #{result.phrase(true)}"
 

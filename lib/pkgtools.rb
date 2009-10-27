@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtools.rb,v 1.35 2008/07/09 16:21:54 sem Exp $
+# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.37 2009-10-27 16:59:21 stas Exp $
 
 PREFIX = "/usr/local"
 Version = "2.4.6"
@@ -949,6 +949,9 @@ class PkgResult
   attr_accessor :item, :result, :info
 
   def initialize(item, result, info = nil)
+    if item.nil? then
+      raise ArgumentError
+    end
     @item = item
     @result = result
     @info = info
