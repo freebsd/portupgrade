@@ -4,10 +4,6 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.5.0 (released 2008-XX-XX):
-
-* Adapt to ruby 1.9.
-
 portupgrade 2.4.6 (released 2008-07-11):
 
 * Fix man pages install.
@@ -353,3 +349,5 @@ portupgrade 2.0.0 (released 2006-01-01):
   instead of "portsdb -U" (make INDEX by yourself) in portsdb(1). [1]
 
   Pointed out by: Enrique Matias <cronopios at gmail dot com> [1]
+
+$FreeBSD: projects/pkgtools/NEWS,v 1.27 2009-10-27 23:31:09 stas Exp $
