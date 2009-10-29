@@ -28,7 +28,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.64 2009-10-27 16:59:20 stas Exp $
+# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.65 2009-10-29 00:31:15 stas Exp $
 #
 
 MYREVISION = %w$Rev: 71 $[1]
@@ -926,12 +926,8 @@ def do_upgrade(pkgname)
   pkg = PkgInfo.new(pkgname)
 
   origin = $task_options[pkgname][:origin]
-  if origin.nil? then
-    warning_message "Cannot find origin for #{pkgname}"
-    return
-  end
 
-  if not File.directory?($portsdb.ports_dir() + '/' + origin)
+  if !origin || !File.directory?($portsdb.ports_dir() + '/' + origin)
     if !$ignore_moved and \
        !config_ignore_moved?(pkg) and \
        (moved = $portsdb.moved.trace(pkg.origin))
@@ -941,7 +937,7 @@ def do_upgrade(pkgname)
 	end
       else
 	warning_message "Package '#{pkg.name}' has been removed from ports tree."
-	$results << PkgResult.new(origin, :ignored, pkgname)
+#	$results << PkgResult.new(origin, :ignored, pkgname)
 	return
       end
     else
@@ -1480,7 +1476,7 @@ def get_pkgname(origin)
   # ports build process. That looks really bad here, so we undo that.
   ignore.slice!(0..2) if (ignore.match /^:\n /)
 
-  if not ignore.empty?
+  if not ignore_message.empty?
     warning_message "Port marked as IGNORE: #{origin}:"
     STDERR.puts "\t" + ignore
     raise IgnoreMarkError unless no_ignore
