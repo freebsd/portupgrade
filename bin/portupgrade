@@ -28,7 +28,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.65 2009-10-29 00:31:15 stas Exp $
+# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.66 2009-12-21 22:19:23 stas Exp $
 #
 
 MYREVISION = %w$Rev: 71 $[1]
@@ -831,7 +831,7 @@ def get_all_depends(origin, parents_list = nil)
     depends = Set.new
 
     portdir = $portsdb.portdir(origin)
-    return nil if not File.directory?(portdir)
+    return [] if not File.directory?(portdir)
 
     begin
       run_make_config(portdir, origin) if $config
