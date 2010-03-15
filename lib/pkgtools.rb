@@ -188,6 +188,10 @@ def config_use_packages?(p)
   config_include?(:USE_PKGS, p)
 end
 
+def config_use_ports?(p)
+  config_include?(:USE_PORTS, p)
+end
+
 def config_held?(p)
   config_include?(:HOLD_PKGS, p)
 end
