@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.38 2010-11-08 04:31:44 stas Exp $
+# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.39 2010-11-08 04:41:23 stas Exp $
 
 PREFIX = "/usr/local"
 Version = "2.4.7"
@@ -1168,7 +1168,7 @@ module PkgConfig
     STDERR.puts "uname(1) could be broken - cannot parse the output: #{uname}"
   end
 
-  def pkg_site_mirror(root = ENV['PACKAGEROOT'] || 'ftp://ftp.FreeBSD.org')
+  def pkg_site_mirror(root = ENV['PACKAGEROOT'] || 'ftp://ftp.FreeBSD.org/')
     sprintf('%s/pub/FreeBSD/ports/%s/packages-%s/',
 	    root, OS_PLATFORM, OS_PKGBRANCH)
   end
