@@ -25,10 +25,10 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.37 2009-10-27 16:59:21 stas Exp $
+# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.38 2010-11-08 04:31:44 stas Exp $
 
 PREFIX = "/usr/local"
-Version = "2.4.6"
+Version = "2.4.7"
 
 begin
   require 'features/ruby18/file'
