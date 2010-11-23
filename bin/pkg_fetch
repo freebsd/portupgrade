@@ -27,6 +27,8 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
+# $FreeBSD: projects/pkgtools/bin/pkg_fetch,v 1.8 2010-11-23 20:29:14 stas Exp $
+#
 
 MYREVISION = %w$Rev: 52 $[1]
 MYDATE = %w$Date: 2008/01/08 11:32:27 $[1]
@@ -48,7 +50,9 @@ end
 COLUMNSIZE = 24
 NEXTLINE = "\n%*s" % [5 + COLUMNSIZE, '']
 
-if PkgConfig::OS_MAJOR.to_i >= 5
+if PkgConfig::OS_MAJOR.to_i >= 8
+  PKG_SUFFIXES = ['.tbz', '.txz', '.tgz']  
+elsif PkgConfig::OS_MAJOR.to_i >= 5
   PKG_SUFFIXES = ['.tbz', '.tgz']
 else
   PKG_SUFFIXES = ['.tgz', '.tbz']

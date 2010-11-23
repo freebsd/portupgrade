@@ -28,7 +28,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.68 2010-11-08 04:37:25 stas Exp $
+# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.69 2010-11-23 20:29:14 stas Exp $
 #
 
 MYREVISION = %w$Rev: 71 $[1]
@@ -2027,12 +2027,12 @@ def find_pkg(origin)
 
   name = pkgname.sub(/-[^\-]+$/, '')
 
-  glob_pkgfile = name + '-*.t[bg]z'
-  re_pkgfile = /^#{Regexp.quote(name)}-[^\-]+\.t[bg]z$/
+  glob_pkgfile = name + '-*.t[bgx]z'
+  re_pkgfile = /^#{Regexp.quote(name)}-[^\-]+\.t[bgx]z$/
 
   if latest_link = $portsdb.latest_link(origin)
-    glob_pkgfile = "{#{glob_pkgfile},#{latest_link}.t[bg]z}"
-    re_pkgfile = /(?:#{re_pkgfile.source}|^#{Regexp.quote(latest_link)}\.t[bg]z$)/
+    glob_pkgfile = "{#{glob_pkgfile},#{latest_link}.t[bgx]z}"
+    re_pkgfile = /(?:#{re_pkgfile.source}|^#{Regexp.quote(latest_link)}\.t[bgx]z$)/
   end
 
   pkglist = []
