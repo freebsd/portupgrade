@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2008/07/10 13:17:02 sem Exp $
+# $FreeBSD: projects/pkgtools/bin/Makefile,v 1.5 2010-12-14 07:37:49 stas Exp $
 
 SCRIPTSDIR?=	${PREFIX}/sbin
 
@@ -28,7 +28,7 @@ ${script}: ${script:T}
 	${RUBY} -pe ' \
 		if $$. == 1; \
 		 if /^#!/; \
-		  $$_.sub(/^#!\s*\S*(\benv\s+)?\bruby/, "#!${RUBY}"); \
+		  $$_.sub!(/^#!\s*\S*(\benv\s+)?\bruby/, "#!${RUBY}"); \
 		 else; \
 		  $$_ = "#!${RUBY}\n" + $$_; \
 		 end; \
