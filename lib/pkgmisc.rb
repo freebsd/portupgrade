@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgmisc.rb,v 1.11 2011-04-03 07:02:30 stas Exp $
+# $FreeBSD: projects/pkgtools/lib/pkgmisc.rb,v 1.12 2011-07-25 12:34:43 swills Exp $
 
 begin
   require 'features/ruby18/dir'	# for Dir.chdir(dir) { ... }
@@ -101,29 +101,8 @@ def shelljoin(*args)
 end
 
 class File
-  begin
-    require 'dl/import'
-  
-    module LIBC
-      PATH_MAX = 1024
-
-      begin
-        extend DL::Importable
-      rescue NameError
-        extend DL::Importer	# Ruby 1.9 use this
-      end
-      dlload "libc.so"
-      extern "const char *realpath(char *, char *)"
-    end
-  
-    def File.realpath(path)
-      return LIBC.realpath(path, "\0" * LIBC::PATH_MAX) ||
-	File.expand_path(path)
-    end
-  rescue LoadError, RuntimeError
-    def File.realpath(path)
-      return File.expand_path(path)
-    end
+  def File.realpath(path)
+    return File.expand_path(path)
   end
 end
 

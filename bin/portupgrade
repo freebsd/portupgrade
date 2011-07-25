@@ -28,7 +28,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.69 2010-11-23 20:29:14 stas Exp $
+# $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.70 2011-07-25 12:34:43 swills Exp $
 #
 
 MYREVISION = %w$Rev: 71 $[1]
@@ -726,7 +726,7 @@ Environment Variables [default]:
 
 	  stty_sane
 
-	  ports = $portsdb.glob(pattern).map { |i| i.origin }
+	  ports = $portsdb.glob(pattern).each.map { |i| i.origin }
 
 	  unique = false
 
@@ -859,7 +859,7 @@ def get_all_depends(origin, parents_list = nil)
 
     cmdargs.concat(get_make_args(origin))
 
-    `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')} 2>&1`.each do |line|
+    `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')} 2>&1`.each_line do |line|
 	line.split(/\s+/).each do |dep|
 	  dep.sub!(/.*?:/,'')
 	  if dep.rindex(':') != nil

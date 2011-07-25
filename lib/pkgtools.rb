@@ -25,7 +25,7 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.40 2010-11-23 20:09:14 stas Exp $
+# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.41 2011-07-25 12:34:43 swills Exp $
 
 PREFIX = "/usr/local"
 Version = "2.4.8"
@@ -1065,6 +1065,14 @@ class PkgResultSet < SimpleDelegator
 
   def [](item)
     @array.find { |r| r.item == item }
+  end
+
+  def progress_message(message, io = STDOUT)
+    io.puts "--->  " + message
+  end
+
+  def warning_message(message, io = STDERR)
+    io.puts "** " + message
   end
 
   def include?(item)
