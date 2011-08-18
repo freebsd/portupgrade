@@ -4,11 +4,15 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.8 (released 2011-08-18):
+portupgrade 2.4.9 (released 2011-08-18):
 
 * Ruby 1.9 compatibility.
 
-portupgrade 2.4.7 (released 2010-11-23):
+portupgrade 2.4.8 (released 2010-11-23):
+
+* Bugfixes.
+
+portupgrade 2.4.7 (released 2010-11-08):
 
 * Bugfixes.
 
@@ -358,4 +362,4 @@ portupgrade 2.0.0 (released 2006-01-01):
 
   Pointed out by: Enrique Matias <cronopios at gmail dot com> [1]
 
-$FreeBSD: projects/pkgtools/NEWS,v 1.28 2011-08-18 07:36:49 stas Exp $
+$FreeBSD: projects/pkgtools/NEWS,v 1.29 2011-08-18 07:39:58 stas Exp $
