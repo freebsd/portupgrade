@@ -634,7 +634,7 @@ Environment Variables [default]:
 		  get_all_depends(origin).each do |d|
 		    newdep = $pkgdb.deorigin(d)
 		    unless newdep.nil? then
-		      dep << newdep.to_s
+		      dep << newdep.join
 		    end
 		  end
 		  depends |= dep if $upward_recursive
@@ -995,6 +995,10 @@ def do_upgrade(pkgname)
 	  $package_tasks << key if deps.include?(pkgname)
 	end
       end
+    else
+      # maybe held?
+      upgraded = false
+      return false
     end
 
     $results << PkgResult.new(origin, result ? :done : :ignored, pkgname)

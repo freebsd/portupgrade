@@ -30,7 +30,7 @@
 require 'pkgdb'
 require 'pkgversion'
 begin
-  require 'features/ruby18/file'
+  require 'features/file'
 rescue LoadError; end
 
 class PkgInfo

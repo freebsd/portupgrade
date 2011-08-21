@@ -31,7 +31,7 @@
 require 'singleton'
 require 'tempfile'
 begin
-  require 'features/ruby18/file'
+  require 'features/file'
 rescue LoadError; end
 require 'pkgmisc'
 require 'pkgdbtools'
