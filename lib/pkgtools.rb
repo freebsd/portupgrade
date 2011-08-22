@@ -28,26 +28,7 @@
 # $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.42 2011-08-18 07:36:49 stas Exp $
 
 PREFIX = "/usr/local"
-Version = "2.4.9"
-
-begin
-  require 'features/ruby18/file'
-  require 'features/ruby18/enumerable'
-rescue LoadError
-  if !File.respond_to?(:fnmatch?)
-    if ENV['RUBY_STATIC']
-      raise "fnmatch module not found"
-    else
-      ruby_s = "#{PREFIX}/bin/ruby_s"
-
-      if File.executable?(ruby_s)
-	exec '/usr/bin/env', 'RUBY_STATIC=1', ruby_s, $0, *ARGV
-      else
-	raise "upgrade problem: please install lang/ruby_static from ports and try again"
-      end
-    end
-  end
-end
+Version = "2.4.9.1"
 
 require "pkg"
 require "ports"

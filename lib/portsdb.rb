@@ -30,9 +30,6 @@
 
 require 'singleton'
 require 'tempfile'
-begin
-  require 'features/ruby18/file'
-rescue LoadError; end
 require 'pkgmisc'
 require 'pkgdbtools'
 

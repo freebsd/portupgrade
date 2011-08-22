@@ -29,9 +29,6 @@
 
 require 'pkgdb'
 require 'pkgversion'
-begin
-  require 'features/ruby18/file'
-rescue LoadError; end
 
 class PkgInfo
   include Comparable
