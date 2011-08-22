@@ -31,8 +31,8 @@ PREFIX = "/usr/local"
 Version = "2.4.9"
 
 begin
-  require 'features/ruby18/file'
-  require 'features/ruby18/enumerable'
+  require 'features/file'
+  require 'features/enumerable'
 rescue LoadError
   if !File.respond_to?(:fnmatch?)
     if ENV['RUBY_STATIC']

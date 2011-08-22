@@ -28,8 +28,8 @@
 # $FreeBSD: projects/pkgtools/lib/pkgmisc.rb,v 1.12 2011-07-25 12:34:43 swills Exp $
 
 begin
-  require 'features/ruby18/dir'	# for Dir.chdir(dir) { ... }
-  require 'features/ruby18/enum' # Enumerable#any?, etc.
+  require 'features/dir'	# for Dir.chdir(dir) { ... }
+  require 'features/enum' # Enumerable#any?, etc.
 rescue LoadError
 end
 
