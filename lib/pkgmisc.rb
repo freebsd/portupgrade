@@ -101,8 +101,10 @@ def shelljoin(*args)
 end
 
 class File
-  def File.realpath(path)
-    return File.expand_path(path)
+  if not File.respond_to?('realpath') then
+    def File.realpath(path)
+      return File.expand_path(path)
+    end
   end
 end
 
