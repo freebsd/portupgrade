@@ -100,6 +100,12 @@ def shelljoin(*args)
   }.join(' ')
 end
 
+class File
+  def File.realpath(path)
+    return File.expand_path(path)
+  end
+end
+
 def init_tmpdir
   if ! $tmpdir.nil? && $tmpdir != "" then
     return
