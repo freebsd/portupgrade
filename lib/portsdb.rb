@@ -564,7 +564,7 @@ class PortsDB
       index_files = shelljoin(index_file) + ' '
       index_files.concat(@alt_index_files.join(' '))
 
-      open("| sort #{index_files}") do |f|
+      open("| sort #{index_files}", 'r:utf-8') do |f|
 	f.each_with_index do |line, i|
 	  lineno = i + 1
 
