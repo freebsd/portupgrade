@@ -2207,7 +2207,7 @@ class PkgResultSet
     write(f, '', true)
     f.close
 
-    install_data(f.path, file)
+    Object.send :install_data, f.path, file
   rescue => e
     warning_message "Failed to save the results: #{e.message}"
   end
