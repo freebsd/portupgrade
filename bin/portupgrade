@@ -1044,7 +1044,7 @@ def do_install(origin)
       make_args = get_make_args(origin)
       make_env = get_make_env(origin, true)
 
-      $portsdb.all_depends_list!(origin, shelljoin(*make_env), make_args).each do |o|
+      $portsdb.all_depends_list!(origin, shelljoin(*make_env), shelljoin(*make_args)).each do |o|
 	result = $results[o]
 
 	if result && result.failed?
