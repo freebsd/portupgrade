@@ -28,7 +28,7 @@ REL_VERSION=	${REL_DATE}.${REL_MINOR}
 
 DISTNAME=	pkgtools-${REL_VERSION}
 TARBALL=	${DISTNAME}.tar.bz2
-CHANGELOG=	ChangeLog NEWS
+CHANGELOG=	NEWS
 README=		README
 
 PORTDIR=	${HOME}/work/ports/sysutils/portupgrade
@@ -54,9 +54,6 @@ clean: clean-release
 
 clean-release:
 	rm -f ${CLEANFILES} 
-
-${CHANGELOG}:
-	env LANG=C svn log -v > ${CHANGELOG}
 
 ${TARBALL}: ${CHANGELOG}
 	svn up
