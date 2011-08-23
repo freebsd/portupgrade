@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.9.2 (released 2011-08-22):
+
+* Bugfixes.
+
 portupgrade 2.4.9.1 (released 2011-08-22):
 
 * Ruby 1.9 related bugfixes.
