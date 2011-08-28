@@ -1465,7 +1465,7 @@ def get_pkgname(origin)
 
   cmdargs.concat(get_make_args(origin))
 
-  output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE -V ECHO_MSG 2>&1`.scan(/.*\n/)
+  output = `cd #{portdir} && #{shelljoin(*cmdargs)} -V PKGNAME -V IGNORE -V NO_IGNORE -V ECHO_MSG`.scan(/.*\n/)
 
   if output.size != 4
     warning_message "Makefile possibly broken: #{origin}:"
