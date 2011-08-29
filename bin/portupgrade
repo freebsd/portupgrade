@@ -859,7 +859,7 @@ def get_all_depends(origin, parents_list = nil)
 
     cmdargs.concat(get_make_args(origin))
 
-    `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')} 2>&1`.each_line do |line|
+    `cd #{portdir} && #{shelljoin(*cmdargs)} -V #{depends_vars.join(' -V ')}`.each_line do |line|
 	line.split(/\s+/).each do |dep|
 	  dep.sub!(/.*?:/,'')
 	  if dep.rindex(':') != nil
