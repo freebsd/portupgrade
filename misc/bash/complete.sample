@@ -52,7 +52,7 @@ _pkg_func() {
     portversion)
 	case $cur in
 	-*)
-	    COMPREPLY=(-h -l -L -O -q -r -R -t -v -x)
+	    COMPREPLY=(-c -C -F -h -l -L -o -O -q -Q -r -R -t -v -x)
 	    ;;
 	*)
 	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )

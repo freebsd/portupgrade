@@ -280,12 +280,18 @@ _freebsd_pkgtools() {
     flags=(
       '-c[enable command output]'
       '-C[portupgrade flags for command output]'
+      '-F[display a package full name]'
+      '-h[show help]'
+      #'--ignore-moved[do not read MOVED file]'
       '-l[specify limit chars]:limit chars:'
       '-L[specify inverse limit chars]:inverse limit chars:'
+      '-o[display package origin]'
       '(-r -R)-O[omit sanity check]'
       '-q[do not read pkgtools.conf]'
+      '-Q[do not display status]'
       '(-O)-r[check recursively]'
       '(-O)-R[check upward recursively]'
+      '(-c -C -F --ignore-moved -l -L -O -o -R -r -x -Q)-t[compare the version]'
       '-v[be verbose]'
       '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
     )
