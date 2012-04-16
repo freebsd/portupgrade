@@ -1226,10 +1226,10 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   end
 
   if $use_packages && origin && config_use_ports?(origin)
-    progress_message "Using the port for '#{origin}' instead of package becouse of user override"
+    progress_message "Using the port for '#{origin}' instead of package because of user override"
     useport = true
   elsif $use_packages && config_use_ports?(oldpkgname)
-    progress_message "Using the port for '#{oldpkgname}' instead of package becouse of user override"
+    progress_message "Using the port for '#{oldpkgname}' instead of package because of user override"
     useport = true
   else
     useport = false
