@@ -1574,6 +1574,11 @@ def install_new_port(origin, interactive = $interactive)
   have_package = false
   newpkg = newpkgname = nil
 
+  if $use_packages && config_use_ports_only?(origin)
+    progress_message "Using the port for '#{origin}' instead of package because of USE_PORTS_ONLY override"
+    $use_packages = $use_packages_only = false
+  end
+
   if $use_packages
     progress_message "Checking for the latest package of '#{origin}'"
 
