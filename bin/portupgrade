@@ -1226,13 +1226,11 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   end
 
   if $use_packages && origin && config_use_ports_only?(origin)
-    progress_message "Using the port for '#{origin}' instead of package because of user override"
-    useport = true
+    progress_message "Using the port for '#{origin}' instead of package because of USE_PORTS_ONLY override"
+    $use_packages = $use_packages_only = false
   elsif $use_packages && config_use_ports_only?(oldpkgname)
-    progress_message "Using the port for '#{oldpkgname}' instead of package because of user override"
-    useport = true
-  else
-    useport = false
+    progress_message "Using the port for '#{oldpkgname}' instead of package because of USE_PORTS_ONLY override"
+    $use_packages = $use_packages_only = false
   end
 
   if origin.nil?
@@ -1255,7 +1253,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   have_package = false
   newpkg = nil
 
-  if (oldpkg.version < portpkg.version || $force) && $use_packages && !useport
+  if (oldpkg.version < portpkg.version || $force) && $use_packages
     newpkg = catch(:newpkg) {
       make_args = get_make_args(origin)
 
