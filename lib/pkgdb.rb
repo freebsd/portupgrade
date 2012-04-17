@@ -538,12 +538,13 @@ class PkgDB
       s = @db[':origins']
       s.is_a?(String) or raise TypeError, "origins - not a string (#{s.class})"
       @installed_ports = s.split
-    rescue TypeError => e
+    rescue => e
       if retried
 	raise DBError, "#{e.message}: Cannot read the pkgdb!"
       end
 
       STDERR.print "[#{e.message}] "
+      File.unlink(@db_file)
       update_db(true)
 
       retried = true
