@@ -73,6 +73,7 @@ class TestTSort < Test::Unit::TestCase
 
     t.tsort { |cycle|
       assert_equal([2, 3], cycle.sort)
+      nil
     }
   end
 end
