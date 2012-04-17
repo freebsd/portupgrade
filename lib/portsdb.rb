@@ -236,12 +236,12 @@ class PortsDB
   end
 
   def index_file()
-    if @index_file.nil?
+    unless @index_file
       indexdir, indexfile = make_var(['INDEXDIR', 'INDEXFILE'])
-      @index_file ||= ENV['PORTS_INDEX'] ||
-        File.join(indexdir, indexfile || 'INDEX')
+      @index_file = ENV['PORTS_INDEX'] || File.join(indexdir, indexfile || 'INDEX')
       @alt_index_files = config_value(:ALT_INDEX) || []
     end
+
     @index_file
   end
 
