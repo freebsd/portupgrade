@@ -85,4 +85,4 @@ commit:
 	@cd ${PORTDIR}; echo cvs -d freefall:/home/ncvs ci
 
 test:
-	@env PORTSDIR=/usr/ports ${RUBY} -Ilib tests/test_all.rb
+	@env PORTSDIR=/usr/ports ${RUBY} -Ilib -I. tests/test_all.rb
