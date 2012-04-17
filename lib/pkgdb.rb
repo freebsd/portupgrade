@@ -407,6 +407,7 @@ class PkgDB
 	  deleted_pkgs.sort!
 	rescue => e
 	  STDERR.print "#{e.message}; rebuild needed] "
+	  File.unlink(@db_file)
 	  return update_db(true)
 	end
       end
