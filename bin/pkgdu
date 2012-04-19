@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 # -*- ruby -*-
+# vim: set sts=2 sw=2 ts=8 et:
 #
 # Copyright (c) 2008 Sergey Matveychuk <sem@FreeBSD.org>
 #

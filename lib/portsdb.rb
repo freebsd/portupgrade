@@ -1,3 +1,4 @@
+# vim: set sts=2 sw=2 ts=8 et:
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
 # Copyright (c) 2006-2008 Sergey Matveychuk <sem@FreeBSD.org>
