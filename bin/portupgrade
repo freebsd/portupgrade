@@ -987,7 +987,8 @@ def do_upgrade(pkgname)
   end
 
   begin
-    if result = upgrade_pkg(pkg, origin)
+    result = upgrade_pkg(pkg, origin)
+    if result == :done
       upgraded = true
 
       if $package && !$fetch_only
@@ -997,7 +998,7 @@ def do_upgrade(pkgname)
       end
     end
 
-    $results << PkgResult.new(origin ? origin : pkg.fullname, result ? :done : :ignored, pkgname)
+    $results << PkgResult.new(origin ? origin : pkg.fullname, result, pkgname)
   rescue IgnoreMarkError => e
     $results << PkgResult.new(origin, :ignored, pkgname)
   rescue => e
@@ -1214,14 +1215,14 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
       warning_message "Forcing upgrade of a held package: #{origin}"
     else
       progress_message "Skipping '#{origin}' because it is held by user (specify -f to force)"
-      return false
+      return :skipped
     end
   elsif config_held?(oldpkgname)
     if $force
       warning_message "Forcing upgrade of a held package: #{oldpkgname}"
     else
       progress_message "Skipping '#{oldpkgname}' because it is held by user (specify -f to force)"
-      return false
+      return :skipped
     end
   end
 
@@ -1310,7 +1311,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
     }
 
     if $fetch_only
-      return newpkg ? true : false
+      return newpkg ? :done : :ignored
     end
 
     if newpkg
@@ -1355,7 +1356,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
       warning_message "No need to upgrade '#{oldpkgname}' (>= #{newpkgname}). (specify -f to force)"
     end
 
-    return false
+    return :ignored
   end
 
   if $fetch_only
@@ -1384,17 +1385,17 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
 
   if $noexecute
     puts "OK? [no]" if interactive
-    return true
+    return :done
   elsif $yestoall
     puts "OK? [yes]" if interactive
   elsif interactive
-    prompt_yesno('OK?', true) or return false
+    prompt_yesno('OK?', true) or return :skipped
   end
 
   unless have_package
     build_port(origin, logfile)
 
-    return true if $fetch_only
+    return :done if $fetch_only
   end
 
   update_pkgdep(oldpkgname, newpkgname, origin)
@@ -1420,7 +1421,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
 rescue CommandFailedError => e
   warning_message e.message
   progress_message "Skipping '#{origin}'"
-  return false
+  return :skip
 ensure
   if $logfilename_format && logfile &&
       File.exist?(logfile) && !File.zero?(logfile)
