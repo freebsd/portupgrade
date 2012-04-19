@@ -997,7 +997,7 @@ def do_upgrade(pkgname)
       end
     end
 
-    $results << PkgResult.new(origin, result ? :done : :ignored, pkgname)
+    $results << PkgResult.new(origin ? origin : pkg.fullname, result ? :done : :ignored, pkgname)
   rescue IgnoreMarkError => e
     $results << PkgResult.new(origin, :ignored, pkgname)
   rescue => e
