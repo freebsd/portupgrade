@@ -403,7 +403,8 @@ class PortsDB
     end
 
     if fetch
-      system "cd #{abs_ports_dir} && make fetchindex && cp $(make -V INDEXDIR)/$(make -V INDEXFILE) #{tmp}"
+      index_dir, index_file = make_var(['INDEXDIR', 'INDEXFILE'])
+      system "cd #{abs_ports_dir} && make fetchindex && cp #{index_dir}/#{index_file} #{tmp}"
     else
       system "cd #{abs_ports_dir} && make INDEXFILE=INDEX.tmp index && mv INDEX.tmp #{tmp}"
     end
