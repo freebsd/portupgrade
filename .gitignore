@@ -1,1 +1,5 @@
 .*.sw*
+man/*.gz
+bin/.build
+etc/.build
+lib/.build
