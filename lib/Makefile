@@ -15,7 +15,7 @@ FILES=	${BUILDDIR}/pkg.rb \
 	${BUILDDIR}/portsdb.rb
 
 FILESDIR?=	`${RUBY} -rrbconfig -e \
-	'puts "%s/%s.%s" % %w[sitedir MAJOR MINOR].map { |k| Config::CONFIG[k] }'`
+	'puts "%s/%s.%s" % %w[sitedir MAJOR MINOR].map { |k| RbConfig::CONFIG[k] }'`
 
 CLEANDIRS=	${BUILDDIR}
 
