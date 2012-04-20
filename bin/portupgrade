@@ -1422,7 +1422,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
 rescue CommandFailedError => e
   warning_message e.message
   progress_message "Skipping '#{origin}'"
-  return :skip
+  return :skipped
 ensure
   if $logfilename_format && logfile &&
       File.exist?(logfile) && !File.zero?(logfile)
