@@ -239,6 +239,7 @@ Environment Variables [default]:
 	    tasks |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
 	  end
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  STDERR.puts e.message
 	  exit 1
 	end
@@ -279,6 +280,7 @@ Environment Variables [default]:
 	    results << PkgResult.new(pkgname, :skipped)
 	  end
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  results << PkgResult.new(pkgname, e)
 	end
       end
@@ -339,6 +341,7 @@ def deinstall_pkg(pkgname)
 	end
       end
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       STDERR.puts e.message
     end
 
@@ -402,6 +405,7 @@ def deinstall_pkg(pkgname)
 
   return true if $noexecute
 
+  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
   cmdargs = [PkgDB::command(:pkg_delete), *$pkg_delete_args] << pkgname
 
   $pkgdb.close_db

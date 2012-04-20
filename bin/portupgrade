@@ -159,6 +159,7 @@ begin
     raise Errno::ENOENT, 'No such file or directory'
   end
 rescue => e
+  raise e if e.class == PkgDB::NeedsPkgNGSupport
   # XXX: the .sub(/ - .*/, '') part should be removed later
   STDERR.puts "Cannot locate current working directory: #{e.message.sub(/ - .*/, '')}"
   exit 1
@@ -586,6 +587,7 @@ Environment Variables [default]:
 		list |= $pkgdb.recurse(pkgname, $recursive, false, $sanity_check)
 	      end
 	    rescue => e
+              raise e if e.class == PkgDB::NeedsPkgNGSupport
 	      STDERR.puts e.message
 	      exit 1
 	    end
@@ -841,6 +843,7 @@ def get_all_depends(origin, parents_list = nil)
     begin
       run_make_config(portdir, origin) if $config
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       puts "#{e.message}. Ignored."
     end
 
@@ -1001,6 +1004,7 @@ def do_upgrade(pkgname)
   rescue IgnoreMarkError => e
     $results << PkgResult.new(origin, :ignored, pkgname)
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     $results << PkgResult.new(origin, e, pkgname)
   ensure
     $use_packages, $use_packages_only = use_packages, use_packages_only
@@ -1024,6 +1028,7 @@ def do_upgrade(pkgname)
       prompt_yesno('OK?', true) or return
     end
 
+    raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
     system!(PkgDB::command(:pkg_create), '-vb', pkgname,
 	    File.join($packages_dir, pkgname + $portsdb.pkg_sufx))
   end
@@ -1075,6 +1080,7 @@ def do_install(origin)
   rescue IgnoreMarkError => e
     $results << PkgResult.new(origin, :ignored)
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     $results << PkgResult.new(origin, e)
   ensure
     $use_packages, $use_packages_only = use_packages, use_packages_only
@@ -1431,6 +1437,7 @@ ensure
     begin
       install_data(logfile, file)
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       warning_message "Failed to save the log file: #{e.message}"
     end
   end
@@ -1674,6 +1681,7 @@ ensure
     begin
       install_data(logfile, file)
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       warning_message "Failed to save the log file: #{e.message}"
     end
   end
@@ -1908,6 +1916,7 @@ def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
     cmdargs = []
   end
 
+  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
   cmdargs << PkgDB::command(:pkg_add) << '-f' << pkgfile
 
   progress_message "Installing the new version via the package"
@@ -1960,6 +1969,7 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
 
   backup_pkgfile = nil
 
+  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
   if str = backquote!(PkgDB::command(:pkg_create), '-vb', pkgname,
 		      File.join($tmpdir, pkgname + $portsdb.pkg_sufx))
     str.each_line { |line|
@@ -2007,6 +2017,7 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
     when :restore
       progress_message "Restoring the old version"
 
+      raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
       xsystem! PkgDB::command(:pkg_add), '-f', backup_pkgfile
 
       if origin and command = get_afterinstall_command(origin)
@@ -2064,6 +2075,7 @@ def find_pkg(origin)
         }
       }
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       warning_message e.message
     end
   end
@@ -2084,6 +2096,7 @@ def extract_pkgfile_deporigins(pkgfile)
 
   deporigins = []
 
+  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
   IO.popen("cd #{dir} && #{PkgDB::command(:pkg_info)} -qfo #{file}") do |r|
     r.each do |line|
       case line
@@ -2095,6 +2108,7 @@ def extract_pkgfile_deporigins(pkgfile)
 
   return deporigins
 rescue => e
+  raise e if e.class == PkgDB::NeedsPkgNGSupport
   warning_message e.message
   return nil
 end
@@ -2224,6 +2238,7 @@ class PkgResultSet
 
     Object.send :install_data, f.path, file
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     warning_message "Failed to save the results: #{e.message}"
   end
 end

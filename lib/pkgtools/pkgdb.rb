@@ -98,6 +98,17 @@ class PkgDB
     cmd
   end
 
+  class NeedsPkgNGSupport < StandardError
+  end
+
+  def with_pkgng?
+    if @with_pkgng.nil?
+      @with_pkgng = $portsdb.make_var('WITH_PKGNG')
+      STDERR.puts "USING PKGNG" if @with_pkgng
+    end
+    @with_pkgng
+  end
+
   class DBError < StandardError
 #    def message
 #      "pkgdb error"
@@ -184,15 +195,18 @@ class PkgDB
   end
 
   def pkgdir(pkgname)
+    raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
     File.join(db_dir, pkgname)
   end
 
   def pkgdir?(dir)
+    raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
     File.exist?(File.join(dir, PKGDB_FILES[:contents])) &&
       !File.exist?(File.join(dir, PKGDB_FILES[:ignoreme]))
   end
 
   def pkgfile(pkgname, filename)
+    raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
     if filename.kind_of?(Symbol)
       filename = PKGDB_FILES[filename]
     end
@@ -203,6 +217,7 @@ class PkgDB
   def pkg(pkgname)
     installed?(pkgname) and PkgInfo.new(pkgname)
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     return nil
   end
 
@@ -213,6 +228,7 @@ class PkgDB
 
     @db['?' + pkgname]
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -285,6 +301,7 @@ class PkgDB
 
     close_db
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -297,6 +314,7 @@ class PkgDB
       nil
     end
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -326,6 +344,7 @@ class PkgDB
       ret
     end
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -407,6 +426,7 @@ class PkgDB
 
 	  deleted_pkgs.sort!
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  STDERR.print "#{e.message}; rebuild needed] "
 	  File.unlink(@db_file)
 	  return update_db(true)
@@ -479,6 +499,7 @@ class PkgDB
 	    end
 	  end
 	rescue => e
+          raise e if e.class == NeedsPkgNGSupport
 	  STDERR.puts "", e.message + ": skipping..."
 	  next
 	end
@@ -498,6 +519,7 @@ class PkgDB
 
       true
     rescue => e
+      raise e if e.class == NeedsPkgNGSupport
       if File.exist?(@db_file)
 	begin
 	  STDERR.puts " error] Remove and try again."
@@ -573,6 +595,7 @@ class PkgDB
       m ? pkgnames : pkgnames.last
     end
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   ensure
     close_db
@@ -656,6 +679,7 @@ class PkgDB
   PKGDB_FILES.each_key do |key|
     module_eval %{
       def pkg_#{key.to_s}(pkgname)
+        raise NeedsPkgNGSupport, "PKGNG support needed (pkg_#{key.to_s}): #{__FILE__}:#{__LINE__}" if with_pkgng?
 	pkgfile(pkgname, #{key.inspect})
       end
     }
@@ -679,9 +703,14 @@ class PkgDB
   end
 
   def installed_pkgs!()
-    Dir.entries(db_dir).select { |pkgname|
-      /^\.\.?$/ !~ pkgname && pkgdir?(pkgdir(pkgname))
-    }.sort
+    if with_pkgng?
+      packages = `pkg info -aq`.split
+    else
+      packages = Dir.entries(db_dir).select { |pkgname|
+        /^\.\.?$/ !~ pkgname && pkgdir?(pkgdir(pkgname))
+      }
+    end
+    packages.sort
   rescue => e
     raise DBError, e.message
   end
@@ -742,6 +771,7 @@ class PkgDB
 
 	  pattern = op + base.strftime('%Y-%m-%d %H:%M:%S')
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  STDERR.puts e.message
 
 	  if block_given?

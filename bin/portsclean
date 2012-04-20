@@ -501,6 +501,7 @@ def pkgclean(level)
 
   puts "Cleaning out #{$packages_base}..."
 
+  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
   IO.popen("cd #{$packages_dir} && find . -maxdepth 1 -type f -name '*.t[bgx]z' | xargs #{PkgDB::command(:pkg_info)} -o") do |r|
     pkgfile = pkgname = nil
 

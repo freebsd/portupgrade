@@ -230,6 +230,7 @@ def pkgs_size(pkgs)
 
     size = 0
     begin
+      raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
       IO.popen("#{PkgDB::command(:pkg_info)} -qL #{pkg}") do |r|
 	r.each do |line|
 	  line.chomp!

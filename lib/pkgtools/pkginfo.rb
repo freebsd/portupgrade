@@ -139,6 +139,7 @@ class PkgInfo
       chdir = "cd #{File.dirname(pkg)};"
     end
 
+    raise PkgDB::NeedsPkgNGSupport if $pkgdb.with_pkgng?
     info = `#{chdir}env PKG_PATH= #{PKG_INFO_CMD} -q#{opt} #{pkg} 2>/dev/null`.chomp
 
     info.empty? ? nil : info
