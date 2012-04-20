@@ -81,6 +81,7 @@ class PkgDB
     :portcvsweb			=> "#{PREFIX}/sbin/portcvsweb",
     :portinstall		=> "#{PREFIX}/sbin/portinstall",
     :portsclean			=> "#{PREFIX}/sbin/portsclean",
+    :pkg			=> nil,
   }
 
   def self.command(sym)
