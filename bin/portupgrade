@@ -1438,6 +1438,8 @@ ensure
   end
 
   timer_end(time_key)
+
+  return :done
 end
 
 # raises:
