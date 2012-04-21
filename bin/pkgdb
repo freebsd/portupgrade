@@ -424,6 +424,11 @@ def fix_db_phase1()
 end
 
 def fix_db_phase2()
+  if $pkgdb.with_pkgng?
+    # FIXME: pkgng
+    STDERR.puts "pkgdb -F not fully supported with PKGNG yet"
+    return
+  end
   # reconstruct all the +REQUIRED_BY files
   puts "Regenerating +REQUIRED_BY files" if $verbose
 
