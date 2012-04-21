@@ -642,31 +642,42 @@ class PkgDB
   end
 
   def pkgdep(pkgname, want_deporigins = false)
-    filename = pkg_contents(pkgname)
-
-    File.exist?(filename) or return nil
-
     deps = {}
-    prev = nil
 
-    if File.size(filename) >= 65536	# 64KB
-      obj = "| grep -E '^@pkgdep|^@comment DEPORIGIN:' #{filename}"
+    if with_pkgng?
+      IO.popen("#{PkgDB::command(:pkg)} query \"%do %dn-%dv\" #{pkgname}") do |r|
+        r.each do |line|
+          line.chomp!
+          deporigin, pkgdepname = line.split(" ")
+          deps[pkgdepname] = deporigin
+        end
+      end
     else
-      obj = filename
-    end
+      filename = pkg_contents(pkgname)
 
-    open(obj) do |f|
-      f.each do |line|
-	case line
-	when /^@pkgdep\s+(\S+)/
-	  prev = $1
-	  deps[prev] = nil
-	when /^@comment DEPORIGIN:(\S+)/
-	  if want_deporigins && prev
-	    deps[prev] = $1
-	    prev = nil
-	  end
-	end
+      File.exist?(filename) or return nil
+
+      prev = nil
+
+      if File.size(filename) >= 65536	# 64KB
+        obj = "| grep -E '^@pkgdep|^@comment DEPORIGIN:' #{filename}"
+      else
+        obj = filename
+      end
+
+      open(obj) do |f|
+        f.each do |line|
+          case line
+          when /^@pkgdep\s+(\S+)/
+            prev = $1
+            deps[prev] = nil
+          when /^@comment DEPORIGIN:(\S+)/
+            if want_deporigins && prev
+              deps[prev] = $1
+              prev = nil
+            end
+          end
+        end
       end
     end
 
