@@ -2,31 +2,44 @@
 
 BUILDDIR=	.build
 
-FILES=	${BUILDDIR}/pkg.rb \
-	${BUILDDIR}/pkgdb.rb \
-	${BUILDDIR}/pkgdbtools.rb \
-	${BUILDDIR}/pkginfo.rb \
-	${BUILDDIR}/pkgmisc.rb \
-	${BUILDDIR}/pkgtools.rb \
-	${BUILDDIR}/pkgtsort.rb \
-	${BUILDDIR}/pkgversion.rb \
-	${BUILDDIR}/portinfo.rb \
-	${BUILDDIR}/ports.rb \
-	${BUILDDIR}/portsdb.rb
+PKGTOOLS_SRC=	pkg.rb \
+		pkgdb.rb \
+		pkgdbtools.rb \
+		pkginfo.rb \
+		pkgmisc.rb \
+		pkgtools.rb \
+		pkgtsort.rb \
+		pkgversion.rb \
+		portinfo.rb \
+		ports.rb \
+		portsdb.rb
+
+FILESGROUPS=	FILES PKGTOOLSFILES
+FILES=		pkgtools.rb
+PKGTOOLSFILES=	${PKGTOOLS_SRC:S,^,${BUILDDIR}/,g} pkgtools/revision.rb
 
 FILESDIR?=	`${RUBY} -rrbconfig -e \
 	'puts "%s/%s.%s" % %w[sitedir MAJOR MINOR].map { |k| RbConfig::CONFIG[k] }'`
+PKGTOOLSFILESDIR=	${FILESDIR}/pkgtools
 
 CLEANDIRS=	${BUILDDIR}
 
-.for file in ${FILES}
-${file}: ${file:T}
+.for file in ${PKGTOOLS_SRC}
+${BUILDDIR}/${file}: pkgtools/${file}
 	${RUBY} -wc ${.ALLSRC}
-	@mkdir -p ${BUILDDIR}
+	@mkdir -p ${BUILDDIR}/
 	${RUBY} -p \
 		-e '$$_.sub %r:/usr/local:, "${PREFIX}"' \
 		${.ALLSRC} > ${.TARGET}
 .endfor
+
+pkgtools/revision.rb: pkgtools/revision.rb.in ${.CURDIR}/../scripts/buildrev.sh .PHONY
+	${.CURDIR}/../scripts/buildrev.sh > ${.TARGET}
+
+beforeinstall: install-mkdir
+
+install-mkdir: .PHONY
+	mkdir -p ${PKGTOOLSFILESDIR}
 
 .include <bsd.prog.mk>
 

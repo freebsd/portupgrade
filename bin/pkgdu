@@ -28,8 +28,6 @@
 # SUCH DAMAGE.
 #
 
-MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/07/10 13:24:11 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -53,7 +51,7 @@ usage: #{MYNAME} [-hbkmRrqs] [pkgname_glob ...]
   EOF
 
   banner = <<-"EOF"
-#{MYNAME} #{Version} (#{MYDATE})
+#{MYNAME} #{Version} (#{PkgTools::DATE})
 
 #{usage}
   EOF

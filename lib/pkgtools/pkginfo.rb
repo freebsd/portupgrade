@@ -28,8 +28,8 @@
 #
 # $Id: pkginfo.rb,v 1.3 2007/02/22 13:36:34 sem Exp $
 
-require 'pkgdb'
-require 'pkgversion'
+require 'pkgtools/pkgdb'
+require 'pkgtools/pkgversion'
 
 class PkgInfo
   include Comparable

@@ -32,8 +32,6 @@
 # $FreeBSD: projects/pkgtools/bin/pkgdb,v 1.25 2009-10-26 12:26:10 stas Exp $
 #
 
-MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2008/07/01 13:32:07 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -64,7 +62,7 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
     EOF
 
   banner = <<-"EOF"
-#{MYNAME} #{Version} (#{MYDATE})
+#{MYNAME} #{Version} (#{PkgTools::DATE})
 
 #{usage}
   EOF
