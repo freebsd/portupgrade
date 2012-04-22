@@ -627,16 +627,24 @@ class PkgDB
   end
 
   def required_by(pkgname)
-    filename = pkg_required_by(pkgname)
-
-    File.exist?(filename) or return nil
-
     deps = {}
+    if with_pkgng?
+      IO.popen("#{PkgDB::command(:pkg)} query \"%rn-%rv\" #{pkgname}") do |r|
+        r.each do |line|
+          line.chomp!
+          deps[line] = true
+        end
+      end
+    else
+      filename = pkg_required_by(pkgname)
 
-    File.open(filename).each_line { |line|
-      line.chomp!
-      deps[line] = true unless line.empty?
-    }
+      File.exist?(filename) or return nil
+
+      File.open(filename).each_line { |line|
+        line.chomp!
+        deps[line] = true unless line.empty?
+      }
+    end
 
     deps.keys
   end
