@@ -1969,15 +1969,19 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
 
   backup_pkgfile = nil
 
-  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
-  if str = backquote!(PkgDB::command(:pkg_create), '-vb', pkgname,
-		      File.join($tmpdir, pkgname + $portsdb.pkg_sufx))
-    str.each_line { |line|
-      if /^Creating .*tar ball in \'(.*)\'/ =~ line
-	backup_pkgfile = $1
-	break
-      end
-    }
+  if $pkgdb.with_pkgng?
+    backup_pkgfile = File.join($tmpdir, pkgname + $portsdb.pkg_sufx)
+    backquote!(PkgDB::command(:pkg), 'create', '-o', $tmpdir, '-f', $portsdb.pkg_sufx, pkgname)
+  else
+    if str = backquote!(PkgDB::command(:pkg_create), '-vb', pkgname,
+                        File.join($tmpdir, pkgname + $portsdb.pkg_sufx))
+      str.each_line { |line|
+        if /^Creating .*tar ball in \'(.*)\'/ =~ line
+          backup_pkgfile = $1
+          break
+        end
+      }
+    end
   end
 
   if backup_pkgfile.nil? || !File.file?(backup_pkgfile)
@@ -1985,11 +1989,13 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
     raise BackupError
   end
 
-  pkgdir = $pkgdb.pkgdir(pkgname)
-  backup_dir = File.join($tmpdir, pkgname + '.bak')
+  unless $pkgdb.with_pkgng?
+    pkgdir = $pkgdb.pkgdir(pkgname)
+    backup_dir = File.join($tmpdir, pkgname + '.bak')
 
-  system!('/bin/cp', '-RPp', pkgdir, backup_dir) or
-    raise BackupError
+    system!('/bin/cp', '-RPp', pkgdir, backup_dir) or
+      raise BackupError
+  end
 
   origin = $pkgdb.origin(pkgname)
 
@@ -2035,7 +2041,9 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
       progress_message "Removing temporary files and directories" if $verbose
 
       process_old_package(backup_pkgfile)
-      system! '/bin/rm', '-rf', backup_dir
+      unless $pkgdb.with_pkgng?
+        system! '/bin/rm', '-rf', backup_dir
+      end
     end
   }
 ensure
