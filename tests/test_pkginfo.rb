@@ -5,7 +5,7 @@ $:.push("..")
 
 require 'test/unit'
 
-require 'pkginfo'
+require 'pkgtools/pkginfo'
 
 class TestPkgInfo < Test::Unit::TestCase
   def test_s_new
