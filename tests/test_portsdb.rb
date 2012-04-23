@@ -6,8 +6,8 @@ $:.push("..")
 require 'test/unit'
 
 require 'pkgtools'
-require 'pkgdb'
-require 'portsdb'
+require 'pkgtools/pkgdb'
+require 'pkgtools/portsdb'
 
 class TestPortsDB < Test::Unit::TestCase
   def test_strip
