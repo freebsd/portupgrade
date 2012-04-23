@@ -358,8 +358,6 @@ def deinstall_pkg(pkgname)
     end
   end
 
-  contents_file = $pkgdb.pkg_contents(pkgname)
-
   if $preserve_shlib
     unless $noexecute
       if !system('/bin/mkdir', '-p', $compatlibdir)
@@ -405,8 +403,11 @@ def deinstall_pkg(pkgname)
 
   return true if $noexecute
 
-  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
-  cmdargs = [PkgDB::command(:pkg_delete), *$pkg_delete_args] << pkgname
+  if $pkgdb.with_pkgng?
+    cmdargs = [PkgDB::command(:pkg), 'delete', *$pkg_delete_args] << pkgname
+  else
+    cmdargs = [PkgDB::command(:pkg_delete), *$pkg_delete_args] << pkgname
+  end
 
   $pkgdb.close_db
 
