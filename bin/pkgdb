@@ -677,7 +677,7 @@ def fix_dependencies(pkgname)
       end
 
       begin
-	modify_pkgdep(pkgname, dep, fix)
+	modify_pkgdep(pkgname, dep, fix, origin)
 
 	case fix
 	when :delete
