@@ -249,6 +249,16 @@ Environment Variables [default]:
       exit 64
     end
 
+    ## Cleanup pkgng options
+    if $pkgdb.with_pkgng?
+      unless $interactive
+        $pkg_delete_args.push '-y'
+      else
+        # pkgng is interactive by default
+        $pkg_delete_args.delete '-i'
+      end
+    end
+
     tasks -= $exclude_packages
 
     case $service
