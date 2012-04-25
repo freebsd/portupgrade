@@ -218,34 +218,55 @@ end
 
 def pkgs_size(pkgs)
   total_bytes = 0
-  pkgs.each do |pkg|
-    if !$ignore_moved and \
-       !config_ignore_moved?(pkg) and \
-       (moved = $portsdb.moved.trace(pkg.origin)) and \
-       (o = moved.last.to)
-      origin = o
-    else
-      origin = pkg.origin
-    end
 
-    size = 0
+  if $pkgdb.with_pkgng?
+    puts pkgs.join(' ')
     begin
-      raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
-      IO.popen("#{PkgDB::command(:pkg_info)} -qL #{pkg}") do |r|
-	r.each do |line|
-	  line.chomp!
-	  size += File.size(line)
-	end
+      IO.popen("#{PkgDB::command(:pkg)} query '%n-%v %sb' #{pkgs.join(' ')}") do |r|
+        r.each do |line|
+          line.chomp!
+          pkgname, size_s = line.split(' ')
+          size = size_s.to_i
+          total_bytes += size
+          if !$quiet
+            size /= $divider
+            puts "#{size}\t#{pkgname}"
+          end
+        end
       end
     rescue => e
       warning_message "Package PLIST error: "+e.message
       next
     end
+  else
+    pkgs.each do |pkg|
+      if !$ignore_moved and \
+        !config_ignore_moved?(pkg) and \
+        (moved = $portsdb.moved.trace(pkg.origin)) and \
+        (o = moved.last.to)
+        origin = o
+      else
+        origin = pkg.origin
+      end
 
-    total_bytes += size
-    if !$quiet
-      size /= $divider
-      puts "#{size}\t#{pkg}"
+      size = 0
+      begin
+        IO.popen("#{PkgDB::command(:pkg_info)} -qL #{pkg}") do |r|
+          r.each do |line|
+            line.chomp!
+            size += File.size(line)
+          end
+        end
+      rescue => e
+        warning_message "Package PLIST error: "+e.message
+        next
+      end
+
+      total_bytes += size
+      if !$quiet
+        size /= $divider
+        puts "#{size}\t#{pkg}"
+      end
     end
   end
 
