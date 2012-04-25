@@ -42,7 +42,7 @@ DOCFILES=	${CHANGELOG} ${README}
 CLEANFILES=	pkgtools-*.tar.bz2
 
 .if 0
-install: install-doc
+install: ${PKGTOOLSLIBDIR}
 .endif
 
 install-doc: ${CHANGELOG}

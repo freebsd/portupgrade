@@ -29,9 +29,9 @@
 # $Id: pkgdb.rb,v 1.15 2008/06/30 17:51:44 sem Exp $
 
 require 'singleton'
-require 'pkgtsort'
-require 'pkgmisc'
-require 'pkgdbtools'
+require 'pkgtools/pkgtsort'
+require 'pkgtools/pkgmisc'
+require 'pkgtools/pkgdbtools'
 
 class PkgDB
   include Singleton
