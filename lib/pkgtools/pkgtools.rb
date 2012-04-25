@@ -680,6 +680,7 @@ end
 
 # raises StandardError
 def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
+  return if $pkgdb.with_pkgng? # PKGNG doesn't need this.
   pkgdir = $pkgdb.pkgdir(pkgname)
   return if pkgdir.nil? || !File.directory?(pkgdir)
   changed = false
