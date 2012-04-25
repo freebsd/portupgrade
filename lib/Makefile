@@ -34,7 +34,7 @@ ${BUILDDIR}/${file}: pkgtools/${file}
 .endfor
 
 pkgtools/revision.rb: pkgtools/revision.rb.in ${.CURDIR}/../scripts/buildrev.sh .PHONY
-	${.CURDIR}/../scripts/buildrev.sh > ${.TARGET}
+	${.CURDIR}/../scripts/buildrev.sh
 
 beforeinstall: install-mkdir
 
