@@ -5,7 +5,7 @@ $:.push("..")
 
 require 'test/unit'
 
-require 'ports'
+require 'pkgtools/ports'
 
 class TestPortInfo < Test::Unit::TestCase
   SAMPLE1 = "ruby-perl-0.2.7|/usr/ports/lang/ruby-perl|/usr/local|A Ruby extension module to use the functions of Perl from Ruby|/usr/ports/lang/ruby-perl/pkg-descr|knu@FreeBSD.org|lang ruby perl5|ruby-1.6.2.2001.02.05|ruby-1.6.2.2001.02.05|http://www.yoshidam.net/Ruby.html#perl\n"

@@ -5,7 +5,7 @@ $:.push("..")
 
 require 'test/unit'
 
-require 'pkgtsort'
+require 'pkgtools/pkgtsort'
 
 class TestTSort < Test::Unit::TestCase
   def test_s_new
