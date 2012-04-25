@@ -1,6 +1,6 @@
 .\" $Id$
 .\"
-.Dd July 09, 2008
+.Dd April 25, 2012
 .Dt PKGDU 1
 .Os FreeBSD
 .Sh NAME
@@ -8,17 +8,57 @@
 .Nd a tool to display packages disk usage size
 .Sh SYNOPSIS
 .Nm
-.Op Fl hbkmRrqs
+.Op Fl hbkmqrR
+.Op Fl x Ar pkgname_glob
 .Op Ar pkgname_glob
 .Sh DESCRIPTION
 .Nm
 displays a sum of file sizes for installed packages.
 .Pp
-This man page is incompleted. Contribute please.
-.Pp
 .Sh OPTIONS
 The following command line arguments are supported:
 .Pp
+.Bl -tag -width "--substitute" -compact
+.It Fl h
+.It Fl -help
+Show help and exit.
+.Pp
+.It Fl b
+.It Fl -bytes
+Display size in bytes.
+.Pp
+.It Fl k
+.It Fl -kbytes
+Display size in kilobytes (default).
+.Pp
+.It Fl m
+.It Fl -mbytes
+Display size in Megabytes.
+.Pp
+.It Fl t
+.It Fl -total
+Display a grand total.
+.Pp
+.It Fl q
+.It Fl -quiet
+Show only a grand total.
+Don't show each package's size.
+.Pp
+.It Fl r
+.It Fl -recursive
+Check all of the packages depending on the matching packages as well.
+.Pp
+.It Fl R
+.It Fl -upward-recursive
+Check all of the packages required by the matching packages as well.
+.Pp
+.It Fl x Ar GLOB
+.It Fl -exclude Ar GLOB
+Exclude packages matching the specified glob pattern.  Exclusion is
+performed after recursing dependency in response to
+.Fl r
+and/or
+.Fl R .
 .Sh SEE ALSO
 .Xr pkgdb 1 ,
 .Xr ports 7
