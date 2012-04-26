@@ -4,6 +4,16 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.9.4 (released 2012-04-26):
+
+* Portupgrade has a new home: http://pkgtools.github.com
+* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=1&state=closed
+    * Fix upgrading to ruby19 causing pkgdb error (db will be rebuilt if it cannot be read)
+    * Fix `portrevision -r`
+    * Fix `pkgdb -F` losing DEPORIGIN in +CONTENTS for dependent packages
+    * Fix `portupgrade -a` crashing with bsdpan packages installed
+    * Updated shell completions for bash and zsh
+
 portupgrade 2.4.9.3 (released 2011-08-23):
 
 * Bugfixes.
