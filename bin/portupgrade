@@ -32,8 +32,6 @@
 # $FreeBSD: projects/pkgtools/bin/portupgrade,v 1.70 2011-07-25 12:34:43 swills Exp $
 #
 
-MYREVISION = %w$Rev: 71 $[1]
-MYDATE = %w$Date: 2008/07/01 11:32:25 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -221,7 +219,7 @@ usage: #{MYNAME} [-habcCDDefFiklnOpPPqrRsuvwWy] [-A command] [-B command]
   EOF
 
   banner = <<-"EOF"
-#{MYNAME} #{Version} (#{MYDATE})
+#{MYNAME} #{Version} (#{PkgTools::DATE})
 
 #{usage}
   EOF

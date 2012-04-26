@@ -30,8 +30,6 @@
 # $FreeBSD: projects/pkgtools/bin/portsclean,v 1.14 2010-11-23 20:29:14 stas Exp $
 #
 
-MYREVISION = %w$Rev: 52 $[1]
-MYDATE = %w$Date: 2008/02/10 22:43:29 $[1]
 MYNAME = File.basename($0)
 
 require "optparse"
@@ -61,7 +59,7 @@ usage: #{MYNAME} [-hCDDiLnPPQQq]
   EOF
 
   banner = <<-"EOF"
-#{MYNAME} #{Version} (#{MYDATE})
+#{MYNAME} #{Version} (#{PkgTools::DATE})
 
 #{usage}
   EOF

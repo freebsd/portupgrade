@@ -29,7 +29,11 @@
 # $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.42 2011-08-18 07:36:49 stas Exp $
 
 PREFIX = "/usr/local"
-Version = "2.4.9.3"
+Version = "2.4.9.4"
+
+module PkgTools
+  DATE = '2012/04/26'
+end
 
 require "pkg"
 require "ports"
