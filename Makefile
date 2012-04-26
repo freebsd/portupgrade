@@ -28,7 +28,7 @@ REL_VERSION=	${REL_DATE}.${REL_MINOR}
 
 DISTNAME=	pkgtools-${REL_VERSION}
 TARBALL=	${DISTNAME}.tar.bz2
-CHANGELOG=	NEWS
+CHANGELOG=	NEWS.md
 README=		README.md
 
 PORTDIR=	${HOME}/work/ports/sysutils/portupgrade
