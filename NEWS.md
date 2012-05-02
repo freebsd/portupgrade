@@ -4,6 +4,11 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.9.5
+
+* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=3&state=open
+    * Fix failed upgrades being seen as success (#25)
+
 portupgrade 2.4.9.4 (released 2012-04-26):
 
 * Portupgrade has a new home: http://pkgtools.github.com

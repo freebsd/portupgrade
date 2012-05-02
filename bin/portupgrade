@@ -1416,7 +1416,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   progress_message "Cleaning out obsolete shared libraries"
   system!(PkgDB::command(:portsclean), '-QL')
 
-  true
+  :done
 rescue CommandFailedError => e
   warning_message e.message
   progress_message "Skipping '#{origin}'"
@@ -1436,8 +1436,6 @@ ensure
   end
 
   timer_end(time_key)
-
-  return :done
 end
 
 # raises:
