@@ -5,7 +5,7 @@ $:.push("..")
 
 require 'test/unit'
 
-require 'pkgversion'
+require 'pkgtools/pkgversion'
 
 class TestPkgVersion < Test::Unit::TestCase
   def test_s_new

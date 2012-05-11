@@ -31,8 +31,8 @@
 
 require 'singleton'
 require 'tempfile'
-require 'pkgmisc'
-require 'pkgdbtools'
+require 'pkgtools/pkgmisc'
+require 'pkgtools/pkgdbtools'
 
 class PortsDB
   include Singleton

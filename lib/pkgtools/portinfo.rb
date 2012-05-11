@@ -28,8 +28,8 @@
 #
 # $Id: portinfo.rb,v 1.3 2007/02/22 13:36:34 sem Exp $
 
-require 'portsdb'
-require 'pkginfo'
+require 'pkgtools/portsdb'
+require 'pkgtools/pkginfo'
 
 class PortInfo
   include Comparable
