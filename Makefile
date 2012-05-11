@@ -34,7 +34,7 @@ distclean:
 	rm -f ${DISTFILES}
 
 ${DISTFILES}: ${CHANGELOG}
-	git archive --prefix=pkgtools/ --format=tar HEAD|bzip2 -9c > ${DISTFILES}
+	git archive --prefix=${DISTNAME}/ --format=tar ${REL_VERSION}|bzip2 -9c > ${DISTFILES}
 
 dist: ${DISTFILES}
 
