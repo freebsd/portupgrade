@@ -1,1 +1,2 @@
 *.rb text diff=ruby
+.git* export-ignore
