@@ -10,6 +10,7 @@ portupgrade 2.4.9.6 (released 2012-07-29):
     * Fix crash on `portsdb -U` (#27)
     * portupgrade now shows the new version installed when completed (#28)
     * `port[upgrade|install] -v` will show recursive depends.
+    * Properly respect LOCALBASE [ports/146858]
 
 portupgrade 2.4.9.5 (released 2012-05-01):
 
