@@ -65,7 +65,7 @@ class PkgDB
     :ignoreme => '+IGNOREME',
   }
 
-  PREFIX = '/usr/local'
+  PREFIX = ENV["LOCALBASE"] || '/usr/local'
 
   LOCK_FILE = '/var/run/pkgdb.db.lock'
 
