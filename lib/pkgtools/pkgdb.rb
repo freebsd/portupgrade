@@ -105,6 +105,7 @@ class PkgDB
   def with_pkgng?
     if @with_pkgng.nil?
       @with_pkgng = $portsdb.make_var('WITH_PKGNG')
+      @with_pkgng = false unless @with_pkgng
       STDERR.puts "USING PKGNG" if @with_pkgng
     end
     @with_pkgng
