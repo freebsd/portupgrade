@@ -81,6 +81,7 @@ class PkgDB
     :portcvsweb			=> "#{PREFIX}/sbin/portcvsweb",
     :portinstall		=> "#{PREFIX}/sbin/portinstall",
     :portsclean			=> "#{PREFIX}/sbin/portsclean",
+    :pkg			=> nil,
   }
 
   def self.command(sym)
@@ -96,6 +97,17 @@ class PkgDB
     File.executable?(full) and return full
 
     cmd
+  end
+
+  class NeedsPkgNGSupport < StandardError
+  end
+
+  def with_pkgng?
+    if @with_pkgng.nil?
+      @with_pkgng = $portsdb.make_var('WITH_PKGNG')
+      STDERR.puts "USING PKGNG" if @with_pkgng
+    end
+    @with_pkgng
   end
 
   class DBError < StandardError
@@ -184,15 +196,18 @@ class PkgDB
   end
 
   def pkgdir(pkgname)
+    raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
     File.join(db_dir, pkgname)
   end
 
   def pkgdir?(dir)
+    raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
     File.exist?(File.join(dir, PKGDB_FILES[:contents])) &&
       !File.exist?(File.join(dir, PKGDB_FILES[:ignoreme]))
   end
 
   def pkgfile(pkgname, filename)
+    raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
     if filename.kind_of?(Symbol)
       filename = PKGDB_FILES[filename]
     end
@@ -203,6 +218,7 @@ class PkgDB
   def pkg(pkgname)
     installed?(pkgname) and PkgInfo.new(pkgname)
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     return nil
   end
 
@@ -213,6 +229,7 @@ class PkgDB
 
     @db['?' + pkgname]
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -285,6 +302,7 @@ class PkgDB
 
     close_db
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -297,6 +315,7 @@ class PkgDB
       nil
     end
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -326,6 +345,7 @@ class PkgDB
       ret
     end
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   end
 
@@ -407,6 +427,7 @@ class PkgDB
 
 	  deleted_pkgs.sort!
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  STDERR.print "#{e.message}; rebuild needed] "
 	  File.unlink(@db_file)
 	  return update_db(true)
@@ -479,6 +500,7 @@ class PkgDB
 	    end
 	  end
 	rescue => e
+          raise e if e.class == NeedsPkgNGSupport
 	  STDERR.puts "", e.message + ": skipping..."
 	  next
 	end
@@ -498,6 +520,7 @@ class PkgDB
 
       true
     rescue => e
+      raise e if e.class == NeedsPkgNGSupport
       if File.exist?(@db_file)
 	begin
 	  STDERR.puts " error] Remove and try again."
@@ -573,6 +596,7 @@ class PkgDB
       m ? pkgnames : pkgnames.last
     end
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     raise DBError, e.message
   ensure
     close_db
@@ -603,46 +627,65 @@ class PkgDB
   end
 
   def required_by(pkgname)
-    filename = pkg_required_by(pkgname)
-
-    File.exist?(filename) or return nil
-
     deps = {}
+    if with_pkgng?
+      IO.popen("#{PkgDB::command(:pkg)} query \"%rn-%rv\" #{pkgname}") do |r|
+        r.each do |line|
+          line.chomp!
+          deps[line] = true
+        end
+      end
+    else
+      filename = pkg_required_by(pkgname)
 
-    File.open(filename).each_line { |line|
-      line.chomp!
-      deps[line] = true unless line.empty?
-    }
+      File.exist?(filename) or return nil
+
+      File.open(filename).each_line { |line|
+        line.chomp!
+        deps[line] = true unless line.empty?
+      }
+    end
 
     deps.keys
   end
 
   def pkgdep(pkgname, want_deporigins = false)
-    filename = pkg_contents(pkgname)
-
-    File.exist?(filename) or return nil
-
     deps = {}
-    prev = nil
 
-    if File.size(filename) >= 65536	# 64KB
-      obj = "| grep -E '^@pkgdep|^@comment DEPORIGIN:' #{filename}"
+    if with_pkgng?
+      IO.popen("#{PkgDB::command(:pkg)} query \"%do %dn-%dv\" #{pkgname}") do |r|
+        r.each do |line|
+          line.chomp!
+          deporigin, pkgdepname = line.split(" ")
+          deps[pkgdepname] = deporigin
+        end
+      end
     else
-      obj = filename
-    end
+      filename = pkg_contents(pkgname)
 
-    open(obj) do |f|
-      f.each do |line|
-	case line
-	when /^@pkgdep\s+(\S+)/
-	  prev = $1
-	  deps[prev] = nil
-	when /^@comment DEPORIGIN:(\S+)/
-	  if want_deporigins && prev
-	    deps[prev] = $1
-	    prev = nil
-	  end
-	end
+      File.exist?(filename) or return nil
+
+      prev = nil
+
+      if File.size(filename) >= 65536	# 64KB
+        obj = "| grep -E '^@pkgdep|^@comment DEPORIGIN:' #{filename}"
+      else
+        obj = filename
+      end
+
+      open(obj) do |f|
+        f.each do |line|
+          case line
+          when /^@pkgdep\s+(\S+)/
+            prev = $1
+            deps[prev] = nil
+          when /^@comment DEPORIGIN:(\S+)/
+            if want_deporigins && prev
+              deps[prev] = $1
+              prev = nil
+            end
+          end
+        end
       end
     end
 
@@ -656,6 +699,7 @@ class PkgDB
   PKGDB_FILES.each_key do |key|
     module_eval %{
       def pkg_#{key.to_s}(pkgname)
+        raise NeedsPkgNGSupport, "PKGNG support needed (pkg_#{key.to_s}): #{__FILE__}:#{__LINE__}" if with_pkgng?
 	pkgfile(pkgname, #{key.inspect})
       end
     }
@@ -679,9 +723,14 @@ class PkgDB
   end
 
   def installed_pkgs!()
-    Dir.entries(db_dir).select { |pkgname|
-      /^\.\.?$/ !~ pkgname && pkgdir?(pkgdir(pkgname))
-    }.sort
+    if with_pkgng?
+      packages = `pkg info -aq`.split
+    else
+      packages = Dir.entries(db_dir).select { |pkgname|
+        /^\.\.?$/ !~ pkgname && pkgdir?(pkgdir(pkgname))
+      }
+    end
+    packages.sort
   rescue => e
     raise DBError, e.message
   end
@@ -742,6 +791,7 @@ class PkgDB
 
 	  pattern = op + base.strftime('%Y-%m-%d %H:%M:%S')
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  STDERR.puts e.message
 
 	  if block_given?

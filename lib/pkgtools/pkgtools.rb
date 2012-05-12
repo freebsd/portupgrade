@@ -573,6 +573,7 @@ def unlink_file(file)
   begin
     File.unlink(file)
   rescue => e
+    raise e if e.class == PkgDB::NeedsPkgNGSupport
     if $sudo && Process.euid != 0
       xsystem!('/bin/rm', '-f', file)
     else
@@ -679,6 +680,7 @@ end
 
 # raises StandardError
 def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
+  return if $pkgdb.with_pkgng? # PKGNG doesn't need this.
   pkgdir = $pkgdb.pkgdir(pkgname)
   return if pkgdir.nil? || !File.directory?(pkgdir)
   changed = false
@@ -819,6 +821,7 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
     install_data(tmpfile, file)
   end
 rescue => e
+  raise e if e.class == PkgDB::NeedsPkgNGSupport
   raise "Failed to rewrite #{file}: " + e.message
 end
 
@@ -847,6 +850,7 @@ def modify_origin(pkgname, origin)
 
   $pkgdb.set_origin(pkgname, origin)
 rescue => e
+  raise e if e.class == PkgDB::NeedsPkgNGSupport
   raise "Failed to rewrite #{contents_file}: " + e.message
 end
 
@@ -857,6 +861,7 @@ def identify_pkg(path)
   origin = nil
   pkgdep = []
 
+  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
   IO.popen("cd #{dir} && #{PkgDB::command(:pkg_info)} -qfo #{file}") do |r|
     r.each do |line|
       case line
@@ -872,6 +877,7 @@ def identify_pkg(path)
 
   return pkgname, origin, pkgdep
 rescue => e
+  raise e if e.class == PkgDB::NeedsPkgNGSupport
   warning_message e.message
   return nil
 end

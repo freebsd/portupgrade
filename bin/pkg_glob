@@ -239,6 +239,7 @@ Environment Variables [default]:
 	    tasks |= $pkgdb.recurse(pkgname, $recursive, $upward_recursive, $sanity_check)
 	  end
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  STDERR.puts e.message
 	  exit 1
 	end
@@ -246,6 +247,16 @@ Environment Variables [default]:
     rescue OptionParser::ParseError => e
       STDERR.puts "#{MYNAME}: #{e}", usage
       exit 64
+    end
+
+    ## Cleanup pkgng options
+    if $pkgdb.with_pkgng?
+      unless $interactive
+        $pkg_delete_args.push '-y'
+      else
+        # pkgng is interactive by default
+        $pkg_delete_args.delete '-i'
+      end
     end
 
     tasks -= $exclude_packages
@@ -279,6 +290,7 @@ Environment Variables [default]:
 	    results << PkgResult.new(pkgname, :skipped)
 	  end
 	rescue => e
+          raise e if e.class == PkgDB::NeedsPkgNGSupport
 	  results << PkgResult.new(pkgname, e)
 	end
       end
@@ -339,6 +351,7 @@ def deinstall_pkg(pkgname)
 	end
       end
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       STDERR.puts e.message
     end
 
@@ -354,8 +367,6 @@ def deinstall_pkg(pkgname)
       return nil
     end
   end
-
-  contents_file = $pkgdb.pkg_contents(pkgname)
 
   if $preserve_shlib
     unless $noexecute
@@ -402,7 +413,11 @@ def deinstall_pkg(pkgname)
 
   return true if $noexecute
 
-  cmdargs = [PkgDB::command(:pkg_delete), *$pkg_delete_args] << pkgname
+  if $pkgdb.with_pkgng?
+    cmdargs = [PkgDB::command(:pkg), 'delete', *$pkg_delete_args] << pkgname
+  else
+    cmdargs = [PkgDB::command(:pkg_delete), *$pkg_delete_args] << pkgname
+  end
 
   $pkgdb.close_db
 

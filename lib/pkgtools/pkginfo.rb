@@ -51,6 +51,22 @@ class PkgInfo
     :origin => 'o',
   }
 
+  PKG_QUERY_FLAGS = {
+    :prefix 		=> '%p',
+    :comment 		=> '%c',
+    :descr 		=> nil,
+    :message 		=> '%M',
+    :plist 		=> nil,
+    :install 		=> nil,
+    :deinstall 		=> nil,
+    :req 		=> '%dn-%dv',
+    :required_by 	=> '%rn-%rv',
+    :mtree 		=> nil,
+    :files 		=> '%Fp',
+    :totalsize  	=> '%sb',
+    :origin     	=> '%o',
+  }
+
   attr_accessor :name, :version
 
   def initialize(pkgname)
@@ -127,7 +143,7 @@ class PkgInfo
   end
 
   def self.get_info(pkg, what)
-    opt = PKG_INFO_FLAGS[what]
+    opt = $pkgdb.with_pkgng? ? PKG_QUERY_FLAGS[what] : PKG_INFO_FLAGS[what]
 
     if opt == nil
       raise ArgumentError, "#{what.to_s}: Unsupported information."
@@ -139,7 +155,11 @@ class PkgInfo
       chdir = "cd #{File.dirname(pkg)};"
     end
 
-    info = `#{chdir}env PKG_PATH= #{PKG_INFO_CMD} -q#{opt} #{pkg} 2>/dev/null`.chomp
+    if $pkgdb.with_pkgng?
+      info = `#{chdir}env PKG_PATH= #{PkgDB::command(:pkg)} query "#{opt}" #{pkg} 2>/dev/null`.chomp
+    else
+      info = `#{chdir}env PKG_PATH= #{PKG_INFO_CMD} -q#{opt} #{pkg} 2>/dev/null`.chomp
+    end
 
     info.empty? ? nil : info
   end

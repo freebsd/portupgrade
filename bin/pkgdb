@@ -95,6 +95,7 @@ usage: #{MYNAME} [-hafFfiLOQQquv] [-c pkgname] [-o pkgname] [-s /old_pkgname/new
 	  end
 	end
       rescue => e
+        raise e if e.class == PkgDB::NeedsPkgNGSupport
 	STDERR.puts e.message
       end unless dry_parse
     }
@@ -274,6 +275,7 @@ Environment Variables [default]:
       STDERR.puts "#{MYNAME}: #{e}", usage
       exit 64
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       STDERR.puts e.message
       exit 1
     end
@@ -422,6 +424,11 @@ def fix_db_phase1()
 end
 
 def fix_db_phase2()
+  if $pkgdb.with_pkgng?
+    # FIXME: pkgng
+    STDERR.puts "pkgdb -F not fully supported with PKGNG yet"
+    return
+  end
   # reconstruct all the +REQUIRED_BY files
   puts "Regenerating +REQUIRED_BY files" if $verbose
 
@@ -606,6 +613,7 @@ def fix_origin(pkg)
 
       puts "Fixed. (-> #{origin})"
     rescue => e
+      raise e if e.class == PkgDB::NeedsPkgNGSupport
       puts e.message
     end
   end
@@ -633,6 +641,7 @@ def guess_origin(pkg)
 
   nil
 rescue => e
+  raise e if e.class == PkgDB::NeedsPkgNGSupport
   puts e.message
 
   nil
@@ -687,6 +696,7 @@ def fix_dependencies(pkgname)
 	$fix_hash[dep] = fix unless fix_score == 100
 	dep = fix
       rescue => e
+        raise e if e.class == PkgDB::NeedsPkgNGSupport
 	puts e.message
       end
     end
@@ -793,6 +803,7 @@ def guess_dep(dep, origin)
     return nil, nil
   end
 rescue => e
+  raise e if e.class == PkgDB::NeedsPkgNGSupport
   puts e.message
 
   return nil, nil

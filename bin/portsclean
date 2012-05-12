@@ -501,39 +501,70 @@ def pkgclean(level)
 
   puts "Cleaning out #{$packages_base}..."
 
-  IO.popen("cd #{$packages_dir} && find . -maxdepth 1 -type f -name '*.t[bgx]z' | xargs #{PkgDB::command(:pkg_info)} -o") do |r|
-    pkgfile = pkgname = nil
+  pkgs = {}
+  if $pkgdb.with_pkgng?
+    IO.popen("cd #{$packages_dir} && find . -maxdepth 1 -type f -name '*.t[bgx]z' -exec echo \"Information for {}:\" \\\; -exec #{PkgDB::command(:pkg)} info -qoF {} \\\;") do |r|
+      pkgfile = pkgname = nil
 
-    r.each do |line|
-      case line
-      when /^Information for +\.\/((\S+-\S+)\.t[bgx]z):/
-	pkgfile = $1
-	pkgname = $2
-      when /^(\S+\/\S+)$/		# /
-	origin = $1
+      r.each do |line|
 
-	if pkgfile
-	  pkg = PkgInfo.new(pkgname)
+        case line
+        when /^Information for +\.\/((\S+-\S+)\.t[bgx]z):/
+          pkgfile = $1
+          pkgname = $2
+        when /^(\S+\/\S+)$/		# /
+          origin = $1
 
-	  pkgfile = File.join($packages_dir, pkgfile)
+          if pkgfile
+            pkgs[pkgname] = {:origin => origin, :pkgfile => pkgfile}
 
-	  if 2 <= level
-	    delete_file(pkgfile)
-	  else
-	    if port = $portsdb[origin]
-	      if port.pkgname.version > pkg.version
-		delete_file(pkgfile)
-	      end
-	    else
-	      puts "Origin not found: #{origin}: #{pkgfile}"
-	    end
-	  end
+            pkgfile = pkgname = nil
+          end
+        end
+      end
+    end
+  else
+    IO.popen("cd #{$packages_dir} && find . -maxdepth 1 -type f -name '*.t[bgx]z' | xargs #{PkgDB::command(:pkg_info)} -o") do |r|
+      pkgfile = pkgname = nil
 
-	  pkgfile = pkgname = nil
-	end
+      r.each do |line|
+        case line
+        when /^Information for +\.\/((\S+-\S+)\.t[bgx]z):/
+          pkgfile = $1
+          pkgname = $2
+        when /^(\S+\/\S+)$/		# /
+          origin = $1
+
+          if pkgfile
+            pkgs[pkgname] = {:origin => origin, :pkgfile => pkgfile}
+
+            pkgfile = pkgname = nil
+          end
+        end
       end
     end
   end
+
+  pkgs.each do |pkgname,pkg_info|
+    origin = pkg_info[:origin]
+    pkgfile = pkg_info[:pkgfile]
+    pkg = PkgInfo.new(pkgname)
+
+    pkgfile = File.join($packages_dir, pkgfile)
+
+    if 2 <= level
+      delete_file(pkgfile)
+    else
+      if port = $portsdb[origin]
+        if port.pkgname.version > pkg.version
+          delete_file(pkgfile)
+        end
+      else
+        puts "Origin not found: #{origin}: #{pkgfile}"
+      end
+    end
+  end
+
 
   IO.popen("find -H #{$packages_base} -type l -name '*.t[bgx]z'") do |r|
     r.each do |line|
