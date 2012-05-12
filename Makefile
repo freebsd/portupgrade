@@ -35,6 +35,7 @@ distclean:
 
 ${DISTFILES}: ${CHANGELOG}
 	git archive --prefix=${DISTNAME}/ --format=tar ${REL_VERSION}|tar -xf -
+	rm -f lib/pkgtools/revision.rb
 	scripts/buildrev.sh
 	mv lib/pkgtools/revision.rb ${DISTNAME}/lib/pkgtools/
 	tar -cf ${DISTFILES} ${DISTNAME}/

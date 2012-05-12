@@ -1,2 +1,3 @@
 *.rb text diff=ruby
 .git* export-ignore
+scripts/buildrev.sh export-subst
