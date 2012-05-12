@@ -34,7 +34,11 @@ distclean:
 	rm -f ${DISTFILES}
 
 ${DISTFILES}: ${CHANGELOG}
-	git archive --prefix=${DISTNAME}/ --format=tar ${REL_VERSION}|bzip2 -9c > ${DISTFILES}
+	git archive --prefix=${DISTNAME}/ --format=tar ${REL_VERSION}|tar -xf -
+	scripts/buildrev.sh
+	mv lib/pkgtools/revision.rb ${DISTNAME}/lib/pkgtools/
+	tar -cf ${DISTFILES} ${DISTNAME}/
+	rm -rf ${DISTNAME}/
 
 dist: ${DISTFILES}
 
