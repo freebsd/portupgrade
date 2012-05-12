@@ -4,6 +4,16 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.10 (SNAPSHOT)
+
+* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=4&state=closed
+    * All lib files now installed in the pkgtools/ namespace (#23)
+    * Fix `portsdb -U` crashing when rebuilding INDEX (#27)
+    * Experimental [pkgng](http://github.com/pkgng/pkgng) support (#10)
+      * Packages, `pkgdb -F`, and `portupgrade -o` are not supported yet.
+      * Various -flags do not work with `pkg_deinstall` and `pkgdb`
+      * Enable by adding WITH_PKGNG=yes to /etc/make.conf
+
 portupgrade 2.4.9.5 (released 2012-05-01):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=3&state=closed
