@@ -13,6 +13,7 @@ portupgrade 2.4.10 (SNAPSHOT)
       * Packages, `pkgdb -F`, and `portupgrade -o` are not supported yet.
       * Various -flags do not work with `pkg_deinstall` and `pkgdb`
       * Enable by adding WITH_PKGNG=yes to /etc/make.conf
+    * `port[upgrade|install] -v` will show recursive depends.
 
 portupgrade 2.4.9.5 (released 2012-05-01):
 

@@ -852,6 +852,8 @@ def get_all_depends(origin, parents_list = nil)
       parents_list = Set.new
       STDERR.print "[Gathering depends for #{origin} "
       first = true
+    elsif $verbose
+      STDERR.print "(#{origin})"
     end
     raise RecursiveDependencyError if parents_list.include?(origin)
     parents_list.add(origin)
