@@ -986,7 +986,7 @@ def do_upgrade(pkgname)
   end
 
   begin
-    result = upgrade_pkg(pkg, origin)
+    result, newpkg = upgrade_pkg(pkg, origin)
     if result == :done
       upgraded = true
 
@@ -997,7 +997,10 @@ def do_upgrade(pkgname)
       end
     end
 
-    $results << PkgResult.new(origin ? origin : pkg.fullname, result, pkgname)
+    result_msg = newpkg ? "#{pkgname} -> #{newpkg.fullname}" : pkgname
+
+
+    $results << PkgResult.new(origin ? origin : pkg.fullname, result, result_msg)
   rescue IgnoreMarkError => e
     $results << PkgResult.new(origin, :ignored, pkgname)
   rescue => e
@@ -1310,7 +1313,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
     }
 
     if $fetch_only
-      return newpkg ? :done : :ignored
+      return newpkg ? [:done, newpkg] : :ignored
     end
 
     if newpkg
@@ -1384,7 +1387,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
 
   if $noexecute
     puts "OK? [no]" if interactive
-    return :done
+    return [:done, newpkg]
   elsif $yestoall
     puts "OK? [yes]" if interactive
   elsif interactive
@@ -1394,7 +1397,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   unless have_package
     build_port(origin, logfile)
 
-    return :done if $fetch_only
+    return [:done, newpkg] if $fetch_only
   end
 
   update_pkgdep(oldpkgname, newpkgname, origin)
@@ -1416,7 +1419,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   progress_message "Cleaning out obsolete shared libraries"
   system!(PkgDB::command(:portsclean), '-QL')
 
-  :done
+  [:done, newpkg]
 rescue CommandFailedError => e
   warning_message e.message
   progress_message "Skipping '#{origin}'"

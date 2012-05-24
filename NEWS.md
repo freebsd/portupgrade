@@ -8,7 +8,7 @@ portupgrade 2.4.9.6 (released 2012-07-29):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=6&state=open
     * Fix crash on `portsdb -U` (#27)
-
+    * portupgrade now shows the new version installed when completed (#28)
 
 portupgrade 2.4.9.5 (released 2012-05-01):
 
