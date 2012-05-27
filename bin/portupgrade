@@ -2028,8 +2028,11 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
     when :restore
       progress_message "Restoring the old version"
 
-      raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
-      xsystem! PkgDB::command(:pkg_add), '-f', backup_pkgfile
+      if $pkgdb.with_pkgng?
+        xsystem! PkgDB::command(:pkg), 'add', backup_pkgfile
+      else
+        xsystem! PkgDB::command(:pkg_add), '-f', backup_pkgfile
+      end
 
       if origin and command = get_afterinstall_command(origin)
 	progress_message "Executing a post-install command for '#{origin}': " + command
