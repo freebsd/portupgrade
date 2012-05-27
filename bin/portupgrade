@@ -1921,8 +1921,11 @@ def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
     cmdargs = []
   end
 
-  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
-  cmdargs << PkgDB::command(:pkg_add) << '-f' << pkgfile
+  if $pkgdb.with_pkgng?
+    cmdargs << PkgDB::command(:pkg) << 'add' << pkgfile
+  else
+    cmdargs << PkgDB::command(:pkg_add) << '-f' << pkgfile
+  end
 
   progress_message "Installing the new version via the package"
 
