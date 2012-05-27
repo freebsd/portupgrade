@@ -10,7 +10,7 @@ portupgrade 2.4.10 (SNAPSHOT)
     * All lib files now installed in the pkgtools/ namespace (#23)
     * Fix `portsdb -U` crashing when rebuilding INDEX (#27)
     * Experimental [pkgng](http://github.com/pkgng/pkgng) support (#10)
-      * Packages, `pkgdb -F`, and `portupgrade -o` are not supported yet.
+      * Packages, `pkgdb -F`, `portupgrade -o`  and `port[install|upgrade] -P` are not supported yet.
       * Various -flags do not work with `pkg_deinstall` and `pkgdb`
       * Enable by adding WITH_PKGNG=yes to /etc/make.conf
     * `port[upgrade|install] -v` will show recursive depends.
