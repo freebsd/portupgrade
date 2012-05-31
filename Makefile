@@ -6,6 +6,10 @@ SUBDIR=	bin \
 	man \
 	misc
 
+.if defined(NEED_COMPAT_SCRIPT)
+SUBDIR+= compat
+.endif
+
 .include <bsd.subdir.mk>
 
 .include "${.CURDIR}/Makefile.inc"

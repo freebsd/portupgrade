@@ -4,3 +4,4 @@ bin/.build
 etc/.build
 lib/.build
 lib/pkgtools/revision.rb
+compat/script
