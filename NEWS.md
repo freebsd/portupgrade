@@ -15,6 +15,9 @@ portupgrade 2.4.10 (SNAPSHOT)
       * Enable by adding WITH_PKGNG=yes to /etc/make.conf
     * `port[upgrade|install] -v` will show recursive depends.
     * portupgrade now shows the new version installed when completed (#28)
+    * Fixed failure being seen as success due to broken script(1) (#8)
+      * This only occurs on FreeBSD < 8.1. A working script(1) is now included and installed
+        into PREFIX/libexec/pkgtools for older systems.
 
 portupgrade 2.4.9.5 (released 2012-05-01):
 
