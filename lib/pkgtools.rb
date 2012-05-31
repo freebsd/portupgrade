@@ -525,11 +525,25 @@ end
 alias system! sudo
 alias xsystem! xsudo
 
+def script_path
+  unless $script_path
+    # If a fixed/custom script(1) is installed by the port, use that version.
+    # See #8
+    custom_script = "#{PREFIX}/libexec/pkgtools/script"
+    if File.exists?(custom_script)
+      $script_path = custom_script
+    else
+      $script_path = '/usr/bin/script'
+    end
+  end
+  $script_path
+end
+
 def logged_command(file, args)
   if !file  
     args
   else
-    ['/usr/bin/script', '-qa', file, *args]
+    [script_path(), '-qa', file, *args]
   end
 end
 
