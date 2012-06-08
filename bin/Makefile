@@ -24,7 +24,7 @@ CLEANDIRS=	${BUILDDIR}
 .for script in ${SCRIPTS}
 ${script}: ${script:T}
 	${RUBY} -wc ${.ALLSRC}
-	@mkdir -p ${BUILDDIR}
+	@${MKDIR} ${BUILDDIR}
 	${RUBY} -pe ' \
 		if $$. == 1; \
 		 if /^#!/; \

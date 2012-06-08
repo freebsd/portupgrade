@@ -20,7 +20,7 @@ CLEANDIRS=	${BUILDDIR}
 
 .for script in ${SCRIPTS}
 ${script}: ${script:T}
-	@mkdir -p ${BUILDDIR}
+	@${MKDIR} ${BUILDDIR}
 	${RUBY} -p \
 		-e '$$_.sub(%r:/usr/local:, "${PREFIX}")' \
 		-e '$$_.sub(%r:(/etc/rc\.subr):, "${PREFIX}\\1") if !File.exist?("/etc/rc.subr")' \

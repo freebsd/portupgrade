@@ -5,7 +5,7 @@ FILES=	complete.sample
 FILESDIR?=	${EXAMPLESDIR}/tcsh
 
 beforeinstall:
-	mkdir -p ${FILESDIR}
+	${MKDIR} ${FILESDIR}
 
 .include <bsd.prog.mk>
 

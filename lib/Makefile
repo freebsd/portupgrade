@@ -28,7 +28,7 @@ CLEANDIRS=	${BUILDDIR}
 .for file in ${PKGTOOLS_SRC}
 ${BUILDDIR}/${file}: pkgtools/${file}
 	${RUBY} -wc ${.ALLSRC}
-	@mkdir -p ${BUILDDIR}/
+	@${MKDIR} ${BUILDDIR}/
 	${RUBY} -p \
 		-e '$$_.sub %r:/usr/local:, "${PREFIX}"' \
 		${.ALLSRC} > ${.TARGET}
@@ -40,7 +40,7 @@ pkgtools/revision.rb: pkgtools/revision.rb.in ${.CURDIR}/../scripts/buildrev.sh 
 beforeinstall: install-mkdir
 
 install-mkdir: .PHONY
-	mkdir -p ${PKGTOOLSFILESDIR}
+	${MKDIR} ${PKGTOOLSFILESDIR}
 
 .include <bsd.prog.mk>
 

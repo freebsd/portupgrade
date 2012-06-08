@@ -28,7 +28,7 @@ DOCMODE?=	444
 DOCFILES=	${CHANGELOG} ${README}
 
 install-doc: ${CHANGELOG}
-	mkdir -p ${DOCSDIR}
+	${MKDIR} ${DOCSDIR}
 	${INSTALL} -c -o ${DOCOWN} -g ${DOCGRP} -m ${DOCMODE} \
 		${DOCFILES} ${DESTDIR}${DOCSDIR}
 

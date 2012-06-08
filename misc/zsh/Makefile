@@ -9,7 +9,7 @@ ZSH_SITEFNDIR=	${PREFIX}/share/zsh/site-functions
 FILESDIR?=	${ZSH_SITEFNDIR}
 
 beforeinstall:
-	mkdir -p ${FILESDIR}
+	${MKDIR} ${FILESDIR}
 
 .include <bsd.prog.mk>
 
