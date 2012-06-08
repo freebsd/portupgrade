@@ -500,6 +500,7 @@ Environment Variables [default]:
 
     upgrade_tasks = []
     install_tasks = []
+    install_tasks_orphans = {}
     $package_tasks = []
     $dep_hash = {}
     $task_options = Hash.new({})
@@ -772,9 +773,11 @@ Environment Variables [default]:
 	    end
 
 	    install_tasks << origin
+            install_tasks_orphans[origin] = false
 	    # Track all not installed
 	    get_notinstalled_depends(origin).each do |dep|
 	      install_tasks << dep
+              install_tasks_orphans[dep] = true
 	    end
 	  end
 	end
@@ -804,7 +807,7 @@ Environment Variables [default]:
     install_tasks.each do |origin| 
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, origin)
-      do_install(origin)
+      do_install(origin, install_tasks_orphans[origin])
       progress_message "** Install tasks #{install_tasks.length}: #{$results.summary}" if $emit_summaries || $verbose
     end
 
@@ -1039,7 +1042,7 @@ def do_upgrade(pkgname)
   end
 end
 
-def do_install(origin)
+def do_install(origin, orphan)
   if origin.nil? then
     warning_message "NIL origin passed to do_install"
     return
@@ -1077,7 +1080,7 @@ def do_install(origin)
   end
 
   begin
-    if install_new_port(origin, false)	# confirmed in advance
+    if install_new_port(origin, orphan, false)	# confirmed in advance
       $results << PkgResult.new(origin, :done)
     else
       $results << PkgResult.new(origin, :skipped)
@@ -1416,12 +1419,19 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
     end
   }
 
+  # Determine if this port should retain the 'automatic' flag or not from pkgng
+  orphan = nil
+  if $pkgdb.with_pkgng?
+    str = backquote!(PkgDB::command(:pkg), 'query', '%a', origin)
+    orphan = str.to_i == 1
+  end
+
   teardown_proc2 = uninstall_pkg(oldpkgname, logfile, $uninstall_extra_flags)
 
   if have_package
     install_pkg(newpkgname, origin, logfile, false, teardown_proc1, teardown_proc2)
   else
-    install_port(origin, logfile, false, teardown_proc1, teardown_proc2)
+    install_port(origin, orphan, logfile, false, teardown_proc1, teardown_proc2)
   end
 
   progress_message "Cleaning out obsolete shared libraries"
@@ -1558,7 +1568,7 @@ end
 #   (PortDirError, MakefileBrokenError, IgnoreMarkError - check_pkgname)
 #   (BuildError - build_port)
 #   (InstallError - install_port, install_pkg)
-def install_new_port(origin, interactive = $interactive)
+def install_new_port(origin, orphan, interactive = $interactive)
   timer_start(time_key = "Fresh installation of #{origin}")
 
   logfile = nil
@@ -1670,7 +1680,7 @@ def install_new_port(origin, interactive = $interactive)
 
     return true if $fetch_only
 
-    install_port(origin, logfile, true)
+    install_port(origin, orphan, logfile, true)
   end
 rescue CommandFailedError => e
   warning_message e.message
@@ -1824,7 +1834,7 @@ end
 
 # raises:
 #   InstallError
-def install_port(origin, logfile = nil, is_new = false, *teardown_procs)
+def install_port(origin, orphan, logfile = nil, is_new = false, *teardown_procs)
   timer_start(time_key = "Installation of #{origin}")
 
   portdir = $portsdb.portdir(origin)
@@ -1835,6 +1845,10 @@ def install_port(origin, logfile = nil, is_new = false, *teardown_procs)
   cmdargs = make_env << 'make'
 
   cmdargs << 'BATCH=yes' if $batch_mode
+
+  if $pkgdb.with_pkgng?
+    cmdargs << '-DINSTALLS_DEPENDS' if orphan
+  end
 
   make_args = get_make_args(origin)
 
@@ -1908,7 +1922,7 @@ def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
 
       progress_message "Installing #{deporigin} as dependency required by #{pkgname}"
 
-      do_install(deporigin)
+      do_install(deporigin, true)
     end
   end
 
