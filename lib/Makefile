@@ -20,8 +20,7 @@ PKGTOOLSFILES=	${PKGTOOLS_SRC:S,^,${BUILDDIR}/,g} pkgtools/revision.rb
 
 .include "${.CURDIR}/Makefile.inc"
 
-RUBYSITELIBDIR!=	${RUBY} -rrbconfig -e 'puts "%s/%s.%s" % %w[sitedir MAJOR MINOR].map { |k| RbConfig::CONFIG[k] }'
-FILESDIR?=	${RUBYSITELIBDIR}
+FILESDIR?=	${RUBY_SITELIBDIR}
 PKGTOOLSFILESDIR=	${FILESDIR}/pkgtools
 
 CLEANDIRS=	${BUILDDIR}
