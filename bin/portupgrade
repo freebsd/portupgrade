@@ -1426,7 +1426,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
     orphan = str.to_i == 1
   end
 
-  teardown_proc2 = uninstall_pkg(oldpkgname, logfile, $uninstall_extra_flags)
+  teardown_proc2 = uninstall_pkg(oldpkgname, orphan, logfile, $uninstall_extra_flags)
 
   if have_package
     install_pkg(newpkgname, origin, logfile, false, teardown_proc1, teardown_proc2)
@@ -1978,7 +1978,7 @@ end
 
 # raises:
 #   BackupError, UninstallError
-def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
+def uninstall_pkg(pkgname, orphan, logfile = nil, extra_flags = '')
   timer_start(time_key = "Uninstallation of #{pkgname}")
 
   $pkgdb.close_db
@@ -2047,6 +2047,7 @@ def uninstall_pkg(pkgname, logfile = nil, extra_flags = '')
 
       if $pkgdb.with_pkgng?
         xsystem! PkgDB::command(:pkg), 'add', backup_pkgfile
+        xsystem! PkgDB::command(:pkg), 'set', '-y', '-A', orphan ? "1" : "0", origin
       else
         xsystem! PkgDB::command(:pkg_add), '-f', backup_pkgfile
       end
