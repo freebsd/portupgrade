@@ -40,7 +40,7 @@ pkgtools/revision.rb: pkgtools/revision.rb.in ${.CURDIR}/../scripts/buildrev.sh 
 beforeinstall: install-mkdir
 
 install-mkdir: .PHONY
-	${MKDIR} ${PKGTOOLSFILESDIR}
+	${MKDIR} ${DESTDIR}${PKGTOOLSFILESDIR}
 
 .include <bsd.prog.mk>
 

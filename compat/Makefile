@@ -8,6 +8,6 @@ MAN=
 BINDIR=	${PREFIX}/libexec/pkgtools
 
 beforeinstall:
-	${MKDIR} ${BINDIR}
+	${MKDIR} ${DESTDIR}${BINDIR}
 
 .include <bsd.prog.mk>

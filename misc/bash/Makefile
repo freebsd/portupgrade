@@ -5,7 +5,7 @@ FILES=	complete.sample
 FILESDIR?=	${EXAMPLESDIR}/bash
 
 beforeinstall:
-	${MKDIR} ${FILESDIR}
+	${MKDIR} ${DESTDIR}${FILESDIR}
 
 .include <bsd.prog.mk>
 
