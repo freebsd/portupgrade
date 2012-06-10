@@ -184,24 +184,19 @@ class PortsDB
   end
 
   def make_var(var, dir = ports_dir())
-    if var.is_a?(Array)
-      vars = var.join(' -V ')
-      `cd #{dir} && make -V #{vars} 2>/dev/null`.lines.map { |val|
-	val.strip!
-	if val.empty?
-	  nil
-	else
-	  val
-	end
-      }
-    else
-      val = `cd #{dir} && make -V #{var} 2>/dev/null`.strip
+    all_vars = var.is_a?(Array) ? var : [var]
+    vars = all_vars.join(' -V ')
+    file = dir == ports_dir() ? "-f Mk/bsd.port.mk" : ""
+    results = `cd #{dir} && make #{file} -V #{vars}`.lines.map { |val|
+      val.strip!
       if val.empty?
-	nil
+        nil
       else
-	val
+        val
       end
-    end
+    }
+    # Return array if requested, or single value if not
+    var.is_a?(Array) ? results : results.first
   end
 
   def ports_dir()
