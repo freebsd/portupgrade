@@ -7,7 +7,10 @@ require 'find'
 
 require 'test/unit'
 
+require 'pkgtools'
 require 'pkgtools/pkgdb'
+
+init_pkgtools_global
 
 class TestPkgDB < Test::Unit::TestCase
   def test_strip
