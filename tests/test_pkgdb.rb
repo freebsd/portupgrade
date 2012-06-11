@@ -14,11 +14,17 @@ class TestPkgDB < Test::Unit::TestCase
     pwd = Dir.pwd
 
     pkgdb = PkgDB.instance.setup('/var/db/pkg')
-    ruby_pkgname = ''
-    Find.find('/var/db/pkg') do |path|
-      if FileTest.directory?(path) && /ruby-1.8/ =~ path
-	ruby_pkgname = File.basename(path)
-      end
+    test_pkgname = ''
+
+    # Find any installed package
+    if `make -f /usr/ports/Mk/bsd.port.mk -V WITH_PKGNG`.chomp != ""
+	    test_pkgname = `pkg query '%n-%v'|head -n 1`.chomp
+    else
+	    Find.find('/var/db/pkg') do |path|
+	      if FileTest.directory?(path)
+		test_pkgname = File.basename(path)
+	      end
+	    end
     end
 
     assert_equal('foo1', pkgdb.strip('foo1'))
@@ -28,9 +34,9 @@ class TestPkgDB < Test::Unit::TestCase
     assert_equal(nil, pkgdb.strip('baz/bar/foo'))
     assert_equal(nil, pkgdb.strip('/baz/bar/foo'))
 
-    assert_equal(ruby_pkgname, pkgdb.strip(ruby_pkgname, true))
+    assert_equal(test_pkgname, pkgdb.strip(test_pkgname, true))
 
-    assert_equal(nil, pkgdb.strip('./' + ruby_pkgname, true))
+    assert_equal(nil, pkgdb.strip('./' + test_pkgname, true))
 
     Dir.chdir(pkgdb.db_dir)
 
@@ -45,10 +51,10 @@ class TestPkgDB < Test::Unit::TestCase
     assert_equal(nil, pkgdb.strip('/foo', true))
     assert_equal(nil, pkgdb.strip('/foo/bar', true))
 
-    assert_equal(ruby_pkgname, pkgdb.strip(ruby_pkgname, true))
-    assert_equal(ruby_pkgname, pkgdb.strip('/var/db/pkg/' + ruby_pkgname, true))
+    assert_equal(test_pkgname, pkgdb.strip(test_pkgname, true))
+    assert_equal(test_pkgname, pkgdb.strip('/var/db/pkg/' + test_pkgname, true))
 
-    assert_equal(nil, pkgdb.strip('../' + ruby_pkgname, true))
+    assert_equal(nil, pkgdb.strip('../' + test_pkgname, true))
   ensure
     Dir.chdir(pwd)
   end
