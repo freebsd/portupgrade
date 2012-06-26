@@ -1477,6 +1477,7 @@ def get_pkgname(origin)
 
   if output.size != 4
     warning_message "Makefile possibly broken: #{origin}:"
+    warning_message "Please report this to the maintainer for #{origin}"
     output.each { |line| STDERR.print "\t" + line }
     raise MakefileBrokenError
   end
