@@ -18,6 +18,7 @@ portupgrade 2.4.10 (SNAPSHOT)
     * Fixed failure being seen as success due to broken script(1) (#8)
       * This only occurs on FreeBSD < 8.1. A working script(1) is now included and installed
         into PREFIX/libexec/pkgtools for older systems.
+    * Capture duplicated origins when upgrading and suggest running `pkgdb -F` instead of crashing
 
 portupgrade 2.4.9.5 (released 2012-05-01):
 
