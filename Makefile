@@ -42,7 +42,7 @@ ${DISTFILES}: ${CHANGELOG}
 	rm -f lib/pkgtools/revision.rb
 	scripts/buildrev.sh
 	mv lib/pkgtools/revision.rb ${DISTNAME}/lib/pkgtools/
-	tar -cf ${DISTFILES} ${DISTNAME}/
+	tar -cjf ${DISTFILES} ${DISTNAME}/
 	rm -rf ${DISTNAME}/
 
 dist: ${DISTFILES}
