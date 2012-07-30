@@ -6,7 +6,7 @@
 
 portupgrade 2.4.9.6 (released 2012-07-29):
 
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=6&state=open
+* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=6&state=closed
     * Fix crash on `portsdb -U` (#27)
     * portupgrade now shows the new version installed when completed (#28)
     * `port[upgrade|install] -v` will show recursive depends.
