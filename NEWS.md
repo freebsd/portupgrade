@@ -8,17 +8,22 @@ portupgrade 2.4.10 (SNAPSHOT)
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=4&state=closed
     * All lib files now installed in the pkgtools/ namespace (#23)
-    * Fix `portsdb -U` crashing when rebuilding INDEX (#27)
     * Experimental [pkgng](http://github.com/pkgng/pkgng) support (#10)
       * Packages, `pkgdb -F`, `portupgrade -o`  and `port[install|upgrade] -P` are not supported yet.
       * Various -flags do not work with `pkg_deinstall` and `pkgdb`
       * Enable by adding WITH_PKGNG=yes to /etc/make.conf
-    * `port[upgrade|install] -v` will show recursive depends.
-    * portupgrade now shows the new version installed when completed (#28)
     * Fixed failure being seen as success due to broken script(1) (#8)
       * This only occurs on FreeBSD < 8.1. A working script(1) is now included and installed
         into PREFIX/libexec/pkgtools for older systems.
     * Capture duplicated origins when upgrading and suggest running `pkgdb -F` instead of crashing
+
+portupgrade 2.4.9.6 (released 2012-07-29):
+
+* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=6&state=open
+    * Fix crash on `portsdb -U` (#27)
+    * portupgrade now shows the new version installed when completed (#28)
+    * `port[upgrade|install] -v` will show recursive depends.
+    * Properly respect LOCALBASE [ports/146858]
 
 portupgrade 2.4.9.5 (released 2012-05-01):
 
