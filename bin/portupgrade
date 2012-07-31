@@ -635,12 +635,12 @@ Environment Variables [default]:
 		  dep = []
 		  get_all_depends(origin).each do |d|
 		    newdep = $pkgdb.deorigin(d)
-                    if newdep.length > 1
-                      warning_message "Duplicated origin - #{origin}: #{newdep.join(" ")}"
-                      warning_message "Run 'pkgdb -F' to interactively fix them."
-                      exit 1
-                    end
 		    unless newdep.nil? then
+                      if newdep.length > 1
+                        warning_message "Duplicated origin - #{origin}: #{newdep.join(" ")}"
+                        warning_message "Run 'pkgdb -F' to interactively fix them."
+                        exit 1
+                      end
 		      dep << newdep.join
 		    end
 		  end
