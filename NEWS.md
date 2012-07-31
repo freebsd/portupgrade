@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.9.7 (released 2012-07-30):
+
+    * Fix crash under certain conditions when checking for duplicated origin
+
 portupgrade 2.4.9.6 (released 2012-07-29):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=6&state=closed
