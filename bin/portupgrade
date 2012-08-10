@@ -1488,6 +1488,13 @@ end
 # raises:
 #   PortDirError, MakefileBrokenError, IgnoreMarkError
 def get_pkgname(origin)
+  # Check if this origin has been MOVED and automatically use that new origin
+  if !$ignore_moved and \
+    !config_ignore_moved?(origin) and \
+    (moved = $portsdb.moved.trace(origin))
+    origin = moved.last.to
+  end
+
   portdir = $portsdb.portdir(origin)
 
   if not File.directory?(portdir)
