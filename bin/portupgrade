@@ -1492,7 +1492,9 @@ def get_pkgname(origin)
   if !$ignore_moved and \
     !config_ignore_moved?(origin) and \
     (moved = $portsdb.moved.trace(origin))
-    origin = moved.last.to
+    if moved.last.to
+      origin = moved.last.to
+    end
   end
 
   portdir = $portsdb.portdir(origin)
