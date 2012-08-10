@@ -4,6 +4,12 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.9.8 (released 2012-XX-XX):
+
+* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=8&state=closed
+
+    * Automatically trace MOVED when upgrading ports (#2, #36, ports/151662)
+
 portupgrade 2.4.9.7 (released 2012-07-30):
 
     * Fix crash under certain conditions when checking for duplicated origin
