@@ -851,16 +851,21 @@ def update_pkgdep(oldpkgname, newpkgname, neworigin = nil)
 end
 
 def modify_origin(pkgname, origin)
-  contents_file = $pkgdb.pkg_contents(pkgname)
-
-  if grep_q_file(/^@comment[ \t]+ORIGIN:/, contents_file)
-    command = shelljoin('sed',
-			"s|^\\(@comment[ \t][ \t]*ORIGIN:\\).*$|\\1#{origin}|")
+  if $pkgdb.with_pkgng?
+    oldorigin = $pkgdb.origin(pkgname)
+    str = backquote!(PkgDB::command(:pkg), 'set', '-yo' "#{oldorigin}:#{origin}")
   else
-    command = "(cat; echo '@comment ORIGIN:#{origin}')"
-  end
+    contents_file = $pkgdb.pkg_contents(pkgname)
 
-  filter_file(command, contents_file)
+    if grep_q_file(/^@comment[ \t]+ORIGIN:/, contents_file)
+      command = shelljoin('sed',
+                          "s|^\\(@comment[ \t][ \t]*ORIGIN:\\).*$|\\1#{origin}|")
+    else
+      command = "(cat; echo '@comment ORIGIN:#{origin}')"
+    end
+
+    filter_file(command, contents_file)
+  end
 
   $pkgdb.set_origin(pkgname, origin)
 rescue => e
