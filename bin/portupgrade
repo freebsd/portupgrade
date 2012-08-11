@@ -1010,6 +1010,11 @@ def do_upgrade(pkgname)
 
     # Handle replaced/moved origins
     if pkg.origin != origin
+      # Change origin in pkgng
+      if $pkgdb.with_pkgng?
+        str = backquote!(PkgDB::command(:pkg), 'set', '-yo' "#{pkg.origin}:#{origin}")
+      end
+
       # Ignore conflicts with DISABLE_CONFLICTS
       $ignore_conflicts = true
     end
