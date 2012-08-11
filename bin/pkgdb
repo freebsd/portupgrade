@@ -351,6 +351,13 @@ def check_lost_deps()
 end
 
 def fix_db
+  if $pkgdb.with_pkgng?
+    # FIXME: pkgng
+    STDERR.puts "pkgdb -F not fully supported with PKGNG yet"
+    $pkgdb.unmark_fixme
+    return
+  end
+
   progress_message "Checking the package registry database"
 
   if ! File.owned?($pkgdb_dir) && Process.uid > 0
@@ -426,7 +433,6 @@ end
 def fix_db_phase2()
   if $pkgdb.with_pkgng?
     # FIXME: pkgng
-    STDERR.puts "pkgdb -F not fully supported with PKGNG yet"
     return
   end
   # reconstruct all the +REQUIRED_BY files
