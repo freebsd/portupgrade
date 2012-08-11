@@ -618,6 +618,13 @@ Environment Variables [default]:
 		origin = $origin
 	      else
 		origin = $pkgdb.origin(task)
+                # Check if this origin has been MOVED and automatically replace the origin
+                if !$ignore_moved and \
+                  !config_ignore_moved?(pkg) and \
+                  (moved = $portsdb.moved.trace(pkg.origin)) and \
+                  moved.last.to
+                  origin = moved.last.to
+                end
 	      end
 	      if !origin.nil?
 		begin
@@ -823,6 +830,7 @@ Environment Variables [default]:
 
     $current_pkgname = ''
     install_tasks.each do |origin| 
+      $ignore_conflicts = false
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, origin)
       do_install(origin, install_tasks_orphans[origin])
@@ -830,6 +838,7 @@ Environment Variables [default]:
     end
 
     upgrade_tasks.each do |pkgname|
+      $ignore_conflicts = false
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
       $current_pkgname = pkgname
@@ -957,6 +966,7 @@ def do_upgrade(pkgname)
   pkg = PkgInfo.new(pkgname)
 
   origin = $task_options[pkgname][:origin]
+  $ignore_conflicts = false
 
   if !origin || !File.directory?($portsdb.ports_dir() + '/' + origin)
     if !$ignore_moved and \
@@ -996,6 +1006,12 @@ def do_upgrade(pkgname)
 	  return
 	end
       end
+    end
+
+    # Handle replaced/moved origins
+    if pkg.origin != origin
+      # Ignore conflicts with DISABLE_CONFLICTS
+      $ignore_conflicts = true
     end
   end
 
@@ -1501,13 +1517,11 @@ end
 # raises:
 #   PortDirError, PortDeletedError, MakefileBrokenError, IgnoreMarkError
 def get_pkgname(origin)
-  # Check if this origin has been MOVED and automatically use that new origin
+  # Check if this origin has been deleted
   if !$ignore_moved and \
     !config_ignore_moved?(origin) and \
     (moved = $portsdb.moved.trace(origin))
-    if moved.last.to
-      origin = moved.last.to
-    else
+    unless moved.last.to
       warning_message "Port deleted on #{moved.last.date}: #{origin}"
       STDERR.puts "\t" + moved.last.why
       raise PortDeletedError
@@ -1754,6 +1768,10 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
   cmdargs << 'BATCH=yes' if $batch_mode
 
   make_args = get_make_args(origin)
+
+  if $ignore_conflicts
+    make_args << '-DDISABLE_CONFLICTS'
+  end
 
   unless make_args.empty?
     cmdargs.concat(make_args)
