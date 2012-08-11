@@ -825,6 +825,7 @@ Environment Variables [default]:
 
     $current_pkgname = ''
     install_tasks.each do |origin| 
+      $ignore_conflicts = false
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, origin)
       do_install(origin)
@@ -832,6 +833,7 @@ Environment Variables [default]:
     end
 
     upgrade_tasks.each do |pkgname|
+      $ignore_conflicts = false
       ctask += 1
       setproctitle('[%d/%d] %s', ctask, ntasks, pkgname)
       $current_pkgname = pkgname
@@ -958,6 +960,7 @@ def do_upgrade(pkgname)
   pkg = PkgInfo.new(pkgname)
 
   origin = $task_options[pkgname][:origin]
+  $ignore_conflicts = false
 
   if !origin || !File.directory?($portsdb.ports_dir() + '/' + origin)
     if !$ignore_moved and \
@@ -997,6 +1000,12 @@ def do_upgrade(pkgname)
 	  return
 	end
       end
+    end
+
+    # Handle replaced/moved origins
+    if pkg.origin != origin
+      # Ignore conflicts with DISABLE_CONFLICTS
+      $ignore_conflicts = true
     end
   end
 
@@ -1741,6 +1750,10 @@ def build_port(origin, logfile = nil, retried = false, is_new = false)
   cmdargs << 'BATCH=yes' if $batch_mode
 
   make_args = get_make_args(origin)
+
+  if $ignore_conflicts
+    make_args << '-DDISABLE_CONFLICTS'
+  end
 
   unless make_args.empty?
     cmdargs.concat(make_args)
