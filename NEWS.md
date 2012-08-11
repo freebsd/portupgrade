@@ -21,6 +21,7 @@ portupgrade 2.4.9.8 (released 2012-XX-XX):
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=8&state=closed
 
     * Automatically trace MOVED when upgrading ports (#2, #36, ports/151662)
+    * Track and display information on deleted ports when upgrading
 
 portupgrade 2.4.9.7 (released 2012-07-30):
 
