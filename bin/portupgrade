@@ -1010,11 +1010,6 @@ def do_upgrade(pkgname)
 
     # Handle replaced/moved origins
     if pkg.origin != origin
-      # Change origin in pkgng
-      if $pkgdb.with_pkgng?
-        str = backquote!(PkgDB::command(:pkg), 'set', '-yo' "#{pkg.origin}:#{origin}")
-      end
-
       # Ignore conflicts with DISABLE_CONFLICTS
       $ignore_conflicts = true
     end
@@ -1468,12 +1463,20 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
     orphan = str.to_i == 1
   end
 
+  # Save old origin for reverting
+  oldorigin = oldpkg.origin.clone
+
   teardown_proc2 = uninstall_pkg(oldpkgname, orphan, logfile, $uninstall_extra_flags)
 
   if have_package
     install_pkg(newpkgname, origin, logfile, false, teardown_proc1, teardown_proc2)
   else
     install_port(origin, orphan, logfile, false, teardown_proc1, teardown_proc2)
+  end
+
+  # Change origin in pkgng
+  if origin and oldpkg.origin != origin and $pkgdb.with_pkgng?
+    str = backquote!(PkgDB::command(:pkg), 'set', '-yo' "#{oldorigin}:#{origin}")
   end
 
   progress_message "Cleaning out obsolete shared libraries"
