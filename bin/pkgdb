@@ -305,6 +305,8 @@ def get_real_run_deps(pkgname)
 end
 
 def check_lost_deps()
+  # pkg check -dn
+  raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
   fix_db_init()
   stty_sane if $interactive
 
