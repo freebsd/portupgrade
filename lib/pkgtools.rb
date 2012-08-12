@@ -526,15 +526,13 @@ alias system! sudo
 alias xsystem! xsudo
 
 def script_path
-  unless $script_path
-    # If a fixed/custom script(1) is installed by the port, use that version.
-    # See #8
-    custom_script = "#{PREFIX}/libexec/pkgtools/script"
-    if File.exists?(custom_script)
-      $script_path = custom_script
-    else
-      $script_path = '/usr/bin/script'
-    end
+  # If a fixed/custom script(1) is installed by the port, use that version.
+  # See #8
+  custom_script = "#{PREFIX}/libexec/pkgtools/script"
+  if File.exists?(custom_script)
+    $script_path = custom_script
+  else
+    $script_path = '/usr/bin/script'
   end
   $script_path
 end
