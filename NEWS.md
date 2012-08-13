@@ -11,6 +11,7 @@ portupgrade 2.4.9.8 (released 2012-XX-XX):
     * Automatically trace MOVED when upgrading ports (#2, #36, ports/151662)
     * Track and display information on deleted ports when upgrading
     * Always set DISABLE_CONFLICTS when replacing origins / handling MOVED origins
+    * Fix error when running portinstall inside of a WRKDIR
 
 portupgrade 2.4.9.7 (released 2012-07-30):
 
