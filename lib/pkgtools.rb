@@ -240,6 +240,10 @@ def config_include?(key, p)
 end
 
 def init_pkgtools_global
+  # Change to a good directory to avoid errors if the user
+  # is compiling in a WRKDIR
+  Dir.chdir
+
   # initialize pkgdb first - PortsDB uses PkgDB.instance.db_dir.
   $pkgdb = PkgDB.instance.setup
   $pkgdb_dir = $pkgdb.db_dir
