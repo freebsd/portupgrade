@@ -622,9 +622,14 @@ class PkgDB
   end
 
   def required?(pkgname)
-    file = pkg_required_by(pkgname)
+    if with_pkgng?
+      str = backquote!(PkgDB::command(:pkg), 'query', '%?r', pkgname)
+      return str.to_i > 0
+    else
+      file = pkg_required_by(pkgname)
 
-    File.exist?(file) && !File.zero?(file)
+      return File.exist?(file) && !File.zero?(file)
+    end
   end
 
   def required_by(pkgname)
