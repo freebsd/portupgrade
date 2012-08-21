@@ -165,7 +165,7 @@ def config_commandtable(key, origin)
     if command.is_a?(Proc)
       String.new(command.call(origin)) rescue nil
     else
-      command
+      command.dup
     end
   }.compact
 end

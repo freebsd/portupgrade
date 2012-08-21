@@ -24,6 +24,7 @@ portupgrade 2.4.9.8 (released 2012-XX-XX):
     * Track and display information on deleted ports when upgrading
     * Always set DISABLE_CONFLICTS when replacing origins / handling MOVED origins
     * Fix error when running portinstall inside of a WRKDIR
+    * Fix Frozen string error with 1.9 when using BEFORE/AFTER* hooks in pkgtools.conf
 
 portupgrade 2.4.9.7 (released 2012-07-30):
 
