@@ -16,7 +16,7 @@ portupgrade 2.4.10 (SNAPSHOT)
       * This only occurs on FreeBSD < 8.1. A working script(1) is now included and installed
         into PREFIX/libexec/pkgtools for older systems.
 
-portupgrade 2.4.9.8 (released 2012-XX-XX):
+portupgrade 2.4.9.8 (released 2012-08-25):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=8&state=closed
 
