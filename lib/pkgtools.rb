@@ -29,10 +29,10 @@
 # $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.42 2011-08-18 07:36:49 stas Exp $
 
 PREFIX = "/usr/local"
-Version = "2.4.9.7"
+Version = "2.4.9.8"
 
 module PkgTools
-  DATE = '2012/07/30'
+  DATE = '2012/08/25'
 end
 
 require "pkg"

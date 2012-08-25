@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.9.8 (released 2012-XX-XX):
+portupgrade 2.4.9.8 (released 2012-08-25):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=8&state=closed
 
