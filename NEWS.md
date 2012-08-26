@@ -18,6 +18,7 @@ portupgrade 2.4.9.9 (released 2012-08-26):
     * Fix running portupgrade from a portdir picking that port up as
       the origin to upgrade/install
     * Don't run 'make config' when only using packages with -PP
+    * Fix portinstall -n not listing depends or a summary (#29)
 
 portupgrade 2.4.9.8 (released 2012-08-25):
 
