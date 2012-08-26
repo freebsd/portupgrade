@@ -37,14 +37,15 @@ ports/packages:
 .Bl -tag -width "dependent" -compact
 .It required
 Ports/packages that a port/package needs for it to be built and/or
-run.  Port Makefiles refer to this type of ports/packages using the
+run.
+Port Makefiles refer to this type of ports/packages using the
 .Dv BUILD_DEPENDS
-and 
+and
 .Dv RUN_DEPENDS
 macros, respectively.
 .It dependent
 Ports/packages that need this port/package.
-.El 
+.El
 .Sh WARNING
 .Bl -bullet
 .It
@@ -54,24 +55,27 @@ doing with
 .It
 When the tools suggest running
 .Dq Li "pkgdb -F" ,
-run it.  Upgrade a certain number of packages at once with an
+run it.
+Upgrade a certain number of packages at once with an
 inconsistent package database will surely cause bad results.
 .It
 Since
 .Nm
 allows you to upgrade your installed packages without rebuilding and
 reinstalling dependent packages, upgraded packages may occasionally
-cause binary incompatibilities.  To cope with this situation, use the
+cause binary incompatibilities.
+To cope with this situation, use the
 .Fl f ,
 .Fl r
 and
-.Fl R 
+.Fl R
 options as necessary.
 .It
 Do not abort
 .Nm
 while it is updating the package database, or it will leave you a half
-modified, inconsistent database.  Even if you don't do anything wrong,
+modified, inconsistent database.
+Even if you do not do anything wrong,
 a package database may get corrupt somehow when it is heavily updated.
 In such cases, run
 .Dq Li "pkgdb -fu"
@@ -109,7 +113,8 @@ Show help and exit.
 .Pp
 .It Fl a
 .It Fl -all
-Do with all the installed packages.  Equivalent to specify
+Do with all the installed packages.
+Equivalent to specify
 .Ar '*'
 as
 .Ar pkgname_glob .
@@ -130,8 +135,10 @@ for more details.
 .Pp
 .It Fl B Ar CMD
 .It Fl -beforebuild Ar CMD
-Run the specified command before each build.  If the command exits in
-failure, the port/package will be skipped.  Here is some typical uses:
+Run the specified command before each build.
+If the command exits in
+failure, the port/package will be skipped.
+Here is some typical uses:
 .Pp
 .Dl portupgrade -B 'cvs update' 'gnome*'
 .Pp
@@ -153,7 +160,8 @@ before everything for all tasks.
 .Pp
 .It Fl D
 .It Fl -distclean
-Delete failed distfiles and retry if checksum fails.  Specified twice,
+Delete failed distfiles and retry if checksum fails.
+Specified twice,
 do
 .Dq Li "make distclean"
 before each fetch or build.
@@ -173,7 +181,8 @@ HOLD_PKGS variable in
 .It Fl -fetch-only
 Only fetch distfiles or packages (if
 .Fl P
-is specified), do not build, upgrade or install anything.  This is
+is specified), do not build, upgrade or install anything.
+This is
 useful if you want to download all the needed distfiles or packages at
 once in advance of installing or upgrading.
 .Pp
@@ -185,8 +194,10 @@ Do not read MOVED file.
 .Pp
 .It Fl i
 .It Fl -interactive
-Turn on interactive mode.  You are asked for approval before each
-suggested installation or upgrade.  This option implies
+Turn on interactive mode.
+You are asked for approval before each
+suggested installation or upgrade.
+This option implies
 .Fl v .
 .Pp
 .It Fl k
@@ -196,7 +207,8 @@ have failed to upgrade in advance.
 .Pp
 .It Fl l Ar FILE
 .It Fl -results-file Ar FILE
-Specify a file name to save the results to.  By default,
+Specify a file name to save the results to.
+By default,
 .Nm
 does not save results as a file.
 .Pp
@@ -225,7 +237,8 @@ command line.
 .It Fl n
 .It Fl -noexecute
 Do not actually install or upgrade any packages; just show what would
-be done.  This option implies
+be done.
+This option implies
 .Fl v
 and negates
 .Fl i
@@ -239,7 +252,8 @@ Prior to the installation a new port/package, all the required
 packages are upgraded.
 .Pp
 If this option is specified, you can specify a portorigin glob as well
-as a pkgname glob to specify which port to install.  See
+as a pkgname glob to specify which port to install.
+See
 .Xr portsdb 1
 for the details of the
 .Sq portorigin glob .
@@ -255,17 +269,20 @@ Specify a port to upgrade the following package with.
 .Pp
 .It Fl O
 .It Fl -omit-check
-Omit sanity checks for dependencies.  By default,
+Omit sanity checks for dependencies.
+By default,
 .Nm
 checks if all the packages to upgrade have consistent dependencies,
-though it takes extra time to calculate dependencies.  If you are sure
+though it takes extra time to calculate dependencies.
+If you are sure
 you have run
 .Dq Li "pkgdb -F"
 in advance, you can specify this option to omit the sanity checks.
 .Pp
 .It Fl p
 .It Fl -package
-Build a package when each specified port is installed or upgraded.  If
+Build a package when each specified port is installed or upgraded.
+If
 a package is upgraded and its dependent packages are given from the
 command line (including the case where
 .Fl r
@@ -280,7 +297,8 @@ searches the local directories listed in
 for each package to install or upgrade the current installation with,
 and if none is found,
 .Xr pkg_fetch 1
-is invoked to fetch one from a remote site.  If it doesn't work
+is invoked to fetch one from a remote site.
+If it does not work
 either, the port is used.
 .Pp
 However, the source will still be used if the port is listed in USE_PORTS_ONLY variable in
@@ -331,13 +349,15 @@ e.g.
 .Pp
 .It Fl u
 .It Fl -uninstall-shlibs
-Do not preserve old shared libraries.  By default,
+Do not preserve old shared libraries.
+By default,
 .Nm
-preserves shared libraries on uninstallation for safety.  See the
+preserves shared libraries on uninstallation for safety.
+See the
 .Xr pkg_deinstall 1
 manpage and check out the
 .Fl P
-option for details. 
+option for details.
 .Pp
 .It Fl v
 .It Fl -verbose
@@ -360,7 +380,8 @@ Do not set UPGRADE_* environment variables.
 .Pp
 .It Fl x Ar GLOB
 .It Fl -exclude Ar GLOB
-Exclude packages matching the specified glob pattern.  Exclusion is
+Exclude packages matching the specified glob pattern.
+Exclusion is
 performed after recursing dependency in response to
 .Fl r
 and/or
@@ -372,7 +393,8 @@ packages depending on XFree86 but leave XFree86 as it is:
 .Pp
 .It Fl y
 .It Fl -yes
-Answer yes to all the questions.  This option implies
+Answer yes to all the questions.
+This option implies
 .Fl v
 and negates
 .Fl n .
@@ -392,7 +414,8 @@ is not given, jump to
 .Sy 4 .
 Otherwise search the local directories listed in
 .Ev PKG_PATH
-for a newer package tarball.  If found, jump to
+for a newer package tarball.
+If found, jump to
 .Sy 5 .
 .It
 Fetch the latest package from a remote site using
@@ -421,7 +444,8 @@ given package.
 Back up the current installation of the given package using
 .Xr pkg_create 1 .
 Note that the backup tarball will be very large if the package is
-a big monster like XFree86.  Please ensure you have sufficient
+a big monster like XFree86.
+Please ensure you have sufficient
 disk space (refer to the ENVIRONMENT section to know where) to save
 the backup tarball. (Perhaps a new option to omit backups will be
 added in the future)
@@ -443,7 +467,7 @@ and
 If the installation fails,
 .Bl -enum -offset indent -nested
 .It
-Restore the old installation backed up in 
+Restore the old installation backed up in
 .Sy 6 .
 .It
 Restore the old package registration files backed up in
@@ -473,7 +497,8 @@ Upgrade
 .Pp
 .Dl portupgrade glib
 .Pp
-As you see, you can omit version numbers.  If multiple versions are
+As you see, you can omit version numbers.
+If multiple versions are
 installed, each of them is upgraded unless they share a port origin.
 (For example you may probably have
 .Ar foo-1.02
@@ -519,7 +544,8 @@ You can use the wildcards as in
 Perl compatible extended regular expressions are also available by
 prepending a colon
 .Sq :
-to a pattern.  In the above case, you could type:
+to a pattern.
+In the above case, you could type:
 .Ar :gnome .
 .Pp
 .Fl L
@@ -527,7 +553,8 @@ to a pattern.  In the above case, you could type:
 .Fl -log-prefix
 is the option to tell
 .Nm
-to keep the build log as a file for each port build.  Regardless of
+to keep the build log as a file for each port build.
+Regardless of
 the option,
 .Nm
 always watches the build output of each port and when a build fails it
@@ -546,7 +573,8 @@ upgraded packages, with the verbose mode on:
 .Fl -upward-recursive
 is the option to tell
 .Nm
-to recurse upwards through dependencies.  In the above case,
+to recurse upwards through dependencies.
+In the above case,
 .Ar rep-gtk ,
 .Ar librep ,
 .Ar imlib ,
@@ -578,7 +606,8 @@ and all that depend on it, confirming each upgrade:
 .Fl -recursive
 is the option to tell
 .Nm
-to recurse downwards through dependencies.  In the above case,
+to recurse downwards through dependencies.
+In the above case,
 .Ar gtk
 and all GNOME related packages would be upgraded.
 .Pp
@@ -669,7 +698,8 @@ with
 was originally the option to supply a missing origin of an outdated
 package before
 .Fx 4.2 ,
-but this example shows another useful usage.  Use
+but this example shows another useful usage.
+Use
 .Nm
 like this, and all the dependencies on the old package
 .Ar ( ghostscript-gnu )
@@ -680,7 +710,8 @@ cleanly, without leaving inconsistency.
 .It
 Upgrade
 .Ar glib
-using a package.  If necessary, download one from a remote ftp site:
+using a package.
+If necessary, download one from a remote ftp site:
 .Pp
 .Dl portupgrade -P glib
 .Pp
@@ -692,8 +723,8 @@ is the option to tell
 to use packages instead of ports where available.
 .Pp
 .It
-Let's perform a massive binary upgrade using the packages stored on a
-CD-ROM, but before that I want to figure out what will be upgraded:
+Perform a massive binary upgrade using the packages stored on a
+CD-ROM, but before that, figure out what will be upgraded:
 .Pp
 .Dl env PKG_PATH=/mnt/cdrom/packages/All portupgrade -anPP
 .Pp
@@ -714,7 +745,7 @@ will not upgrade a package if a package file
 .Pa ( *.tbz )
 to upgrade the package with is not available.
 .Pp
-If you don't want
+If you do not want
 .Nm
 to download packages which are not on the CD-ROM, set
 .Ev PKG_FETCH
@@ -764,7 +795,8 @@ a try instead of
 .Xr pkg_version 1 .
 It has comparable usage with
 .Xr pkg_version 1
-but runs much faster.  Also the output script of
+but runs much faster.
+Also the output script of
 .Dq Li "portversion -c"
 utilizes
 .Xr portupgrade 1
@@ -792,50 +824,60 @@ To track the change history of a port, use
 .Sh ENVIRONMENT
 .Bl -tag -width "UPGRADE_PORT_VER" -compact
 .It Ev PKG_DBDIR
-Alternative location for the installed package database.  Default is
+Alternative location for the installed package database.
+Default is
 .Dq Pa /var/db/pkg .
 .Pp
 .It Ev PORTSDIR
-Alternative location for the ports tree.  Default is
+Alternative location for the ports tree.
+Default is
 .Dq Pa /usr/ports .
 .Pp
 .It Ev PORTS_INDEX
-Alternative location for the ports INDEX file.  Default is
+Alternative location for the ports INDEX file.
+Default is
 .Dq Pa $PORTSDIR/INDEX .
 .Pp
 .It Ev PORTS_DBDIR
-Alternative location for the ports database files.  Default is
+Alternative location for the ports database files.
+Default is
 .Dq Pa $PORTSDIR .
 .Pp
 .It Ev PKG_TMPDIR
 .It Ev TMPDIR
 (In that order) Temporary directory where
-.Nm 
-attempts to create backup files.  If neither is defined,
+.Nm
+attempts to create backup files.
+If neither is defined,
 .Dq Pa /var/tmp
-is used.  Note that this directory must have enough free space when
+is used.
+Note that this directory must have enough free space when
 upgrading a big package. (See the TECHNICAL DETAILS above)
 .Pp
 .It Ev PACKAGES
 Base directory where
 .Nm
-creates packages.  Default is
+creates packages.
+Default is
 .Dq Pa $PORTSDIR/packages .
 .Pp
 .It Ev PKG_PATH
 A list of directories where
 .Nm
-searches for packages, separated by colons.  Default is
+searches for packages, separated by colons.
+Default is
 .Dq Pa $PACKAGES/All .
 .Pp
 .It Ev PKG_SUFX
-Suffix for packages.  Default is the value defined in
+Suffix for packages.
+Default is the value defined in
 .Pa bsd.port.mk
 or
 .Pa /etc/make.conf .
 .Pp
 .It Ev PKGTOOLS_CONF
-Configuration file for the pkgtools suite.  Default is
+Configuration file for the pkgtools suite.
+Default is
 .Dq Pa $PREFIX/etc/pkgtools.conf .
 .Pp
 .It Ev PORTUPGRADE
@@ -845,7 +887,8 @@ Default options for
 .Fl v )
 .Pp
 .It Ev UPGRADE_TOOL
-The environment variable is set to upgrade tool name. Always is set to
+The environment variable is set to upgrade tool name.
+Always is set to
 .Dq portupgrade .
 .Pp
 .It Ev UPGRADE_PORT
@@ -896,10 +939,11 @@ Default location of the pkgtools configuration file.
 .An Stanislav Sedov Aq stas@FreeBSD.org
 .An Bryan Drewery Aq bdrewery@FreeBSD.org
 .Sh BUGS
-SUSP (^Z) doesn't work during a build/install.
+SUSP (^Z) does not work during a build/install.
 .Pp
 Sometimes a database may get corrupt and the pkgtools commands start
-to abort due to segmentation fault.  In such cases, run
+to abort due to segmentation fault.
+In such cases, run
 .Dq Li "pkgdb -fu"
 to rebuild the database, and the problems will go away.
 If the command failed itself, remove a database file (/var/db/pkg/pkgdb.db)
@@ -908,7 +952,8 @@ and run it again.
 Some third-party or hand-made packages have invalid package names
 which make
 .Nm
-and the related tools angry.  To completely hide the existence of a
+and the related tools angry.
+To completely hide the existence of a
 package from them, put (just
 .Xr touch 1 )
 a dummy file named "+IGNOREME" in the package directory.

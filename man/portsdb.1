@@ -22,9 +22,10 @@ command is a tool to generates the ports database named
 from the ports index file named
 .Pa INDEX .
 It is commonly used among the tool suite and automatically updated on
-demand when it gets older than the index file.  To save time, you can
+demand when it gets older than the index file.
+To save time, you can
 update it beforehand, like right after the index file is updated.
-Note that 
+Note that
 .Pa INDEX
 file is updated every few hours on official site,
 it is recommended that you run
@@ -47,14 +48,15 @@ ports/packages:
 .Bl -tag -width "dependent" -compact
 .It required
 Ports/packages that a port/package needs for it to be built and/or
-run.  Port Makefiles refer to this type of ports/packages using the
+run.
+Port Makefiles refer to this type of ports/packages using the
 .Dv BUILD_DEPENDS
-and 
+and
 .Dv RUN_DEPENDS
 macros, respectively.
 .It dependent
 Ports/packages that need this port/package.
-.El 
+.El
 .Sh OPTIONS
 The following command line arguments are supported:
 .Pp
@@ -85,7 +87,7 @@ or an extended regular expression preceded by a colon
 .Nm ports_glob
 lists ports that match the pattern.
 .Pp
-Don't forget to include a slash if you want
+Do not forget to include a slash if you want
 .Nm ports_glob
 to treat a pattern as a portorigin glob.
 .Pp
@@ -105,7 +107,8 @@ from the official site.
 .Pp
 .It Fl M
 .It Fl -master-recursive
-List all master ports of the given ports as well.  It also lists the
+List all master ports of the given ports as well.
+It also lists the
 master ports of all those required by the given ports if
 .Fl R
 is specified.
@@ -127,7 +130,8 @@ List all those ports required by the given ports as well.
 .It Fl -update
 Update or create the ports database file
 .Pa INDEX.db
-from the ports index file.  It is in binary form and meant to be fast
+from the ports index file.
+It is in binary form and meant to be fast
 to search for information.
 .Pp
 Note: the ports database file is automatically updated if it is not
@@ -139,11 +143,12 @@ Update or create the
 .Pa INDEX
 file by running
 .Dq Nm make index .
-If you define special macros in 
+If you define special macros in
 .Pa /etc/make.conf
 and the dependency of some ports are changed, you should create
 .Pa INDEX
-by yourself by using this option. Otherwise, using
+by yourself by using this option.
+Otherwise, using
 .Fl F
 option is recommended since it is much faster.
 .Pp
@@ -154,18 +159,21 @@ Exclude ports matching the specified glob pattern from the list.
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
 .It Ev PORTSDIR
-Alternative location for the ports tree.  Default is
+Alternative location for the ports tree.
+Default is
 .Dq Pa /usr/ports .
 .Pp
 .It Ev PORTS_INDEX
-Alternative location for the ports INDEX file.  Default is
+Alternative location for the ports INDEX file.
+Default is
 .Dq Pa $PORTSDIR/INDEX .
 .Pp
 It is recommendable that you set this variable to something other than
 the default to avoid conflict with CVS, CVSup, or CTM.
 .Pp
 .It Ev PORTS_DBDIR
-Alternative location for the ports database file.  The database file
+Alternative location for the ports database file.
+The database file
 will be located in the first writable directory in the following ones:
 .Ev $PORTS_DBDIR ,
 .Ev $PORTSDIR ,
@@ -178,7 +186,8 @@ and
 .Pa /tmp .
 .Pp
 .It Ev PKGTOOLS_CONF
-Configuration file for the pkgtools suite.  Default is
+Configuration file for the pkgtools suite.
+Default is
 .Dq Pa $PREFIX/etc/pkgtools.conf .
 .El
 .Sh FILES

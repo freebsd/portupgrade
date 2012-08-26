@@ -12,7 +12,8 @@
 .Sh DESCRIPTION
 The
 .Nm
-command downloads binary packages from remote sites.  It can
+command downloads binary packages from remote sites.
+It can
 optionally download packages recursively through dependencies.
 .Sh OPTIONS
 The following command line arguments are supported:
@@ -29,7 +30,8 @@ directory on a server for fetching.
 .Pp
 If pkgname is a name without version, it will be fetched from
 .Dq Pa Latest
-directory. You can force using of 
+directory.
+You can force using of
 .Dq Pa Latest
 directory for ambiguous cases adding @ to the pkgname.
 .Pp
@@ -44,7 +46,8 @@ Show help and exit.
 .Pp
 .It Fl f
 .It Fl -force
-Download a package even if it is recorded as installed.  By default,
+Download a package even if it is recorded as installed.
+By default,
 .Nm
 skips the packages which are recorded as installed.
 .Pp
@@ -66,22 +69,26 @@ Turn on verbose output.
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
 .It Ev PACKAGEROOT
-URI of the root of your preferred mirror site.  Default is
+URI of the root of your preferred mirror site.
+Default is
 .Dq Pa ftp://ftp.FreeBSD.org .
 The site must have a directory
 .Dq Pa /pub/FreeBSD/ports/$arch/packages-$release/ .
 .Pp
 .It Ev PACKAGESITE
-URI of the directory to fetch packages from.  This variable precedes
+URI of the directory to fetch packages from.
+This variable precedes
 all other package site related variables, i.e.
 .Ev PACKAGEROOT
 and
 .Ev PKG_SITES .
-Use of this variable is discouraged.  Use
+Use of this variable is discouraged.
+Use
 .Ev PKG_SITES .
 .Pp
 .It Ev PKG_SITES
-List of URI's to fetch packages from separated by space.  Each site
+List of URI's to fetch packages from separated by space.
+Each site
 directory must contain directories named
 .Dq All
 and
@@ -90,15 +97,18 @@ and
 .It Ev PACKAGES
 Base directory where
 .Nm
-saves downloaded packages.  Default is
+saves downloaded packages.
+Default is
 .Dq Pa $PORTSDIR/packages .
 .Pp
 .It Ev PKG_DBDIR
-Alternative location for the installed package database.  Default is
+Alternative location for the installed package database.
+Default is
 .Dq Pa /var/db/pkg .
 .Pp
 .It Ev PKG_FETCH
-Alternative command for downloading files.  Default is
+Alternative command for downloading files.
+Default is
 .Dq /usr/bin/fetch -ao '%2$s' '%1$s' ,
 where every actual command line is composed as:
 .Pp
@@ -112,17 +122,20 @@ or
 .It Ev PKG_TMPDIR
 .It Ev TMPDIR
 (In that order) Temporary directory where
-.Nm 
-downloads files temporarily.  If neither is not defined,
+.Nm
+downloads files temporarily.
+If neither is not defined,
 .Dq Pa /var/tmp
 is used.
 .Pp
 .It Ev PORTSDIR
-Alternative location for the ports tree.  Default is
+Alternative location for the ports tree.
+Default is
 .Dq Pa /usr/ports .
 .Pp
 .It Ev PKGTOOLS_CONF
-Configuration file for the pkgtools suite.  Default is
+Configuration file for the pkgtools suite.
+Default is
 .Dq Pa $PREFIX/etc/pkgtools.conf .
 .El
 .Sh FILES

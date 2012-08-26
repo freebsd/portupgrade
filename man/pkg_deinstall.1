@@ -4,7 +4,7 @@
 .Os FreeBSD
 .Sh NAME
 .Nm pkg_deinstall
-.Nd a package deinstaller with wildcards and dependency recursion support 
+.Nd a package deinstaller with wildcards and dependency recursion support
 .Sh SYNOPSIS
 .Nm
 .Op Fl hacdDfinOPqrRv
@@ -25,17 +25,19 @@ ports/packages:
 .Bl -tag -width "dependent" -compact
 .It required
 Ports/packages that a port/package needs for it to be built and/or
-run.  Port Makefiles refer to this type of ports/packages using the
+run.
+Port Makefiles refer to this type of ports/packages using the
 .Dv BUILD_DEPENDS
-and 
+and
 .Dv RUN_DEPENDS
 macros, respectively.
 .It dependent
 Ports/packages that need this port/package.
-.El 
+.El
 .Sh OPTIONS
-The following command line arguments are supported.  The options
-marked as 
+The following command line arguments are supported.
+The options
+marked as
 .Sq [*]
 are transparently passed to
 .Xr pkg_delete 1 .
@@ -64,7 +66,8 @@ Show help and exit.
 .Pp
 .It Fl a
 .It Fl -all
-Deinstall all the installed packages.  Equivalent to specify
+Deinstall all the installed packages.
+Equivalent to specify
 .Ar '*'
 as
 .Ar pkgname_glob .
@@ -72,18 +75,22 @@ as
 .It Fl c
 .It Fl -collate
 For each package, check if any of the files installed by the package
-has been overwritten by others.  If any, list them and abort the
-deinstallation of the package.  This option is disabled by the
+has been overwritten by others.
+If any, list them and abort the
+deinstallation of the package.
+This option is disabled by the
 .Fl f
 option.
 .Pp
 .It Fl d
 .It Fl -rmdir
-Remove empty directories created by file cleanup.  By default, only
+Remove empty directories created by file cleanup.
+By default, only
 files/directories explicitly listed in a package's contents (either as
 normal files/directories or with the
 .Li @dirrm
-directive) will be removed at deinstallation time.  This option tells
+directive) will be removed at deinstallation time.
+This option tells
 .Nm
 to also remove any directories that were emptied as a result of
 removing the package. [*]
@@ -106,15 +113,17 @@ terminal.
 .Pp
 .It Fl n
 .It Fl -noexecute
-Don't actually deinstall a package, just report the steps that would
+Do not actually deinstall a package, just report the steps that would
 be taken if it were. [*]
 .Pp
 .It Fl O
 .It Fl -omit-check
-Omit sanity checks for dependencies.  By default,
+Omit sanity checks for dependencies.
+By default,
 .Nm
 checks if all the packages to deinstall have consistent dependencies,
-though it takes extra time to calculate dependencies.  If you are sure
+though it takes extra time to calculate dependencies.
+If you are sure
 you have run
 .Dq Li "pkgdb -F"
 in advance, you can specify this option to omit the sanity checks.
@@ -124,7 +133,8 @@ in advance, you can specify this option to omit the sanity checks.
 Set
 .Ar prefix
 as the directory in which to delete files from any installed packages
-which do not explicitly set theirs.  For most packages, the prefix
+which do not explicitly set theirs.
+For most packages, the prefix
 will be set automatically to the installed location by
 .Xr pkg_add 1 .
 [*]
@@ -170,7 +180,8 @@ Turn on verbose output. [*]
 .Pp
 .It Fl x Ar pkgname_glob
 .It Fl -exclude Ar pkgname_glob
-Exclude packages matching the specified glob pattern.  Exclusion is
+Exclude packages matching the specified glob pattern.
+Exclusion is
 performed after recursing dependency in response to
 .Fl r
 and/or
@@ -185,11 +196,13 @@ packages depending on XFree86 but leave XFree86 as it is:
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
 .It Ev PKG_DBDIR
-Alternative location for the installed package database.  Default is
+Alternative location for the installed package database.
+Default is
 .Dq Pa /var/db/pkg
 .Pp
 .It Ev PKGTOOLS_CONF
-Configuration file for the pkgtools suite.  Default is
+Configuration file for the pkgtools suite.
+Default is
 .Dq Pa $PREFIX/etc/pkgtools.conf .
 .El
 .Sh FILES
