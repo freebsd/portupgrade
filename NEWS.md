@@ -4,6 +4,11 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.9.9 (released 2012-08-26):
+
+    * Fix running portupgrade from a portdir picking that port up as
+      the origin to upgrade/install
+
 portupgrade 2.4.9.8 (released 2012-08-25):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=8&state=closed

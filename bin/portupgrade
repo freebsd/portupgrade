@@ -555,6 +555,10 @@ Environment Variables [default]:
 	end
       end
 
+      # Change to a good directory to avoid errors if the user
+      # is running in a WRKDIR
+      Dir.chdir
+
       all = '*'
       argv << all
 
