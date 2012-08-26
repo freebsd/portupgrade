@@ -875,7 +875,7 @@ def get_all_depends(origin, parents_list = nil)
     return [] if not File.directory?(portdir)
 
     begin
-      run_make_config(portdir, origin) if $config
+      run_make_config(portdir, origin) if $config and !$use_packages_only
     rescue => e
       raise e if e.class == PkgDB::NeedsPkgNGSupport
       puts "#{e.message}. Ignored."
