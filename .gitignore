@@ -3,3 +3,4 @@ man/*.gz
 bin/.build
 etc/.build
 lib/.build
+compat/script

@@ -6,3 +6,5 @@ DOCSDIR?=	${PREFIX}/share/doc/pkgtools
 EXAMPLESDIR?=	${PREFIX}/share/examples/pkgtools
 
 RUBY?=		${PREFIX}/bin/ruby
+
+MKDIR?=		mkdir -p
