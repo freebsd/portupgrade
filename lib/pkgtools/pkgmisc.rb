@@ -2,6 +2,7 @@
 #
 # Copyright (c) 2001-2004 Akinori MUSHA <knu@iDaemons.org>
 # Copyright (c) 2006-2008 Sergey Matveychuk <sem@FreeBSD.org>
+# Copyright (c) 2009-2012 Stanislav Sedov <stas@FreeBSD.org>
 #
 # All rights reserved.
 #
