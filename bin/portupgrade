@@ -791,7 +791,6 @@ Environment Variables [default]:
 
 	    if $noexecute
 	      puts "Install '#{origin}'? [no]" if interactive
-	      next
 	    elsif $yestoall
 	      puts "Install '#{origin}'? [yes]" if interactive
 	    elsif interactive
