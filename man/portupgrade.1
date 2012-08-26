@@ -40,12 +40,12 @@ ports/packages:
 Ports/packages that a port/package needs for it to be built and/or
 run.  Port Makefiles refer to this type of ports/packages using the
 .Dv BUILD_DEPENDS
-and 
+and
 .Dv RUN_DEPENDS
 macros, respectively.
 .It dependent
 Ports/packages that need this port/package.
-.El 
+.El
 .Sh WARNING
 .Bl -bullet
 .It
@@ -66,7 +66,7 @@ cause binary incompatibilities.  To cope with this situation, use the
 .Fl f ,
 .Fl r
 and
-.Fl R 
+.Fl R
 options as necessary.
 .It
 Do not abort
@@ -335,7 +335,7 @@ preserves shared libraries on uninstallation for safety.  See the
 .Xr pkg_deinstall 1
 manpage and check out the
 .Fl P
-option for details. 
+option for details.
 .Pp
 .It Fl v
 .It Fl -verbose
@@ -441,7 +441,7 @@ and
 If the installation fails,
 .Bl -enum -offset indent -nested
 .It
-Restore the old installation backed up in 
+Restore the old installation backed up in
 .Sy 6 .
 .It
 Restore the old package registration files backed up in
@@ -808,7 +808,7 @@ Alternative location for the ports database files.  Default is
 .It Ev PKG_TMPDIR
 .It Ev TMPDIR
 (In that order) Temporary directory where
-.Nm 
+.Nm
 attempts to create backup files.  If neither is defined,
 .Dq Pa /var/tmp
 is used.  Note that this directory must have enough free space when

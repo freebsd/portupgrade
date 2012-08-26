@@ -25,7 +25,7 @@ from the ports index file named
 It is commonly used among the tool suite and automatically updated on
 demand when it gets older than the index file.  To save time, you can
 update it beforehand, like right after the index file is updated.
-Note that 
+Note that
 .Pa INDEX
 file is updated every few hours on official site,
 it is recommended that you run
@@ -50,12 +50,12 @@ ports/packages:
 Ports/packages that a port/package needs for it to be built and/or
 run.  Port Makefiles refer to this type of ports/packages using the
 .Dv BUILD_DEPENDS
-and 
+and
 .Dv RUN_DEPENDS
 macros, respectively.
 .It dependent
 Ports/packages that need this port/package.
-.El 
+.El
 .Sh OPTIONS
 The following command line arguments are supported:
 .Pp
@@ -140,7 +140,7 @@ Update or create the
 .Pa INDEX
 file by running
 .Dq Nm make index .
-If you define special macros in 
+If you define special macros in
 .Pa /etc/make.conf
 and the dependency of some ports are changed, you should create
 .Pa INDEX

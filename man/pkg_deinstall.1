@@ -5,7 +5,7 @@
 .Os FreeBSD
 .Sh NAME
 .Nm pkg_deinstall
-.Nd a package deinstaller with wildcards and dependency recursion support 
+.Nd a package deinstaller with wildcards and dependency recursion support
 .Sh SYNOPSIS
 .Nm
 .Op Fl hacdDfinOPqrRv
@@ -28,15 +28,15 @@ ports/packages:
 Ports/packages that a port/package needs for it to be built and/or
 run.  Port Makefiles refer to this type of ports/packages using the
 .Dv BUILD_DEPENDS
-and 
+and
 .Dv RUN_DEPENDS
 macros, respectively.
 .It dependent
 Ports/packages that need this port/package.
-.El 
+.El
 .Sh OPTIONS
 The following command line arguments are supported.  The options
-marked as 
+marked as
 .Sq [*]
 are transparently passed to
 .Xr pkg_delete 1 .
