@@ -13,7 +13,8 @@
 The
 .Nm
 command reads lines of package names from the standard input and sorts
-them in dependency order.  For every combination of packages A and B
+them in dependency order.
+For every combination of packages A and B
 where the former is required by the latter, A will appear prior to B.
 .Sh OPTIONS
 The following command line arguments are supported:
@@ -30,11 +31,13 @@ Do not read the configuration file. ($PREFIX/etc/pkgtools.conf)
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
 .It Ev PKG_DBDIR
-Alternative location for the installed package database.  Default is
+Alternative location for the installed package database.
+Default is
 .Dq Pa /var/db/pkg .
 .Pp
 .It Ev PKGTOOLS_CONF
-Configuration file for the pkgtools suite.  Default is
+Configuration file for the pkgtools suite.
+Default is
 .Dq Pa $PREFIX/etc/pkgtools.conf .
 .El
 .Sh FILES

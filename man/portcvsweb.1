@@ -54,7 +54,8 @@ and
 (or the ones listed in
 .Ev BROWSER
 if set) to view the CVS history of a given port, file, directory, or
-module via the CVSweb or FreshPorts.org.  If no file is given, the current directory is
+module via the CVSweb or FreshPorts.org.
+If no file is given, the current directory is
 assumed.
 .Pp
 To detect which repository the file/directory belongs and what
@@ -62,10 +63,12 @@ revision it is,
 .Nm
 reads the
 .Pa CVS/*
-files if found, or scans the given file for a CVS tag.  If the file
+files if found, or scans the given file for a CVS tag.
+If the file
 does not contain a CVS tag, it scans the
 .Pa Makefile
-in the directory.  If yet there is no
+in the directory.
+If yet there is no
 .Pa Makefile
 in the directory, it moves up through the directory hierarchy until it
 finds one.
@@ -89,7 +92,8 @@ The following command line arguments are supported:
 .Bl -tag -width "--use-remote-packages" -compact
 .It Ar pkgname_glob
 .It Ar portorigin_glob
-Pick the first port that matched the given pattern.  See
+Pick the first port that matched the given pattern.
+See
 .Xr pkg_glob 1
 and
 .Xr portorigin_glob 1
@@ -108,16 +112,19 @@ Show help and exit.
 .Pp
 .It Fl F
 .It Fl -freshports
-FreshPorts mode. View CVS history via FreshPorts.org instead of CVSweb.
+FreshPorts mode.
+View CVS history via FreshPorts.org instead of CVSweb.
 .Pp
 .It Fl -datespec Ns Xo
 .Op Ar =DATESPEC
 .Xc
 (FreshPorts mode only) View the commit of the day specified by
 .Ar DATESPEC
-via FreshPorts. When
+via FreshPorts.
+When
 .Ar DATESPEC
-is omittied, view the commits of today. When
+is omittied, view the commits of today.
+When
 .Ar DATESPEC
 is a negative value, view the commits of
 .Ar DATESPEC
@@ -183,7 +190,8 @@ days before.
 .Sh ENVIRONMENT
 .Bl -tag -width "BROWSER" -compact
 .It Ev BROWSER
-Alternative WWW browser.  Default is
+Alternative WWW browser.
+Default is
 .Dq w3m:lynx:links:firefox:mozilla:netscape .
 .El
 .Sh SEE ALSO

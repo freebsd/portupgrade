@@ -24,7 +24,8 @@ is used to produce a report of installed ports/packages.
 .Pp
 Each package's version number is checked against the corresponding
 entry in the ports database to see if a newer version is available for
-upgrade.  If a package is not found in the database,
+upgrade.
+If a package is not found in the database,
 .Nm
 inspects the origin port to get the version.
 .Pp
@@ -35,7 +36,8 @@ but is optimized for
 .Xr portupgrade 1
 and runs much faster than
 .Xr pkg_version 1
-thanks to the ports database generated from the INDEX file.  See
+thanks to the ports database generated from the INDEX file.
+See
 .Xr portsdb 1
 for details.
 .Pp
@@ -48,11 +50,13 @@ The installed version of the package is older than the current
 version.
 .It Li \&>
 The installed version of the package is newer than the current
-version.  This situation can arise with using an out-of-date INDEX
+version.
+This situation can arise with using an out-of-date INDEX
 file, or when testing new ports.
 .It Li \&?
 The installed package does not appear in the database nor does the
-port directory exist.  This could be because the port has been removed
+port directory exist.
+This could be because the port has been removed
 from the official ports tree, or because the package was installed
 from an unofficial (or not yet committed) port, or because the INDEX
 file has not been synchronized (updated) with the ports tree yet.
@@ -61,10 +65,12 @@ The installed package does not appear in the database, the port
 directory actually exists, the port's Makefile is broken and the
 latest version number cannot be obtained.
 .It Li \&#
-The installed package does not have an origin recorded.  This could be
+The installed package does not have an origin recorded.
+This could be
 because the package was installed before the concept of
 .Sq origin
-was introduced.  You can run
+was introduced.
+You can run
 .Dq Nm pkgdb -F
 to complete missing origins.
 .El
@@ -82,7 +88,8 @@ ports/packages:
 .Bl -tag -width "dependent" -compact
 .It required
 Ports/packages that a port/package needs for it to be built and/or
-run.  Port Makefiles refer to this type of ports/packages using the
+run.
+Port Makefiles refer to this type of ports/packages using the
 .Dv BUILD_DEPENDS
 and
 .Dv RUN_DEPENDS
@@ -124,11 +131,14 @@ Show help and exit.
 .Pp
 .It Fl c
 .It Fl -command-output
-Enable command output.  Command output includes a command of
+Enable command output.
+Command output includes a command of
 .Xr portupgrade 1
 you should run to upgrade your installed packages to the latest
-versions in the ports system.  This feature does not constitute an
-automated packages upgrading system.  Edit the list of packages to
+versions in the ports system.
+This feature does not constitute an
+automated packages upgrading system.
+Edit the list of packages to
 upgrade and the options for
 .Xr portupgrade 1
 and run it to perform the upgrade.
@@ -156,7 +166,8 @@ Exclude the packages with the specified status flags.
 .Pp
 .It Fl O
 .It Fl -omit-check
-Omit sanity checks for dependencies.  By default,
+Omit sanity checks for dependencies.
+By default,
 .Nm
 checks whether all packages it is to check have consistent
 dependencies, though it takes extra time to calculate dependencies.
@@ -194,7 +205,8 @@ Turn on verbose output.
 .Pp
 .It Fl x Ar GLOB
 .It Fl -exclude Ar GLOB
-Exclude packages matching the specified glob pattern.  Exclusion is
+Exclude packages matching the specified glob pattern.
+Exclusion is
 performed after recursing dependency in response to
 .Fl r
 and/or
@@ -209,7 +221,8 @@ packages depending on XFree86 but not for XFree86:
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
 .It Ev PKG_DBDIR
-Alternative location for the installed package database.  The default
+Alternative location for the installed package database.
+The default
 is
 .Dq Pa /var/db/pkg .
 .Pp
@@ -219,7 +232,8 @@ The default is
 .Dq Pa /usr/ports .
 .Pp
 .It Ev PKGTOOLS_CONF
-Configuration file for the pkgtools suite.  The default is
+Configuration file for the pkgtools suite.
+The default is
 .Dq Pa $PREFIX/etc/pkgtools.conf .
 .El
 .Sh FILES

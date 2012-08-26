@@ -23,13 +23,15 @@ The
 command is a tool to create or update the system package database which is
 used by the
 .Xr portupgrade 1
-tool suite.  It maintains a hash that maps an
+tool suite.
+It maintains a hash that maps an
 installed file to a package name, a hash that maps a package to an
 origin, and a list of installed packages.
 .Pp
 .Nm pkg_which
 looks in the package database to tell which package each specified
-file came from.  If the database is outdated but you do not have permission to update it, it delegates tasks to
+file came from.
+If the database is outdated but you do not have permission to update it, it delegates tasks to
 .Xr pkg_info 1 .
 .Pp
 Actually,
@@ -43,7 +45,8 @@ The
 command also works as an interactive tool for fixing the package
 registry database when
 .Fl F
-is specified.  It helps you resolve stale dependencies, unlink cyclic
+is specified.
+It helps you resolve stale dependencies, unlink cyclic
 dependencies, complete stale or missing origins and remove duplicates.
 You should run this command periodically so
 .Xr portupgrade 1
@@ -57,7 +60,8 @@ The following command line arguments are supported:
 .It Ar file
 Inquire which package
 .Ar file
-came from.  If the
+came from.
+If the
 .Ar file
 is not present,
 .Nm pkg_which
@@ -95,7 +99,8 @@ other packages.
 .It Fl -force
 Force; Specified with
 .Fl u ,
-update database regardless of timestamps.  Specified with
+update database regardless of timestamps.
+Specified with
 .Fl F ,
 fix "held" packages too.
 .Pp
@@ -122,8 +127,10 @@ Useful if you need a speed-up.
 .Pp
 .It Fl Q
 .It Fl -quiet
-Do not write anything to stdout.  Specified twice, do not write
-anything to stderr either.  This is for internal use.
+Do not write anything to stdout.
+Specified twice, do not write
+anything to stderr either.
+This is for internal use.
 .Pp
 .It Fl q
 .It Fl -noconfig
@@ -168,27 +175,33 @@ that do not belong to any package:
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
 .It Ev PKG_DBDIR
-Alternative location for the installed package database.  Default is
+Alternative location for the installed package database.
+Default is
 .Dq Pa /var/db/pkg .
 .Pp
 .It Ev PORTSDIR
-Alternative location for the ports tree.  Default is
+Alternative location for the ports tree.
+Default is
 .Dq Pa /usr/ports .
 .Pp
 .It Ev PORTS_INDEX
-Alternative location for the ports INDEX file.  Default is
+Alternative location for the ports INDEX file.
+Default is
 .Dq Pa $PORTSDIR/INDEX .
 .Pp
 .It Ev PORTS_DBDIR
-Alternative location for the ports database files.  Default is
+Alternative location for the ports database files.
+Default is
 .Dq Pa $PORTSDIR .
 The database files in the directory are automatically created or
-updated as necessary.  See
+updated as necessary.
+See
 .Xr portsdb 1
 for details.
 .Pp
 .It Ev PKGTOOLS_CONF
-Configuration file for the pkgtools suite.  Default is
+Configuration file for the pkgtools suite.
+Default is
 .Dq Pa $PREFIX/etc/pkgtools.conf .
 .El
 .Sh FILES
@@ -216,6 +229,7 @@ was taken from
 .Sh BUGS
 .Pp
 Sometimes a database may get corrupt, and the pkgtools commands may
-abort with a segmentation fault.  In such cases, run
+abort with a segmentation fault.
+In such cases, run
 .Dq Li "pkgdb -fu"
 to rebuild the database, and the problems should go away.
