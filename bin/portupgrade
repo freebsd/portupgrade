@@ -1328,6 +1328,11 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
       pkg, pkgfile = find_pkg(origin)
 
       if !pkg || pkg.version < oldpkg.version || pkg.version < portpkg.version
+        if $noexecute
+          puts "Need to fetch #{origin}: Not fetching with -n, specify -F to do fetch-only"
+          throw :newpkg, nil
+        end
+
         if fetch_pkg(origin, logfile)
           pkg, pkgfile = find_pkg(origin)
         end
@@ -1368,11 +1373,11 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
       return newpkg ? [:done, newpkg] : :ignored
     end
 
-    if newpkg
+    if newpkg or $noexecute
       have_package = true
     elsif $use_packages_only
       warning_message "No package available: #{origin}"
-      raise PkgNotFoundError
+      raise PkgNotFoundError unless $noexecute
     else
       progress_message "Using the port instead of a package"
     end
@@ -1670,23 +1675,30 @@ def install_new_port(origin, orphan, interactive = $interactive)
     newpkg, pkgfile = find_pkg(origin)
 
     if !newpkg || newpkg < portpkg
-      if fetch_pkg(origin, logfile, true)
-	newpkg, pkgfile = find_pkg(origin)
+      if $noexecute
       end
 
-      if !newpkg
-	warning_message "Could not find the latest version (#{portpkg.version})"
-      else
-        progress_message "Located a package version #{newpkg.version} (#{pkgfile})"
+      unless $noexecute
+        if fetch_pkg(origin, logfile, true)
+          newpkg, pkgfile = find_pkg(origin)
+        end
 
-        if newpkg < portpkg
-          if $use_packages_only
-            progress_message "Using it anyway although it is not the latest version (#{portpkg.version}), since -PP/--use-packages-only is specified"
-          else
-            warning_message "Ignoring the package which is not the latest version (#{portpkg.version})"
-            newpkg = nil
+        if !newpkg
+          warning_message "Could not find the latest version (#{portpkg.version})"
+        else
+          progress_message "Located a package version #{newpkg.version} (#{pkgfile})"
+
+          if newpkg < portpkg
+            if $use_packages_only
+              progress_message "Using it anyway although it is not the latest version (#{portpkg.version}), since -PP/--use-packages-only is specified"
+            else
+              warning_message "Ignoring the package which is not the latest version (#{portpkg.version})"
+              newpkg = nil
+            end
           end
-	end
+        end
+      else
+        puts "Need to fetch package for #{origin}: Not fetching with -n, specify -F to do fetch-only"
       end
     end
 
@@ -1694,11 +1706,11 @@ def install_new_port(origin, orphan, interactive = $interactive)
       return newpkg ? true : false
     end
 
-    if newpkg
+    if newpkg or $noexecute
       have_package = true
     elsif $use_packages_only
       warning_message "No package available: #{origin}"
-      raise PkgNotFoundError
+      raise PkgNotFoundError unless $noexecute
     else
       progress_message "Using the port instead of a package"
     end

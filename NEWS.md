@@ -20,6 +20,9 @@ portupgrade 2.4.9.9 (released 2012-08-26):
     * Don't run 'make config' when only using packages with -PP
     * Fix portinstall -n not listing depends or a summary (#29)
     * manpage cleanups
+    * port{install,upgrade} -n will no longer fetch packages when using
+      -P or -PP. Use -F to fetch packages instead. -n implies dry run,
+      so it should not be making any modifications to the system.
 
 portupgrade 2.4.9.8 (released 2012-08-25):
 
