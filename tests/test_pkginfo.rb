@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 #
-# $Id: test_pkginfo.rb 1028 2004-07-20 11:14:02Z knu $
 $:.push("..")
 
 require 'test/unit'

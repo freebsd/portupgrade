@@ -1,6 +1,5 @@
 #!/bin/sh
 #
-# $Id: pkgtools.sh 52 2006-01-01 06:26:59Z koma2 $
 
 # PROVIDE: pkgtools
 # REQUIRE: ldconfig

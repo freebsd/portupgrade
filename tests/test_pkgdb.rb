@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 #
-# $FreeBSD: projects/pkgtools/tests/test_pkgdb.rb,v 1.3 2009-10-27 23:30:14 stas Exp $
 $:.push("..")
 
 require 'find'

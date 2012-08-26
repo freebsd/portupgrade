@@ -28,8 +28,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: portsdb.rb,v 1.15 2008/01/08 11:32:27 sem Exp $
-# $FreeBSD: projects/pkgtools/lib/portsdb.rb,v 1.17 2011-07-25 12:34:43 swills Exp $
 
 require 'singleton'
 require 'tempfile'

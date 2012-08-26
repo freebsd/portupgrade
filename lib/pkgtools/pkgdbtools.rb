@@ -27,7 +27,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgdbtools.rb,v 1.9 2009-10-26 14:00:59 stas Exp $
 
 module PkgDBTools
   def PkgDBTools.remove_lock(file_name, force = false)

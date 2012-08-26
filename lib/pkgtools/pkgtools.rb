@@ -28,7 +28,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgtools.rb,v 1.42 2011-08-18 07:36:49 stas Exp $
 
 PREFIX = ENV["LOCALBASE"] ||  "/usr/local"
 Version = "2.4.9.8"

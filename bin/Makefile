@@ -1,4 +1,3 @@
-# $FreeBSD: projects/pkgtools/bin/Makefile,v 1.5 2010-12-14 07:37:49 stas Exp $
 
 SCRIPTSDIR?=	${PREFIX}/sbin
 

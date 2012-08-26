@@ -2,7 +2,6 @@
 #
 # status-pkg - a replacement of the weekly status-pkg report script
 #
-# $Id: status-pkg.sh 52 2006-01-01 06:26:59Z koma2 $
 
 # If there is a global system configuration file, suck it in.
 #

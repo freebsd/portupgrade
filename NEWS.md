@@ -431,4 +431,3 @@ portupgrade 2.0.0 (released 2006-01-01):
 
   Pointed out by: Enrique Matias <cronopios at gmail dot com> [1]
 
-$FreeBSD: projects/pkgtools/NEWS,v 1.29 2011-08-18 07:39:58 stas Exp $

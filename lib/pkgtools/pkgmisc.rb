@@ -27,7 +27,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $FreeBSD: projects/pkgtools/lib/pkgmisc.rb,v 1.12 2011-07-25 12:34:43 swills Exp $
 
 class Array
   def qindex(item)

@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 #
-# $Id: test_portsdb.rb,v 1.1.1.1 2006/06/13 12:59:01 sem Exp $
 $:.push("..")
 
 require 'test/unit'

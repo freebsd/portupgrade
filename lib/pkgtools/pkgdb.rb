@@ -28,7 +28,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgdb.rb,v 1.15 2008/06/30 17:51:44 sem Exp $
 
 require 'singleton'
 require 'pkgtools/pkgtsort'

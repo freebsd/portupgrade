@@ -27,7 +27,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgversion.rb,v 1.3 2007/02/22 13:36:34 sem Exp $
 
 class PkgVersion
   include Comparable

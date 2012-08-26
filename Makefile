@@ -1,4 +1,3 @@
-# $Id: Makefile,v 1.1.1.1 2006/06/13 12:58:59 sem Exp $
 
 SUBDIR=	bin \
 	etc \

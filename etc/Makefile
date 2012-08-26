@@ -1,4 +1,3 @@
-# $Id: Makefile,v 1.2 2006/07/02 15:30:37 sem Exp $
 
 ETCDIR?=	${PREFIX}/etc
 

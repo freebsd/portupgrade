@@ -27,7 +27,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 #
-# $Id: pkgtsort.rb,v 1.4 2008/01/08 11:32:27 sem Exp $
 
 #
 # Topological Sorter

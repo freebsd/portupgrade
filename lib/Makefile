@@ -1,4 +1,3 @@
-# $Id: Makefile,v 1.2 2006/08/14 17:34:11 sem Exp $
 
 BUILDDIR=	.build
 
