@@ -76,7 +76,7 @@ Do not abort
 .Nm
 while it is updating the package database, or it will leave you a half
 modified, inconsistent database.
-Even if you don't do anything wrong,
+Even if you do not do anything wrong,
 a package database may get corrupt somehow when it is heavily updated.
 In such cases, run
 .Dq Li "pkgdb -fu"
@@ -296,7 +296,7 @@ for each package to install or upgrade the current installation with,
 and if none is found,
 .Xr pkg_fetch 1
 is invoked to fetch one from a remote site.
-If it doesn't work
+If it does not work
 either, the port is used.
 .Pp
 However, the source will still be used if the port is listed in USE_PORTS_ONLY variable in
@@ -743,7 +743,7 @@ will not upgrade a package if a package file
 .Pa ( *.tbz )
 to upgrade the package with is not available.
 .Pp
-If you don't want
+If you do not want
 .Nm
 to download packages which are not on the CD-ROM, set
 .Ev PKG_FETCH
@@ -935,7 +935,7 @@ Default location of the pkgtools configuration file.
 .An Akinori MUSHA Aq knu@iDaemons.org
 .An Sergey Matveychuk Aq sem@FreeBSD.org
 .Sh BUGS
-SUSP (^Z) doesn't work during a build/install.
+SUSP (^Z) does not work during a build/install.
 .Pp
 Sometimes a database may get corrupt and the pkgtools commands start
 to abort due to segmentation fault.
