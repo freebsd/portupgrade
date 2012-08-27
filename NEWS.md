@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.9.9 (released 2012-08-26):
+portupgrade 2.4.9.9 (released 2012-08-27):
 
     * Fix running portupgrade from a portdir picking that port up as
       the origin to upgrade/install
