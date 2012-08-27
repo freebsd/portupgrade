@@ -30,7 +30,7 @@
 #
 
 PREFIX = ENV["LOCALBASE"] ||  "/usr/local"
-Version = "2.4.9.8"
+Version = "2.4.9.9"
 
 require "pkgtools/pkg"
 require "pkgtools/ports"

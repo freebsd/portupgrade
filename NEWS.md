@@ -13,7 +13,7 @@ portupgrade 2.4.10 (SNAPSHOT)
       * Various -flags do not work with `pkg_deinstall` and `pkgdb`
       * Enable by adding WITH_PKGNG=yes to /etc/make.conf
 
-portupgrade 2.4.9.9 (released 2012-08-26):
+portupgrade 2.4.9.9 (released 2012-08-27):
 
     * Fix running portupgrade from a portdir picking that port up as
       the origin to upgrade/install
