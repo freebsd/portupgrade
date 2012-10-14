@@ -4,11 +4,11 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.10 (SNAPSHOT)
+portupgrade 2.4.10 (released 2012-10-14):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=4&state=closed
     * All lib files now installed in the pkgtools/ namespace (#23)
-    * Experimental [pkgng](http://github.com/pkgng/pkgng) support (#10)
+    * [pkgng](http://github.com/pkgng/pkgng) support (#10)
       * Packages, `pkgdb -F`  and `port[install|upgrade] -P` are not supported yet.
       * Various -flags do not work with `pkg_deinstall` and `pkgdb`
       * Enable by adding WITH_PKGNG=yes to /etc/make.conf
