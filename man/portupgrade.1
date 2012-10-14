@@ -1,5 +1,5 @@
 .\"
-.Dd August 26, 2012
+.Dd October 14, 2012
 .Dt PORTUPGRADE 1
 .Os FreeBSD
 .Sh NAME
@@ -46,6 +46,12 @@ macros, respectively.
 .It dependent
 Ports/packages that need this port/package.
 .El
+.Pp
+When
+.Nm
+deals with multiple packages, it automatically sorts the packages in
+dependency order before everything.
+.Pp
 .Sh WARNING
 .Bl -bullet
 .It
@@ -527,11 +533,6 @@ for
 .Ar Mesa :
 .Pp
 .Dl portupgrade XFree86 -m '-DWANT_GGI' Mesa
-.Pp
-When
-.Nm
-deals with multiple packages, it automatically sorts the packages in
-dependency order before everything.
 .Pp
 .Fl m
 /
