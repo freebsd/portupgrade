@@ -558,6 +558,12 @@ Environment Variables [default]:
 	end
       end
 
+      # FIXME: pkgng
+      if $use_packages_only && $pkgdb.with_pkgng?
+        STDERR.puts "Packages are not yet suported. Use pkg(8) directly."
+        return 0
+      end
+
       # Change to a good directory to avoid errors if the user
       # is running in a WRKDIR
       Dir.chdir
