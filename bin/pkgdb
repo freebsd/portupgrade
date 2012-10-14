@@ -356,7 +356,7 @@ end
 def fix_db
   if $pkgdb.with_pkgng?
     # FIXME: pkgng
-    STDERR.puts "pkgdb -F not fully supported with PKGNG yet" if !$quiet
+    STDERR.puts "pkgdb -F not supported with PKGNG yet. Use 'pkg check' directly." if !$quiet
     $pkgdb.unmark_fixme
     return
   end
