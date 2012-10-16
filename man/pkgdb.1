@@ -160,17 +160,6 @@ Note: if the ports database files are stale, pkgdb will automatically update the
 .It Fl -verbose
 Turn on verbose output.
 .El
-.Sh EXAMPLES
-.Bl -bullet
-.It
-Get a list of files under
-.Pa /usr/local
-and
-.Pa /usr/X11R6
-that do not belong to any package:
-.Pp
-.Dl find /usr/local /usr/X11R6 -type f -print0 | xargs -0 pkg_which -v | fgrep '?'
-.El
 .Sh ENVIRONMENT
 .Bl -tag -width "PKGTOOLS_CONF" -compact
 .It Ev PKG_DBDIR
@@ -211,6 +200,17 @@ Default location of the package database.
 .It Pa $PREFIX/etc/pkgtools.conf
 Default location of the pkgtools configuration file.
 .El
+.Sh EXAMPLES
+.Bl -bullet
+.It
+Get a list of files under
+.Pa /usr/local
+and
+.Pa /usr/X11R6
+that do not belong to any package:
+.Pp
+.Dl find /usr/local /usr/X11R6 -type f -print0 | xargs -0 pkg_which -v | fgrep '?'
+.El
 .Sh SEE ALSO
 .Xr portsclean 1 ,
 .Xr portsdb 1 ,
@@ -226,7 +226,6 @@ was taken from
 .An Akinori MUSHA Aq knu@iDaemons.org
 .An Sergey Matveychuk Aq sem@FreeBSD.org
 .Sh BUGS
-.Pp
 Sometimes a database may get corrupt, and the pkgtools commands may
 abort with a segmentation fault.
 In such cases, run
