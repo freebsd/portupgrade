@@ -1492,6 +1492,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   # Change origin in pkgng
   if origin and oldpkg.origin != origin and $pkgdb.with_pkgng?
     str = backquote!(PkgDB::command(:pkg), 'set', '-yo' "#{oldorigin}:#{origin}")
+    warning_message "Updating origin in pkg for #{oldorigin} to #{origin}"
   end
 
   progress_message "Cleaning out obsolete shared libraries"
