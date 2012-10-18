@@ -1490,7 +1490,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   end
 
   # Change origin in pkgng
-  if origin and oldorigin != origin and $pkgdb.with_pkgng?
+  if $pkgdb.with_pkgng? and origin and oldorigin != origin
     str = backquote!(PkgDB::command(:pkg), 'set', '-yo' "#{oldorigin}:#{origin}")
     warning_message "Updating origin in pkg for #{oldorigin} to #{origin}"
   end
