@@ -4,6 +4,12 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.10.1 (released 2012-10-17):
+
+* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=5&state=closed
+    * Fix `pkg set -o` being called for pkgng when not needed (#42)
+    * Fix pkgdb locking up during upgrades, when cleaning shared libraries (#39)
+
 portupgrade 2.4.10 (released 2012-10-14):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=4&state=closed
