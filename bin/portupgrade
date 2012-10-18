@@ -1495,6 +1495,10 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
     warning_message "Updating origin in pkg for #{oldorigin} to #{origin}"
   end
 
+  # Close DB before calling portsclean
+  $pkgdb.close_db
+  sleep 1
+
   progress_message "Cleaning out obsolete shared libraries"
   system!(PkgDB::command(:portsclean), '-QL')
 
