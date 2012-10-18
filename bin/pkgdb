@@ -307,7 +307,7 @@ end
 
 def check_lost_deps()
   # pkg check -dn
-  raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if with_pkgng?
+  raise NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
   fix_db_init()
   stty_sane if $interactive
 
