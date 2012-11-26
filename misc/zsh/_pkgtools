@@ -11,7 +11,11 @@ _freebsd_pkgtools_load_bsd_pkg() {
 _freebsd_pkgtools_pkg_names() {
   local ret=1 l
 
-  l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )
+  if [ -n "$(make -f /usr/share/mk/bsd.port.mk -V WITH_PKGNG)" ]; then
+	l=( $(pkg info -aq) )
+  else
+	l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )
+  fi
 
   compadd "$@" - ${l[@]%-*} && ret=0
 
