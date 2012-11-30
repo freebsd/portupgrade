@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.10.3:
+
+* Fix ZSH completions with PKGNG (#45)
+
 portupgrade 2.4.10.2 (released 2012-10-18):
 
 * Fix `pkgdb -L` [ports/172855](http://www.freebsd.org/cgi/query-pr.cgi?pr=172855)
