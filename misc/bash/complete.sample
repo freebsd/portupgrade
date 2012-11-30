@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 #
 
+_pkgs_list() {
+	local dbdir="$1"
+	shift 1 # the rest will be passed diretly to compgen
+	if [ -n "$(make -f /usr/share/mk/bsd.port.mk -V WITH_PKGNG)" ]; then
+		compgen -W "$(pkg info -aq)" $*
+	else
+		cd ${dbdir} && compgen -d $*
+	fi
+}
+
 _pkg_func() {   
     local cur prev dbdir portsdir command
 
@@ -17,7 +27,7 @@ _pkg_func() {
 	    COMPREPLY=(-h -q -v)
 	    ;;
 	*)
-	    COMPREPLY=( $(compgen -f $2 ) $(cd $portsdir && compgen -d $2) $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( $(compgen -f $2 ) $(cd $portsdir && compgen -d $2) $(_pkgs_list ${dbdir} $2) )
 	    ;;
 	esac
 	;;
@@ -41,7 +51,7 @@ _pkg_func() {
 		if [[ $command = 'portinstall' ]]; then
 		    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
 		else
-		    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		    COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 		fi
 		;;
 	    esac
@@ -54,7 +64,7 @@ _pkg_func() {
 	    COMPREPLY=(-c -C -F -h -l -L -o -O -q -Q -r -R -t -v -x)
 	    ;;
 	*)
-	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 	    ;;
 	esac
 	;;
@@ -85,7 +95,7 @@ _pkg_func() {
     pkgdb|pkg_which)
 	case $prev in
 	-[co])
-	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 	    ;;
 	-s)
 	    local ch prefix base nospace
@@ -96,7 +106,7 @@ _pkg_func() {
 	    ?*${ch}*)
 	        base=${cur##*$ch}
 	        prefix=${cur%$base}
-		COMPREPLY=( $(cd $dbdir && compgen -P "${prefix}" -S "$ch" -d "${base}") )
+		COMPREPLY=( $(_pkgs_list ${dbdir} -P "${prefix}" -S "$ch" "${base}") )
 		;;
 	    "")
 		COMPREPLY=( $(compgen $nospace '/') )
@@ -104,7 +114,7 @@ _pkg_func() {
 	    *)
 	        base=${cur##*$ch}
 	        prefix=${cur%$base}
-		COMPREPLY=( $(cd $dbdir && compgen $nospace -P "${prefix}" -S "$ch" -d "${base}") )
+		COMPREPLY=( $(_pkgs_list ${dbdir} -P "${prefix}" -S "$ch" $nospace "${base}") )
 		;;
 	    esac
 	    ;;
@@ -125,7 +135,7 @@ _pkg_func() {
 	    COMPREPLY=(-h -f -q -R -v)
 	    ;;
 	*)
-	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 	    COMPREPLY=( ${COMPREPLY[@]%-*} )
 	    ;;
 	esac
@@ -143,7 +153,7 @@ _pkg_func() {
 	    COMPREPLY=(-h -a -O -q -r -R -x)
 	    ;;
 	*)
-	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 	    ;;
 	esac
 	;;
@@ -158,7 +168,7 @@ _pkg_func() {
 		COMPREPLY=(-h -a -c -d -D -f -i -n -O -p -P -q -r -R -v -x)
 		;;
 	    *)
-		COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 		;;
 	    esac
 	    ;;
@@ -168,7 +178,7 @@ _pkg_func() {
     pkg_create)
 	case $prev in
 	-[bP])
-	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 	    ;;
 	-o)
 	    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
@@ -202,7 +212,7 @@ _pkg_func() {
 		COMPREPLY=(-d -D -f -G -i -n -r -v -x -p -a)
 		;;
 	    *)
-		COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 		;;
 	    esac
 	    ;;
@@ -211,7 +221,7 @@ _pkg_func() {
     pkg_info)
 	case $prev in
 	-e)
-	    COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+	    COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 	    ;;
 	-O)
 	    COMPREPLY=( $(cd $portsdir && compgen -d $2) )
@@ -228,7 +238,7 @@ _pkg_func() {
 		COMPREPLY=(-c -d -D -f -g -G -i -I -k -L -m -o -p -q -r -R -s -v -V -x -a -e -O -l -t -W)
 		;;
 	    *)
-		COMPREPLY=( $(cd $dbdir && compgen -d $2) )
+		COMPREPLY=( $(_pkgs_list ${dbdir} $2) )
 		;;
 	    esac
 	    ;;

@@ -7,6 +7,7 @@
 portupgrade 2.4.10.3:
 
 * Fix ZSH completions with PKGNG (#45)
+* Fix BASH completions with PKGNG
 
 portupgrade 2.4.10.2 (released 2012-10-18):
 
