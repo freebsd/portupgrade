@@ -22,6 +22,17 @@ _freebsd_pkgtools_pkg_names() {
   return ret
 }
 
+(( $+functions[_freebsd_pkgtools_pkgs] )) ||
+_freebsd_pkgtools_pkgs() {
+  if [ -n "$(make -f /usr/share/mk/bsd.port.mk -V WITH_PKGNG)" ]; then
+    l=( $(pkg info -aq) )
+  else
+    l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )
+  fi
+
+  compadd "$@" - ${l[@]}
+}
+
 (( $+functions[_freebsd_pkgtools_ports] )) ||
 _freebsd_pkgtools_ports() {
   local ret=1
@@ -45,7 +56,7 @@ _freebsd_pkgtools_which_files() {
 _freebsd_pkgtools_pkgs_or_ports() {
     local ret=1
 
-    _bsd_pkg_pkgs && ret=0
+    _freebsd_pkgtools_pkgs && ret=0
 
     if [ X"$service" = X"portinstall" ] || (( $words[(I)-*N*] )); then
 	_freebsd_pkgtools_ports && ret=0
@@ -58,7 +69,7 @@ _freebsd_pkgtools_pkgs_or_ports() {
 _freebsd_pkgtools_cvsweb_files() {
     local ret=1
 
-    _bsd_pkg_pkgs && ret=0
+    _freebsd_pkgtools_pkgs && ret=0
 
     _freebsd_pkgtools_ports && ret=0
 
@@ -74,7 +85,7 @@ _freebsd_pkgtools_pkgdb_origin() {
   if compset -P 1 "*="; then
     _freebsd_pkgtools_ports -/ && ret=0
   else
-    _bsd_pkg_pkgs -qS = && ret=0
+    _freebsd_pkgtools_pkgs -qS = && ret=0
   fi
 
   return ret
@@ -88,10 +99,10 @@ _freebsd_pkgtools_pkgdb_subst() {
     case $PREFIX in
     *$IPREFIX[0]*)
       compset -P 1 "*$IPREFIX[0]"
-      _bsd_pkg_pkgs -S "$IPREFIX[0] " && ret=0
+      _freebsd_pkgtools_pkgs -S "$IPREFIX[0] " && ret=0
       ;;
     *)
-      _bsd_pkg_pkgs -S "$IPREFIX[0]" && ret=0
+      _freebsd_pkgtools_pkgs -S "$IPREFIX[0]" && ret=0
       ;;
     esac
   else
@@ -122,12 +133,12 @@ _freebsd_pkgtools() {
       '(-a -O)-r[deinstall recursively]'
       '(-a -O)-R[deinstall upward recursively]'
       '-v[turn on verbose output]'
-      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+      '*-x[exclude packages]:exclude pattern:_freebsd_pkgtools_pkgs'
     )
 
     _arguments -s \
       $flags[@] \
-      '(-a)*:package to deinstall:_bsd_pkg_pkgs'
+      '(-a)*:package to deinstall:_freebsd_pkgtools_pkgs'
 
     ;;
 
@@ -152,12 +163,12 @@ _freebsd_pkgtools() {
       '-q[do not read pkgtools.conf]'
       '(-a -O)-r[list recursively]'
       '(-a -O)-R[list upward recursively]'
-      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+      '*-x[exclude packages]:exclude pattern:_freebsd_pkgtools_pkgs'
     )
 
     _arguments -s \
       $flags[@] \
-      '(-a)*:package to list:_bsd_pkg_pkgs'
+      '(-a)*:package to list:_freebsd_pkgtools_pkgs'
 
     ;;
 
@@ -174,7 +185,7 @@ _freebsd_pkgtools() {
   pkgdb|pkg_which)
     flags=(
       '-a[turn on automatic mode when -F is also specified]'
-      '*-c[pkgname to collate the installed files of]:package name:_bsd_pkg_pkgs'
+      '*-c[pkgname to collate the installed files of]:package name:_freebsd_pkgtools_pkgs'
       '-f[force to update database regardless of timestamps]'
       '-F[interactively fix package registry]'
       '*-o[look up or change a package'\''s origin]:package[=origin]:_freebsd_pkgtools_pkgdb_origin'
@@ -270,7 +281,7 @@ _freebsd_pkgtools() {
       '-v[be verbose]'
       '(-c)-w[do not clean before each build]'
       '(-C)-W[do not clean after each install]'
-      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+      '*-x[exclude packages]:exclude pattern:_freebsd_pkgtools_pkgs'
       '(-n)-y[answer yes to all the questions]'
     )
 
@@ -297,12 +308,12 @@ _freebsd_pkgtools() {
       '(-O)-R[check upward recursively]'
       '(-c -C -F --ignore-moved -l -L -O -o -R -r -x -Q)-t[compare the version]'
       '-v[be verbose]'
-      '*-x[exclude packages]:exclude pattern:_bsd_pkg_pkgs'
+      '*-x[exclude packages]:exclude pattern:_freebsd_pkgtools_pkgs'
     )
 
     _arguments -s \
       $flags[@] \
-      '*:package to check:_bsd_pkg_pkgs'
+      '*:package to check:_freebsd_pkgtools_pkgs'
 
     ;;
 
