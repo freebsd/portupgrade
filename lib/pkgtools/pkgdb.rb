@@ -97,10 +97,14 @@ class PkgDB
 
     # Special handling if pkg is being upgraded
     if sym == :pkg
-      # Ask ports-mgmt/pkg what binary to use; it will
-      # return a path to the built pkg-static
-      full = $portsdb.make_var('PKG_BIN', "#{$portsdb.ports_dir}/ports-mgmt/pkg")
-      File.executable?(full) and return full
+      pkg_dir = "#{$portsdb.ports_dir}/ports-mgmt/pkg"
+
+      if File.directory?(pkg_dir)
+        # Ask ports-mgmt/pkg what binary to use; it will
+        # return a path to the built pkg-static
+        full = $portsdb.make_var('PKG_BIN', pkg_dir)
+        File.executable?(full) and return full
+      end
 
       raise "no pkg(8) available; Manually upgrade/reinstall ports-mgmt/pkg"
 
