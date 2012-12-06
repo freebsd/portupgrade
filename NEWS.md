@@ -8,6 +8,7 @@ portupgrade 2.4.10.3:
 
 * Fix ZSH completions with PKGNG (#45)
 * Fix BASH completions with PKGNG
+* Fix upgrading ports-mgmt/pkg causing hangs on 9.1,STABLE,CURRENT (#46)
 
 portupgrade 2.4.10.2 (released 2012-10-18):
 

@@ -94,6 +94,18 @@ class PkgDB
 
     full = "#{PREFIX}/sbin/#{cmd}"
     File.executable?(full) and return full
+
+    # Special handling if pkg is being upgraded
+    if sym == :pkg
+      # Ask ports-mgmt/pkg what binary to use; it will
+      # return a path to the built pkg-static
+      full = $portsdb.make_var('PKG_BIN', "#{$portsdb.ports_dir}/ports-mgmt/pkg")
+      File.executable?(full) and return full
+
+      raise "no pkg(8) available; Manually upgrade/reinstall ports-mgmt/pkg"
+
+    end
+
     full = "/usr/sbin/#{cmd}"
     File.executable?(full) and return full
 
