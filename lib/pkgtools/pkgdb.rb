@@ -731,7 +731,7 @@ class PkgDB
 
   def installed_pkgs!()
     if with_pkgng?
-      packages = `pkg query '%n-%v'`.split
+      packages = backquote(PkgDB::command(:pkg), 'query', '%n-%v').split
     else
       packages = Dir.entries(db_dir).select { |pkgname|
         /^\.\.?$/ !~ pkgname && pkgdir?(pkgdir(pkgname))
