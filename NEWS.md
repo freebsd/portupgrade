@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.10.4 (released 2013-01-14):
+
+* Fix crash when HOME is not set in the environment
+
 portupgrade 2.4.10.3 (released 2012-12-06):
 
 * List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=11&page=1&state=closed
