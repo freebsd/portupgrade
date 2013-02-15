@@ -343,12 +343,12 @@ module PortCvsWeb
       uri_info
     end
 
-    def Uri_FreshPorts.date2uri(arg)
-      if (DATESPEC_DAYBACK_RE =~ arg) || (DATESPEC_DATE_RE =~ arg) 
+    def Uri_FreshPorts.date2uri
+      if (DATESPEC_DAYBACK_RE =~ $datespec) || (DATESPEC_DATE_RE =~ $datespec)
 	uri_info = UriInfo.new
 	uri_info.base = URI_BASE
 	uri_info.os = 'FreeBSD'
-	uri_info.path = DATE_PATH + gettime(arg).strftime(DATE_FMT)
+	uri_info.path = DATE_PATH + gettime.strftime(DATE_FMT)
 	uri_info.uri = uri_info.base + uri_info.path
 	uri_info
       else
@@ -385,15 +385,15 @@ module PortCvsWeb
     end
 
     private
-    def Uri_FreshPorts.gettime(datespec)
+    def Uri_FreshPorts.gettime
       time = nil
 
       tz_back = ENV['TZ']
       ENV['TZ'] = TZ_FRESHPORTS
-      if DATESPEC_DAYBACK_RE =~ datespec
-	time = Time.at(Time.now + datespec.to_i*24*60*60)
+      if DATESPEC_DAYBACK_RE =~ $datespec
+	time = Time.at(Time.now + $datespec.to_i*24*60*60)
       else   # DATESPEC_DATE_RE =~ datespec
-	time = Time.parse(datespec)
+	time = Time.parse($datespec)
       end
       ENV['TZ'] = tz_back
 
@@ -418,7 +418,6 @@ usage: #{MYNAME} [-hqv] {pkgname_glob|portorigin_glob|file|directory}
   EOF
 
   dry_parse = true
-  datespec = nil
 
   OptionParser.new(banner, COLUMNSIZE) do |opts|
     opts.def_option("-h", "--help", "Show this message") {
@@ -439,11 +438,9 @@ usage: #{MYNAME} [-hqv] {pkgname_glob|portorigin_glob|file|directory}
       $freshports = v
     }
 
-    opts.def_option("-D [DATE]", "--datespec [DATE]", 
-                    "View the FreshPorts.org of DAYBACK days ago.") { |datespec|
-      if datespec == nil
-	datespec = "0"
-      end
+    opts.def_option("-D [DATE]", "--datespec [DATE]",
+                    "View the FreshPorts.org of DAYBACK days ago.") { |v|
+      $datespec = v
     }
 
     begin
@@ -471,8 +468,8 @@ usage: #{MYNAME} [-hqv] {pkgname_glob|portorigin_glob|file|directory}
   file = argv[0] || '.'
 
   if $freshports
-    if datespec
-      uri = PortCvsWeb::Uri_FreshPorts.date2uri(datespec).uri
+    if $datespec
+      uri = PortCvsWeb::Uri_FreshPorts.date2uri.uri
     else
       uri = resolve_uri(file, PortCvsWeb::Uri_FreshPorts)
     end
