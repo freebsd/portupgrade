@@ -983,7 +983,7 @@ class PkgDB
 	  raise DBError,
 	  format("Stale dependency: %s --> %s -- manually run 'pkgdb -F' to fix%s.",
 		 pkgname, name,
-		 recurse_up ? ' (-O disallowed when -R is given)' : ', or specify -O to force')
+		 recurse_up ? ' (-O disallowed when -R is given)' : ', or specify -O to force') if sanity_check
 
 	list << name if recurse_up
       end
@@ -999,7 +999,7 @@ class PkgDB
 	  raise DBError,
 	  format("Stale dependency: %s <-- %s -- manually run 'pkgdb -F' to fix%s.",
 		 pkgname, name,
-		 recurse_down ? ' (-O disallowed when -r is given)' : ', or specify -O to force')
+		 recurse_down ? ' (-O disallowed when -r is given)' : ', or specify -O to force') if sanity_check
 
 	list << name if recurse_down
       end

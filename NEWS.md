@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.10.5
+
+* Fix -O flag not always being respected
+
 portupgrade 2.4.10.4 (released 2013-01-14):
 
 * Fix crash when HOME is not set in the environment [ports/175281](http://www.freebsd.org/cgi/query-pr.cgi?pr=175281)
