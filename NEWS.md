@@ -7,6 +7,8 @@
 portupgrade 2.4.10.5
 
 * Fix -O flag not always being respected
+* Disable dependency sanity checking with PKGNG as it has its own mechcanism
+  pkg-check(8) for that.
 
 portupgrade 2.4.10.4 (released 2013-01-14):
 

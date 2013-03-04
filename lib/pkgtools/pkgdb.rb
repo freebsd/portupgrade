@@ -975,6 +975,10 @@ class PkgDB
   def recurse(pkgname, recurse_down = false, recurse_up = false, sanity_check = false)
     list = []
 
+    if with_pkgng?
+      sanity_check = false
+    end
+
     if recurse_up || sanity_check
       autofix
 
