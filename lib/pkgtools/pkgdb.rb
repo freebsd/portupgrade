@@ -622,10 +622,8 @@ class PkgDB
 
   def date_installed(pkgname)
     installed?(pkgname) or return nil
-
-    File.mtime(pkg_comment(pkgname)) ||
-      File.mtime(pkg_descr(pkgname)) ||
-      File.mtime(pkg_contents(pkgname)) rescue Time.at(0)
+    pkg = PkgInfo.new(pkgname)
+    pkg.date_installed
   end
 
   def installed_pkg?(pkgname)
