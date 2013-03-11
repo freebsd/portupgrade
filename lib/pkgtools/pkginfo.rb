@@ -63,6 +63,7 @@ class PkgInfo
     :req 		=> '%dn-%dv',
     :required_by 	=> '%rn-%rv',
     :mtree 		=> nil,
+    :mtime 		=> '%t',
     :files 		=> '%Fp',
     :totalsize  	=> '%sb',
     :origin     	=> '%o',
@@ -191,7 +192,13 @@ class PkgInfo
   end
 
   def date_installed()
-    PkgDB.instance.date_installed fullname()
+    if $pkgdb.with_pkgng?
+      Time.at(get_info(:mtime).to_i)
+    else
+      File.mtime(pkg_comment(pkgname)) ||
+        File.mtime(pkg_descr(pkgname)) ||
+        File.mtime(pkg_contents(pkgname)) rescue Time.at(0)
+    end
   end
 
   def installed?()
