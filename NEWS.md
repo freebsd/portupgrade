@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.10.5
+portupgrade 2.4.10.5 (released 2013-03-13):
 
 * Fix -O flag not always being respected
 * Disable dependency sanity checking with PKGNG as it has its own mechcanism
