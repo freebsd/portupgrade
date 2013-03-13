@@ -8,7 +8,7 @@ portupgrade 2.4.10.5 (released 2013-03-13):
 
 * Fix -O flag not always being respected
 * Disable dependency sanity checking with PKGNG as it has its own mechcanism
-  pkg-check(8) for that.
+  pkg-check(8) for that [ports/175841](http://www.freebsd.org/cgi/query-pr.cgi?pr=ports/175841)
 * Fix date parsing support with PKGNG [ports/175926](http://www.freebsd.org/cgi/query-pr.cgi?pr=ports/175926)
 
 portupgrade 2.4.10.4 (released 2013-01-14):
