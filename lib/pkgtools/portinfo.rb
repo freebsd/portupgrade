@@ -35,8 +35,10 @@ class PortInfo
   include Comparable
 
   FIELDS = [ :pkgname, :origin, :prefix, :comment, :descr_file,
-             :maintainer, :categories, :build_depends, :run_depends, :www ]
-  LIST_FIELDS = [ :categories, :build_depends, :run_depends ]
+             :maintainer, :categories, :build_depends, :run_depends, :www,
+             :extract_depends, :patch_depends, :fetch_depends ]
+  LIST_FIELDS = [ :categories, :build_depends, :run_depends,
+                  :extract_depends, :patch_depends, :fetch_depends ]
   PORTS_DIR_FIELDS = [ :origin, :descr_file ]
   NFIELDS = FIELDS.size
   FIELD_SEPARATOR = '|'
@@ -136,7 +138,7 @@ class PortInfo
   end
 
   def all_depends()
-    build_depends | run_depends
+    build_depends | run_depends | extract_depends | patch_depends | fetch_depends
   end
 
   def self.match?(pattern, origin)
