@@ -11,7 +11,9 @@ _freebsd_pkgtools_load_bsd_pkg() {
 _freebsd_pkgtools_pkg_names() {
   local ret=1 l
 
-  if [ -n "$(make -f /usr/share/mk/bsd.port.mk -V WITH_PKGNG)" ]; then
+  if TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
+     PACKAGESITE=file:///nonexistent \
+     pkg info pkg >/dev/null 2>&1; then
 	l=( $(pkg info -aq) )
   else
 	l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )
@@ -24,7 +26,9 @@ _freebsd_pkgtools_pkg_names() {
 
 (( $+functions[_freebsd_pkgtools_pkgs] )) ||
 _freebsd_pkgtools_pkgs() {
-  if [ -n "$(make -f /usr/share/mk/bsd.port.mk -V WITH_PKGNG)" ]; then
+  if TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
+     PACKAGESITE=file:///nonexistent \
+     pkg info pkg >/dev/null 2>&1; then
     l=( $(pkg info -aq) )
   else
     l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )

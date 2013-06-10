@@ -121,7 +121,9 @@ class PkgDB
 
   def with_pkgng?
     if @with_pkgng.nil?
-      @with_pkgng = $portsdb.make_var('WITH_PKGNG')
+      @with_pkgng = `env TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
+       PACKAGESITE=file:///nonexistent \
+       pkg info pkg >/dev/null 2>&1 && echo yes`.chomp != ""
       @with_pkgng = false unless @with_pkgng
       STDERR.puts "USING PKGNG" if @with_pkgng
     end

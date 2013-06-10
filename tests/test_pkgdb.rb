@@ -19,7 +19,9 @@ class TestPkgDB < Test::Unit::TestCase
     test_pkgname = ''
 
     # Find any installed package
-    if `make -f /usr/ports/Mk/bsd.port.mk -V WITH_PKGNG`.chomp != ""
+    if `env TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
+       PACKAGESITE=file:///nonexistent \
+       pkg info pkg >/dev/null 2>&1 && echo yes`.chomp != ""
 	    test_pkgname = `pkg query '%n-%v'|head -n 1`.chomp
     else
 	    Find.find('/var/db/pkg') do |path|
