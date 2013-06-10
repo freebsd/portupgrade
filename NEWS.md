@@ -17,7 +17,7 @@ portupgrade 2.4.10.4 (released 2013-01-14):
 
 portupgrade 2.4.10.3 (released 2012-12-06):
 
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=11&page=1&state=closed
+* List of issues fixed: https://github.com/freebsd/portupgrade/issues?milestone=11&page=1&state=closed
     * Fix ZSH completions with PKGNG (#45)
     * Fix BASH completions with PKGNG
     * Fix upgrading ports-mgmt/pkg causing hangs on 9.1,STABLE,CURRENT (#46)
@@ -28,13 +28,13 @@ portupgrade 2.4.10.2 (released 2012-10-18):
 
 portupgrade 2.4.10.1 (released 2012-10-17):
 
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=5&state=closed
+* List of issues fixed: https://github.com/freebsd/portupgrade/issues?milestone=5&state=closed
     * Fix `pkg set -o` being called for pkgng when not needed (#42)
     * Fix pkgdb locking up during upgrades, when cleaning shared libraries (#39)
 
 portupgrade 2.4.10 (released 2012-10-14):
 
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=4&state=closed
+* List of issues fixed: https://github.com/freebsd/portupgrade/issues?milestone=4&state=closed
     * All lib files now installed in the pkgtools/ namespace (#23)
     * [pkgng](http://github.com/pkgng/pkgng) support (#10)
       * Packages, `pkgdb -F`  and `port[install|upgrade] -P` are not supported yet.
@@ -54,7 +54,7 @@ portupgrade 2.4.9.9 (released 2012-08-27):
 
 portupgrade 2.4.9.8 (released 2012-08-25):
 
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=8&state=closed
+* List of issues fixed: https://github.com/freebsd/portupgrade/issues?milestone=8&state=closed
 
     * Automatically trace MOVED when upgrading ports (#2, #36, ports/151662)
     * Track and display information on deleted ports when upgrading
@@ -71,7 +71,7 @@ portupgrade 2.4.9.7 (released 2012-07-30):
 
 portupgrade 2.4.9.6 (released 2012-07-29):
 
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=6&state=closed
+* List of issues fixed: https://github.com/freebsd/portupgrade/issues?milestone=6&state=closed
     * Fix crash on `portsdb -U` (#27)
     * portupgrade now shows the new version installed when completed (#28)
     * `port[upgrade|install] -v` will show recursive depends.
@@ -80,13 +80,13 @@ portupgrade 2.4.9.6 (released 2012-07-29):
 
 portupgrade 2.4.9.5 (released 2012-05-01):
 
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=3&state=closed
+* List of issues fixed: https://github.com/freebsd/portupgrade/issues?milestone=3&state=closed
     * Fix failed upgrades being seen as success (#25)
 
 portupgrade 2.4.9.4 (released 2012-04-26):
 
 * Portupgrade has a new home: http://pkgtools.github.com
-* List of issues fixed: https://github.com/pkgtools/pkgtools/issues?milestone=1&state=closed
+* List of issues fixed: https://github.com/freebsd/portupgrade/issues?milestone=1&state=closed
     * Fix upgrading to ruby19 causing pkgdb error (db will be rebuilt if it cannot be read)
     * Fix `portrevision -r`
     * Fix `pkgdb -F` losing DEPORIGIN in +CONTENTS for dependent packages
