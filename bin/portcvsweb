@@ -277,7 +277,7 @@ module PortCvsWeb
 
   class Uri_CvsWeb < Uri_Base
     URI_BASE = {
-      'FreeBSD' => 'http://www.FreeBSD.org/cgi/cvsweb.cgi/',
+      'FreeBSD' => 'http://svnweb.FreeBSD.ORG/',
       'NetBSD' => 'http://cvsweb.netbsd.org/bsdweb.cgi/',
       'OpenBSD' => 'http://www.openbsd.org/cgi-bin/cvsweb/',
     }
@@ -294,7 +294,11 @@ module PortCvsWeb
 	uri_info = UriInfo.new
 	uri_info.os = Uri_Base.guess_os(nil) || OS_DEFAULT
 	uri_info.base = URI_BASE[uri_info.os]
-	uri_info.path = File.join('ports', origin)  # XXX
+        if uri_info.os == "FreeBSD"
+          uri_info.path = File.join('ports/head', origin)
+        else
+          uri_info.path = File.join('ports', origin)  # XXX
+        end
 	uri_info.uri = uri_info.base + uri_info.path
 	uri_info
       else
@@ -309,7 +313,11 @@ module PortCvsWeb
 	  uri_info = UriInfo.new
 	  uri_info.os = Uri_Base.guess_os(nil) || OS_DEFAULT
 	  uri_info.base = URI_BASE[uri_info.os]
-	  uri_info.path = File.join('ports', origin)  # XXX
+          if uri_info.os == "FreeBSD"
+            uri_info.path = File.join('ports/head', origin)
+          else
+            uri_info.path = File.join('ports', origin)  # XXX
+          end
 	  uri_info.uri = uri_info.base + uri_info.path
 	  ret = uri_info
 	end
@@ -534,7 +542,7 @@ def search_cvsweb(file)
   end
 
   puts "Inquiring the CVSweb site (ports)..." if $verbose
-  uri = PortCvsWeb::Uri_CvsWeb::URI_BASE[OS_DEFAULT] + File.join('ports', file)
+  uri = PortCvsWeb::Uri_CvsWeb::URI_BASE[OS_DEFAULT] + File.join('ports/head', file)
   if uri_exist?(uri)
     return uri
   end
