@@ -16,6 +16,7 @@ SCRIPTS=	${BUILDDIR}/pkg_fetch \
 LINKS=		${SCRIPTSDIR}/pkg_glob		${SCRIPTSDIR}/pkg_deinstall \
 		${SCRIPTSDIR}/pkgdb		${SCRIPTSDIR}/pkg_which \
 		${SCRIPTSDIR}/portupgrade	${SCRIPTSDIR}/portinstall \
+		${SCRIPTSDIR}/portcvsweb	${SCRIPTSDIR}/portsvnweb \
 		${SCRIPTSDIR}/portsdb		${SCRIPTSDIR}/ports_glob
 
 CLEANDIRS=	${BUILDDIR}

@@ -15,6 +15,7 @@ MAN1=		pkg_deinstall.1 \
 
 MLINKS=		pkgdb.1		pkg_which.1 \
 		portupgrade.1	portinstall.1 \
+		portcvsweb.1	portsvnweb.1 \
 		portsdb.1	ports_glob.1
 
 MAN5=		pkgtools.conf.5

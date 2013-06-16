@@ -9,6 +9,7 @@ portupgrade 2.4.10.6 (released 2013-06-XX):
 * Fix how pkgng support is detected for completions so that legacy
   pkg_install packages work when there is no ports tree checked out.
 * Fix portcvsweb so it uses svnweb.FreeBSD.ORG
+* Symlink portcvsweb as portsvnweb
 
 portupgrade 2.4.10.5 (released 2013-03-13):
 
