@@ -418,7 +418,6 @@ usage: #{MYNAME} [-hqv] {pkgname_glob|portorigin_glob|file|directory}
   EOF
 
   dry_parse = true
-  freshports = false
   datespec = nil
 
   OptionParser.new(banner, COLUMNSIZE) do |opts|
@@ -436,7 +435,8 @@ usage: #{MYNAME} [-hqv] {pkgname_glob|portorigin_glob|file|directory}
     }
 
     opts.def_option("-F", "--freshports", 
-                    "View FreshPorts.org instead of cvsweb") { |freshports|
+                    "View FreshPorts.org instead of cvsweb") { |v|
+      $freshports = v
     }
 
     opts.def_option("-D [DATE]", "--datespec [DATE]", 
@@ -470,7 +470,7 @@ usage: #{MYNAME} [-hqv] {pkgname_glob|portorigin_glob|file|directory}
 
   file = argv[0] || '.'
 
-  if freshports
+  if $freshports
     if datespec
       uri = PortCvsWeb::Uri_FreshPorts.date2uri(datespec).uri
     else
