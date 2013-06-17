@@ -23,7 +23,7 @@ _pkg_func() {
     command=${COMP_WORDS[0]}
 
     case $command in
-    portcvsweb)
+    portcvsweb|portsvnweb)
 	case $cur in
 	-*)
 	    COMPREPLY=(-h -q -v)
@@ -261,6 +261,7 @@ complete -F _pkg_func \
 		pkg_info \
 		pkg_which \
 		portcvsweb \
+		portsvnweb \
 		portinstall \
 		portsdb \
 		ports_glob \

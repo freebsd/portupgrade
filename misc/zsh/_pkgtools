@@ -1,4 +1,4 @@
-#compdef pkg_deinstall pkg_fetch pkg_glob pkg_sort pkg_which pkgdb portcvsweb portinstall ports_glob portsclean portsdb portupgrade portversion
+#compdef pkg_deinstall pkg_fetch pkg_glob pkg_sort pkg_which pkgdb portcvsweb portsvnweb portinstall ports_glob portsclean portsdb portupgrade portversion
 
 (( $+functions[_freebsd_pkgtools_load_bsd_pkg] )) ||
 _freebsd_pkgtools_load_bsd_pkg() {
@@ -206,7 +206,7 @@ _freebsd_pkgtools() {
 
     ;;
 
-  portcvsweb)
+  portcvsweb|portsvnweb)
     flags=(
       '-q[do not read pkgtools.conf]'
       '-v[be verbose]'
