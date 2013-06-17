@@ -95,9 +95,12 @@ class PkgDB
     full = "#{PREFIX}/sbin/#{cmd}"
     File.executable?(full) and return full
 
-    # Special handling if pkg is being upgraded
+    # Special handling for pkg(8)
+    # Use what the port advises to use via PKG_BIN as that will properly
+    # handle upgrades
     if sym == :pkg
-      pkg_dir = "#{$portsdb.ports_dir}/ports-mgmt/pkg"
+      pkg_origin = @pkgng_origin || "ports-mgmt/pkg"
+      pkg_dir = "#{$portsdb.ports_dir}/#{pkg_origin}"
 
       if File.directory?(pkg_dir)
         # Ask ports-mgmt/pkg what binary to use; it will
@@ -106,7 +109,7 @@ class PkgDB
         File.executable?(full) and return full
       end
 
-      raise "no pkg(8) available; Manually upgrade/reinstall ports-mgmt/pkg"
+      raise "no pkg(8) available; Manually upgrade/reinstall #{pkg_origin}"
 
     end
 
@@ -125,7 +128,9 @@ class PkgDB
        PACKAGESITE=file:///nonexistent \
        pkg info pkg >/dev/null 2>&1 && echo yes`.chomp != ""
       @with_pkgng = false unless @with_pkgng
+      @pkgng_origin = $portsdb.make_var('PKGNG_ORIGIN')
       STDERR.puts "USING PKGNG" if @with_pkgng
+      #STDERR.puts "USING PKGNG[#{@pkgng_origin}]" if @with_pkgng
     end
     @with_pkgng
   end

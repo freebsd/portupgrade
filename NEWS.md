@@ -11,6 +11,7 @@ portupgrade 2.4.10.6 (released 2013-06-XX):
 * Fix portcvsweb so it uses svnweb.FreeBSD.ORG (#47)
 * Symlink portcvsweb as portsvnweb
 * Fix portcvsweb FreshPorts and datespec support (#49)
+* Add support for WITH_PKGNG=devel
 
 portupgrade 2.4.10.5 (released 2013-03-13):
 
