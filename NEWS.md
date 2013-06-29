@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.10.6 (released 2013-06-XX):
+portupgrade 2.4.10.6 (released 2013-06-29):
 
 * Change how pkgng support is detected for completions
 * Fix portcvsweb so it uses svnweb.FreeBSD.ORG (#47)
