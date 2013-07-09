@@ -340,6 +340,9 @@ def libclean()
 	  # Skip system libraries (/lib, /usr/lib)
 	  # XXX Warning on this?
 	  next if /^\/lib/ =~ prev_path || /^\/usr\/lib/ =~ prev_path
+	  
+	  # Skip if specified in IGNORE_LIBS in pkgtools.conf
+	  next if !config_ignore_libs?(prev_path)
 
 	  puts "** #{path} is shadowed by #{prev_path}"
 
@@ -395,8 +398,10 @@ def libclean()
 
   libtable.each do |libname, hash|
     # ignore the ones outside the localbase and the x11base
+    # also ignore files specified in IGNORE_LIBS in pkgtools.conf
     hash.delete_if { |ver, (path, dir, prefix, pkgname)|
       !prefix || dir == compatlibdir
+      !config_ignore_libs?(path)
     }
 
     size = hash.size
