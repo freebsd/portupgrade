@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.10.7:
+
+* Fix FTP PACKAGESITE encoding / as %2F in Ruby1.9
+
 portupgrade 2.4.10.6 (released 2013-06-29):
 
 * Change how pkgng support is detected for completions

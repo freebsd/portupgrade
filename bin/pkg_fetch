@@ -338,7 +338,8 @@ def fetch(uri, path = File.basename(uri.path))
     return false
   end
 
-  cmdline = format(ENV['PKG_FETCH'] || "/usr/bin/fetch -o '%2$s' '%1$s'", uri, path)
+  uri_subbed = uri.to_s.gsub("%3A", ":").gsub("%2F", "/")
+  cmdline = format(ENV['PKG_FETCH'] || "/usr/bin/fetch -o '%2$s' '%1$s'", uri_subbed, path)
 
   progress_message "Invoking a command: #{cmdline}" if $verbose
 
