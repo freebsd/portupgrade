@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.10.7:
+portupgrade 2.4.10.7 (released 2013-07-15):
 
 * Fix FTP PACKAGESITE encoding / as %2F in Ruby1.9
 
