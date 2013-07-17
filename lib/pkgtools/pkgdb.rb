@@ -149,6 +149,10 @@ class PkgDB
 
   def initialize(*args)
     @db = nil
+    if with_pkgng?
+      @db_driver = "pkg"
+      return
+    end
     @lock_file = Process.euid == 0 ? LOCK_FILE : nil
     @db_version = DB_VERSION
     ObjectSpace.define_finalizer(self, PkgDB.finalizer)
@@ -325,6 +329,8 @@ class PkgDB
     @db[':mtime'] = Marshal.dump(Time.now)
     @db[':origins'] = @installed_ports.join(' ')
 
+    return true if with_pkgng?
+
     close_db
   rescue => e
     raise e if e.class == PkgDB::NeedsPkgNGSupport
@@ -383,6 +389,7 @@ class PkgDB
   end
 
   def check_db
+    return true if with_pkgng?
     return true if up_to_date? || File.writable?(db_dir)
 
     if $sudo
@@ -577,9 +584,11 @@ class PkgDB
     retried = false
 
     begin
-      open_db_for_read!
+      if not with_pkgng?
+        open_db_for_read!
 
-      check_db_version or raise TypeError, 'database version mismatch/bump detected'
+        check_db_version or raise TypeError, 'database version mismatch/bump detected'
+      end
 
       s = @db[':pkgnames']
       s.is_a?(String) or raise TypeError, "pkgnames - not a string (#{s.class})"

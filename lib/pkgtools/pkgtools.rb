@@ -239,9 +239,9 @@ end
 
 def init_pkgtools_global
   # initialize pkgdb first - PortsDB uses PkgDB.instance.db_dir.
+  $portsdb = PortsDB.instance.setup
   $pkgdb = PkgDB.instance.setup
   $pkgdb_dir = $pkgdb.db_dir
-  $portsdb = PortsDB.instance.setup
   $ports_dir = $portsdb.ports_dir
   $packages_base = ENV['PACKAGES'] || File.join($ports_dir, 'packages')
   $packages_dir = File.join($packages_base, 'All')
