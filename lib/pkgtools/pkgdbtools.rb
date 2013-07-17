@@ -62,6 +62,8 @@ module PkgDBTools
   def db_driver=(new_db_driver)
     begin
       case new_db_driver || ENV['PKG_DBDRIVER'] || 'bdb_btree'
+      when 'pkg'
+        @db_driver = :pkg
       when 'bdb_btree'
 	@db_driver = :bdb_btree
       when 'bdb_hash', 'bdb'
@@ -75,6 +77,8 @@ module PkgDBTools
       end
 
       case @db_driver
+      when :pkg
+        next_driver = nil
       when :bdb_btree
 	next_driver = 'bdb1_btree'
 	require 'bdb'
@@ -186,6 +190,8 @@ module PkgDBTools
 
   def get_db(mode, perm)
     case db_driver
+    when :pkg
+      db = {}
     when :bdb_btree
       db = BDB::Btree.open @db_file, nil, mode, perm, *@db_params
     when :bdb_hash
@@ -226,7 +232,7 @@ module PkgDBTools
 
   def close_db
     unlock_db
-    if @db
+    if @db and @db_driver != :pkg
       @db.close
       @db = nil
     end

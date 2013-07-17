@@ -150,7 +150,7 @@ class PkgDB
   def initialize(*args)
     @db = nil
     if with_pkgng?
-      @db_driver = "pkg"
+      set_db_driver("pkg")
       return
     end
     @lock_file = Process.euid == 0 ? LOCK_FILE : nil
@@ -160,8 +160,12 @@ class PkgDB
   end
 
   def setup(alt_db_dir = nil, alt_db_driver = nil)
-    set_db_dir(alt_db_dir)
-    set_db_driver(alt_db_driver)
+    if with_pkgng?
+      set_db_driver("pkg")
+    else
+      set_db_dir(alt_db_dir)
+      set_db_driver(alt_db_driver)
+    end
 
     self
   end
