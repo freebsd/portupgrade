@@ -129,7 +129,6 @@ class PkgDB
        pkg info pkg >/dev/null 2>&1 && echo yes`.chomp != ""
       @with_pkgng = false unless @with_pkgng
       @pkgng_origin = $portsdb.make_var('PKGNG_ORIGIN')
-      STDERR.puts "USING PKGNG" if @with_pkgng
       #STDERR.puts "USING PKGNG[#{@pkgng_origin}]" if @with_pkgng
     end
     @with_pkgng
@@ -420,10 +419,9 @@ class PkgDB
 
     rebuild = force || !File.exist?(@db_file)
 
-    STDERR.printf '[%s the pkgdb <format:%s> in %s ... ',
-      rebuild ? 'Rebuilding' : 'Updating', @db_driver, db_dir
-
     if with_pkgng?
+      STDERR.printf '[Reading data from pkg(8) ... '
+
       @installed_pkgs = []
       @installed_ports = []
       @db = {}
@@ -445,12 +443,15 @@ class PkgDB
       @db[':pkgnames'] = @installed_pkgs.join(' ')
       @db[':db_version'] = Marshal.dump(DB_VERSION)
 
-      STDERR.puts " done]"
+      STDERR.puts "- done]"
 
       mark_fixme
 
       return true
     end
+
+    STDERR.printf '[%s the pkgdb <format:%s> in %s ... ',
+      rebuild ? 'Rebuilding' : 'Updating', @db_driver, db_dir
 
     @installed_pkgs = installed_pkgs!.freeze
 
