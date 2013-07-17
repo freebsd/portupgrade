@@ -611,6 +611,11 @@ class PkgDB
   def which(path, m = false)
     path = File.expand_path(path)
 
+    if with_pkgng?
+      pkgname = xbackquote(PkgDB::command(:pkg), 'which', '-q', path).chomp
+      return pkgname.length ? [pkgname] : nil
+    end
+
     open_db
 
     if !@db.key?(path)
