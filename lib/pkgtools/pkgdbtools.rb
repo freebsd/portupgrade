@@ -109,6 +109,7 @@ module PkgDBTools
   alias set_db_driver db_driver=
 
   def date_db_file
+    return Time.at(0) if $pkgdb.with_pkgng?
     File.mtime(@db_file) rescue Time.at(0)
   end
 
