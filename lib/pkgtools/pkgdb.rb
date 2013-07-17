@@ -423,6 +423,35 @@ class PkgDB
     STDERR.printf '[%s the pkgdb <format:%s> in %s ... ',
       rebuild ? 'Rebuilding' : 'Updating', @db_driver, db_dir
 
+    if with_pkgng?
+      @installed_pkgs = []
+      @installed_ports = []
+      @db = {}
+      pkg_origins = xbackquote(PkgDB::command(:pkg), 'query', '%n-%v %o').split("\n")
+      pkg_origins.each do |line|
+        pkg, origin = line.split(' ')
+        @installed_pkgs << pkg
+        add_origin(pkg, origin)
+      end
+      @installed_pkgs.freeze
+
+      STDERR.printf "- %d packages found ", @installed_pkgs.size
+
+      @installed_ports.uniq!
+      @installed_ports.sort!
+
+      @db[':mtime'] = Marshal.dump(Time.now)
+      @db[':origins'] = @installed_ports.join(' ')
+      @db[':pkgnames'] = @installed_pkgs.join(' ')
+      @db[':db_version'] = Marshal.dump(DB_VERSION)
+
+      STDERR.puts " done]"
+
+      mark_fixme
+
+      return true
+    end
+
     @installed_pkgs = installed_pkgs!.freeze
 
     try_again = false
