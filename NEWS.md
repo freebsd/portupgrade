@@ -4,6 +4,12 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.11:
+
+* Pkgdb no longer populates an extra bdb database when using pkgng.
+  This speeds up operation when using pkgng and also avoids extra
+  complexity and possible corruption.
+
 portupgrade 2.4.10.7 (released 2013-07-15):
 
 * Fix FTP PACKAGESITE encoding / as %2F in Ruby1.9
