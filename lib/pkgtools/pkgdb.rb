@@ -129,7 +129,6 @@ class PkgDB
        pkg info pkg >/dev/null 2>&1 && echo yes`.chomp != ""
       @with_pkgng = false unless @with_pkgng
       @pkgng_origin = $portsdb.make_var('PKGNG_ORIGIN')
-      STDERR.puts "USING PKGNG" if @with_pkgng
       #STDERR.puts "USING PKGNG[#{@pkgng_origin}]" if @with_pkgng
     end
     @with_pkgng
@@ -149,6 +148,10 @@ class PkgDB
 
   def initialize(*args)
     @db = nil
+    if with_pkgng?
+      set_db_driver("pkg")
+      return
+    end
     @lock_file = Process.euid == 0 ? LOCK_FILE : nil
     @db_version = DB_VERSION
     ObjectSpace.define_finalizer(self, PkgDB.finalizer)
@@ -156,8 +159,12 @@ class PkgDB
   end
 
   def setup(alt_db_dir = nil, alt_db_driver = nil)
-    set_db_dir(alt_db_dir)
-    set_db_driver(alt_db_driver)
+    if with_pkgng?
+      set_db_driver("pkg")
+    else
+      set_db_dir(alt_db_dir)
+      set_db_driver(alt_db_driver)
+    end
 
     self
   end
@@ -325,6 +332,8 @@ class PkgDB
     @db[':mtime'] = Marshal.dump(Time.now)
     @db[':origins'] = @installed_ports.join(' ')
 
+    return true if with_pkgng?
+
     close_db
   rescue => e
     raise e if e.class == PkgDB::NeedsPkgNGSupport
@@ -383,6 +392,7 @@ class PkgDB
   end
 
   def check_db
+    return true if with_pkgng?
     return true if up_to_date? || File.writable?(db_dir)
 
     if $sudo
@@ -408,6 +418,37 @@ class PkgDB
     STDERR.sync = true
 
     rebuild = force || !File.exist?(@db_file)
+
+    if with_pkgng?
+      STDERR.printf '[Reading data from pkg(8) ... '
+
+      @installed_pkgs = []
+      @installed_ports = []
+      @db = {}
+      pkg_origins = xbackquote(PkgDB::command(:pkg), 'query', '%n-%v %o').split("\n")
+      pkg_origins.each do |line|
+        pkg, origin = line.split(' ')
+        @installed_pkgs << pkg
+        add_origin(pkg, origin)
+      end
+      @installed_pkgs.freeze
+
+      STDERR.printf "- %d packages found ", @installed_pkgs.size
+
+      @installed_ports.uniq!
+      @installed_ports.sort!
+
+      @db[':mtime'] = Marshal.dump(Time.now)
+      @db[':origins'] = @installed_ports.join(' ')
+      @db[':pkgnames'] = @installed_pkgs.join(' ')
+      @db[':db_version'] = Marshal.dump(DB_VERSION)
+
+      STDERR.puts "- done]"
+
+      mark_fixme
+
+      return true
+    end
 
     STDERR.printf '[%s the pkgdb <format:%s> in %s ... ',
       rebuild ? 'Rebuilding' : 'Updating', @db_driver, db_dir
@@ -577,9 +618,11 @@ class PkgDB
     retried = false
 
     begin
-      open_db_for_read!
+      if not with_pkgng?
+        open_db_for_read!
 
-      check_db_version or raise TypeError, 'database version mismatch/bump detected'
+        check_db_version or raise TypeError, 'database version mismatch/bump detected'
+      end
 
       s = @db[':pkgnames']
       s.is_a?(String) or raise TypeError, "pkgnames - not a string (#{s.class})"
@@ -610,6 +653,11 @@ class PkgDB
 
   def which(path, m = false)
     path = File.expand_path(path)
+
+    if with_pkgng?
+      pkgname = xbackquote(PkgDB::command(:pkg), 'which', '-q', path).chomp
+      return pkgname.length ? [pkgname] : nil
+    end
 
     open_db
 
