@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.11:
+portupgrade 2.4.11 (released 2013-07-21):
 
 * Pkgdb no longer populates an extra bdb database when using pkgng.
   This speeds up operation when using pkgng and also avoids extra
