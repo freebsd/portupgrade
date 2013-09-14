@@ -13,7 +13,7 @@ _freebsd_pkgtools_pkg_names() {
 
   if TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
      PACKAGESITE=file:///nonexistent \
-     pkg info pkg >/dev/null 2>&1; then
+     pkg info -x 'pkg(-devel)?$' >/dev/null 2>&1; then
 	l=( $(pkg info -aq) )
   else
 	l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )
@@ -28,7 +28,7 @@ _freebsd_pkgtools_pkg_names() {
 _freebsd_pkgtools_pkgs() {
   if TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
      PACKAGESITE=file:///nonexistent \
-     pkg info pkg >/dev/null 2>&1; then
+     pkg info -x 'pkg(-devel)?$' >/dev/null 2>&1; then
     l=( $(pkg info -aq) )
   else
     l=( ${PKG_DBDIR:-/var/db/pkg}/*(/:t) )

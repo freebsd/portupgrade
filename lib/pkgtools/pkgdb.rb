@@ -126,7 +126,7 @@ class PkgDB
     if @with_pkgng.nil?
       @with_pkgng = `env TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
        PACKAGESITE=file:///nonexistent \
-       pkg info pkg >/dev/null 2>&1 && echo yes`.chomp != ""
+       pkg info -x 'pkg(-devel)?$' >/dev/null 2>&1 && echo yes`.chomp != ""
       @with_pkgng = false unless @with_pkgng
       @pkgng_origin = $portsdb.make_var('PKGNG_ORIGIN')
       #STDERR.puts "USING PKGNG[#{@pkgng_origin}]" if @with_pkgng

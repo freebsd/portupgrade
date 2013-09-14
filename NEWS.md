@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.12 (released XXX):
+
+* Fix detection of pkg-devel
+
 portupgrade 2.4.11 (released 2013-07-21):
 
 * Pkgdb no longer populates an extra bdb database when using pkgng.

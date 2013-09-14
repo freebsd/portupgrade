@@ -21,7 +21,7 @@ class TestPkgDB < Test::Unit::TestCase
     # Find any installed package
     if `env TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 \
        PACKAGESITE=file:///nonexistent \
-       pkg info pkg >/dev/null 2>&1 && echo yes`.chomp != ""
+       pkg info -x 'pkg(-devel)?$' >/dev/null 2>&1 && echo yes`.chomp != ""
 	    test_pkgname = `pkg query '%n-%v'|head -n 1`.chomp
     else
 	    Find.find('/var/db/pkg') do |path|
