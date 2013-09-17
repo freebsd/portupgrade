@@ -825,7 +825,7 @@ def modify_pkgdep(pkgname, dep, newdep, neworigin = nil)
   if changed
     lines = head_lines + depends_lines + tail_lines
     w = Tempfile.new(File.basename(file))
-    w.print(*lines)
+    w.print(lines.join())
     w.close
     tmpfile = w.path
 

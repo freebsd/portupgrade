@@ -7,6 +7,7 @@
 portupgrade 2.4.12 (released XXX):
 
 * Fix detection of pkg-devel
+* Avoid stack overflow when checking dependencies (#53)
 
 portupgrade 2.4.11 (released 2013-07-21):
 

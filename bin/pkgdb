@@ -974,7 +974,7 @@ def fix_cycles(tsort)
 	    end
 
 	    f.rewind
-	    f.print(*lines)
+	    f.print(lines.join())
 	    f.truncate f.pos
 	  end
 
