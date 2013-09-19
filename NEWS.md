@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.12 (released XXX):
+portupgrade 2.4.11.1 (released 2013-09-18):
 
 * Fix detection of pkg-devel
 * Avoid stack overflow when checking dependencies (#53)
