@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.11.2 (released 2013-09-21):
+
+* Remove dependency on devel/ruby-date2 for Ruby 1.9
+
 portupgrade 2.4.11.1 (released 2013-09-18):
 
 * Fix detection of pkg-devel

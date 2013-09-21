@@ -782,18 +782,34 @@ class PkgDB
   end
 
   def self.parse_date(str)
-    require 'parsedate'
+    begin
+      # Ruby 1.8 compat
+      require 'parsedate'
 
-    ary = ParseDate.parsedate(str)
-    ary.pop
-    tz = ary.pop
+      ary = ParseDate.parsedate(str)
+      ary.pop
+      tz = ary.pop
 
-    case tz
-    when 'GMT', 'UTC'
-      Time.utc(*ary)
-    else
-      Time.local(*ary)
+      case tz
+      when 'GMT', 'UTC'
+        return Time.utc(*ary)
+      else
+        return Time.local(*ary)
+      end
+
+    rescue LoadError
+      require 'date'
+
+      time = DateTime.parse(str).to_time
+
+      case tz
+      when 'GMT', 'UTC'
+        return time.utc
+      else
+        return time.localtime
+      end
     end
+
   rescue
     raise ArgumentError, "#{str}: date format error"
   end
