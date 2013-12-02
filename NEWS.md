@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.11.3 (released XXX):
+
+* Fix date parsing with pkg_install
+
 portupgrade 2.4.11.2 (released 2013-09-21):
 
 * Remove dependency on devel/ruby-date2 for Ruby 1.9
