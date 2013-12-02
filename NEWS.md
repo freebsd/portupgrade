@@ -8,6 +8,7 @@ portupgrade 2.4.11.3 (released XXX):
 
 * Fix date parsing with pkg_install
 * Show proper origin in 'portupgrade' when duplicates detected
+* Fix crash when attempting to upgrade bsdpan packages
 
 portupgrade 2.4.11.2 (released 2013-09-21):
 
