@@ -195,9 +195,9 @@ class PkgInfo
     if $pkgdb.with_pkgng?
       Time.at(get_info(:mtime).to_i)
     else
-      File.mtime(pkg_comment(fullname())) ||
-        File.mtime(pkg_descr(fullname())) ||
-        File.mtime(pkg_contents(fullname())) rescue Time.at(0)
+      File.mtime(pkg_comment) ||
+        File.mtime(pkg_descr) ||
+        File.mtime(pkg_contents) rescue Time.at(0)
     end
   end
 
