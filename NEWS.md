@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.11.3 (released XXX):
+portupgrade 2.4.11.3 (released 2013-12-05):
 
 * Fix date parsing with pkg_install
 * Show proper origin in 'portupgrade' when duplicates detected
