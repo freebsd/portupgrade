@@ -6,14 +6,14 @@ require 'test/unit'
 
 require 'pkgtools/pkgtsort'
 
-class TestTSort < Test::Unit::TestCase
+class TestPkgTSort < Test::Unit::TestCase
   def test_s_new
-    assert_raises(ArgumentError) { TSort.new(1) }
-    assert_raises(ArgumentError) { TSort.new(nil) }
+    assert_raises(ArgumentError) { PkgTSort.new(1) }
+    assert_raises(ArgumentError) { PkgTSort.new(nil) }
   end
 
   def test_add
-    t = TSort.new
+    t = PkgTSort.new
 
     t.add(1, 2, 3)
     d = t.dump
@@ -35,7 +35,7 @@ class TestTSort < Test::Unit::TestCase
   end
 
   def test_delete
-    t = TSort.new
+    t = PkgTSort.new
 
     t.add(1, 2, 3)
     t.add(5, 1, 3, 4)
@@ -61,7 +61,7 @@ class TestTSort < Test::Unit::TestCase
   end
 
   def test_tsort
-    t = TSort.new
+    t = PkgTSort.new
 
     t.add(1, 2, 3)
     t.add(2, 4)

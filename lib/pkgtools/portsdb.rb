@@ -887,7 +887,7 @@ class PortsDB
   end
 
   def sort(ports)
-    tsort = TSort.new
+    tsort = PkgTSort.new
 
     ports.each do |p|
       portinfo = port(p)

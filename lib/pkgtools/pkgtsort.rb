@@ -32,7 +32,7 @@
 # Topological Sorter
 #
 
-class TSort
+class PkgTSort
   def initialize()
     @hints = Hash.new([])
   end
@@ -164,14 +164,14 @@ class TSort
 end
 
 if __FILE__ == $0
-  t = TSort.new
+  t = PkgTSort.new
   t.add(1, 2, 3).add(2, 4).add(3, 4).add(2, 3).add(1,3).add(6, 5).add(5, 1)
 
   p t.dump
   a = t.tsort { |cycle| puts "cycle found: " + cycle.join('-'); false }
   puts(*a)
 
-  t = TSort.new
+  t = PkgTSort.new
   t.add(1, 2, 3).add(2, 4).add(3, 4).add(2, 3).add(4,1).add(1,3).add(6, 5).add(5, 6)
 
   p t.dump
