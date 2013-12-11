@@ -441,7 +441,7 @@ def fix_db_phase2()
   # reconstruct all the +REQUIRED_BY files
   puts "Regenerating +REQUIRED_BY files" if $verbose
 
-  tsort = TSort.new
+  tsort = PkgTSort.new
   indep_pkgnames = []
 
   $pkgnames.each do |pkgname|

@@ -955,7 +955,7 @@ class PkgDB
   end
 
   def tsort(pkgnames)
-    t = TSort.new
+    t = PkgTSort.new
 
     pkgnames.each do |pkgname|
       deps = pkgdep(pkgname) || []
@@ -975,7 +975,7 @@ class PkgDB
   end
 
   def tsort_build(pkgnames)
-    t = TSort.new
+    t = PkgTSort.new
 
     pkgnames.each do |pkgname|
       pkg = pkg(pkgname) or next
