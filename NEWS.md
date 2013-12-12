@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.12 (released 2013-12-12):
+
+* Fixed TSort name clash when using bundler
+
 portupgrade 2.4.11.3 (released 2013-12-05):
 
 * Fix date parsing with pkg_install
