@@ -384,6 +384,10 @@ class PortsDB
     t.close
     tmp = t.path
 
+    t = Tempfile.new('INDEX.', abs_ports_dir)
+    t.close
+    tmpindex = t.path.split('/')[-1]
+
     if File.exist?(index_file)
       if !File.writable?(index_file)
 	STDERR.puts "index file #{index_file} not writable!"
@@ -401,7 +405,7 @@ class PortsDB
     if fetch
       system "cd #{abs_ports_dir} && make fetchindex && cp #{index_file} #{tmp}"
     else
-      system "cd #{abs_ports_dir} && make INDEXFILE=INDEX.tmp index && mv INDEX.tmp #{tmp}"
+      system "cd #{abs_ports_dir} && make INDEXFILE=#{tmpindex} index && mv #{tmpindex} #{tmp}"
     end
 
     if File.zero?(tmp)
