@@ -138,6 +138,10 @@ Environment Variables [default]:
 
       results = PkgResultSet.new
 
+      if $pkgdb.with_pkgng?
+        system(format("%s update", PkgDB::command(:pkg)))
+      end
+
       opts.order(*argv) do |arg|
 	set_uri_base(arg)
 
@@ -180,6 +184,11 @@ def do_fetch_pkg(pkgname)
     return false, nil
   end
 
+  if $pkgdb.with_pkgng?
+    pkgname = backquote!(PkgDB::command(:pkg), 'rquery', '-U', '%n-%v',
+                         pkgname).lines.first.chomp
+  end
+
   PKG_SUFFIXES.each do |suffix|
     pkgfilename = pkgname + suffix
     path = File.join($packages_dir, pkgfilename)
@@ -205,7 +214,11 @@ def do_fetch_pkg(pkgname)
 
   progress_message "Fetching #{pkgname}"
 
-  temp_path_base = File.join($tmpdir, pkgname)
+  if $pkgdb.with_pkgng?
+    temp_path_base = File.join($tmpdir, 'All/', pkgname)
+  else
+    temp_path_base = File.join($tmpdir, pkgname)
+  end
 
   temp_path = real_fetch_pkg(pkgname, temp_path_base, latest)
 
@@ -312,20 +325,28 @@ def real_fetch_pkg(pkgname, path_base, latest = false)
     subdir = $subdir || 'All'
   end
 
-  if $verbose
-    information_message 'Will try the following sites in the order named:'
+  if $pkgdb.with_pkgng?
+    suffix = '.txz'
+    uri = pkgname + suffix
+    path = path_base + suffix
 
-    $pkg_site_uris.each do |site|
-      STDERR.puts "\t#{site}"
+    fetch(uri, path) and return path
+  else
+    if $verbose
+      information_message 'Will try the following sites in the order named:'
+
+      $pkg_site_uris.each do |site|
+        STDERR.puts "\t#{site}"
+      end
     end
-  end
 
-  $pkg_site_uris.each do |uri_base|
-    PKG_SUFFIXES.each do |suffix|
-      uri = uri_base + (subdir + '/' + pkgname + suffix)
-      path = path_base + suffix
+    $pkg_site_uris.each do |uri_base|
+      PKG_SUFFIXES.each do |suffix|
+        uri = uri_base + (subdir + '/' + pkgname + suffix)
+        path = path_base + suffix
 
-      fetch(uri, path) and return path
+        fetch(uri, path) and return path
+      end
     end
   end
 
@@ -339,7 +360,15 @@ def fetch(uri, path = File.basename(uri.path))
   end
 
   uri_subbed = uri.to_s.gsub("%3A", ":").gsub("%2F", "/")
-  cmdline = format(ENV['PKG_FETCH'] || "/usr/bin/fetch -o '%2$s' '%1$s'", uri_subbed, path)
+
+  if $pkgdb.with_pkgng?
+    # Path is /tmp/<something>/All
+    cmdline = format("%s fetch -U -y -o '%s' '%s'", PkgDB::command(:pkg),
+                     File.dirname(File.dirname(path)),
+                     File.basename(uri, '.txz'))
+  else
+    cmdline = format(ENV['PKG_FETCH'] || "/usr/bin/fetch -o '%2$s' '%1$s'", uri_subbed, path)
+  end
 
   progress_message "Invoking a command: #{cmdline}" if $verbose
 

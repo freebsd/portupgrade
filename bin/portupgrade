@@ -558,12 +558,6 @@ Environment Variables [default]:
 	end
       end
 
-      # FIXME: pkgng
-      if $use_packages && $pkgdb.with_pkgng?
-        STDERR.puts "Packages are not yet suported. Use pkg(8) directly."
-        return 0
-      end
-
       # Change to a good directory to avoid errors if the user
       # is running in a WRKDIR
       Dir.chdir '/tmp'
@@ -1612,6 +1606,10 @@ def fetch_pkg(origin, logfile = nil, use_latest_link = false)
   cmdargs << newpkgname
 
   progress_message "Fetching the package(s) for '#{newpkgname}' (#{origin})"
+
+  if $pkgdb.with_pkgng?
+    use_latest_link = false
+  end
 
   if not script(logfile, *cmdargs)
     unless $use_packages_only

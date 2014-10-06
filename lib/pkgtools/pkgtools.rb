@@ -879,16 +879,24 @@ def identify_pkg(path)
   origin = nil
   pkgdep = []
 
-  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
-  IO.popen("cd #{dir} && #{PkgDB::command(:pkg_info)} -qfo #{file}") do |r|
-    r.each do |line|
-      case line
-      when /^@name\s+(\S*)/
-	pkgname = $1
-      when /^@pkgdep\s+(\S*)/
-	pkgdep << $1
-      when /^(\S+\/\S+)$/		# /
-	origin = $1
+  if $pkgdb.with_pkgng?
+    origin = backquote!(PkgDB::command(:pkg), 'query', '-F', "#{dir}/#{file}",
+                        '%o').chomp
+    pkgname = backquote!(PkgDB::command(:pkg), 'query', '-F', "#{dir}/#{file}",
+                         '%n-%v').chomp
+    pkgdep = backquote!(PkgDB::command(:pkg), 'query', '-F', "#{dir}/#{file}",
+                        '%dn-%dv').split("\n")
+  else
+    IO.popen("cd #{dir} && #{PkgDB::command(:pkg_info)} -qfo #{file}") do |r|
+      r.each do |line|
+        case line
+        when /^@name\s+(\S*)/
+          pkgname = $1
+        when /^@pkgdep\s+(\S*)/
+          pkgdep << $1
+        when /^(\S+\/\S+)$/		# /
+          origin = $1
+        end
       end
     end
   end
