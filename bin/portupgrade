@@ -1478,7 +1478,7 @@ def upgrade_pkg(oldpkg, origin = nil, interactive = $interactive)
   teardown_proc2 = uninstall_pkg(oldpkgname, orphan, logfile, $uninstall_extra_flags)
 
   if have_package
-    install_pkg(newpkgname, origin, logfile, false, teardown_proc1, teardown_proc2)
+    install_pkg(newpkgname, orphan, origin, logfile, false, teardown_proc1, teardown_proc2)
   else
     install_port(origin, orphan, logfile, false, teardown_proc1, teardown_proc2)
   end
@@ -1756,7 +1756,7 @@ def install_new_port(origin, orphan, interactive = $interactive)
   if have_package
     return true if $fetch_only
 
-    install_pkg(newpkgname, origin, logfile, true)
+    install_pkg(newpkgname, orphan, origin, logfile, true)
   else
     build_port(origin, logfile, false, true)
 
@@ -1999,7 +1999,7 @@ end
 
 # raises:
 #   InstallError
-def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
+def install_pkg(pkgname, orphan, origin, logfile = nil, is_new = false, *teardown_procs)
   newpkg, pkgfile = find_pkg(origin)
 
   if pkgfile and deporigins = extract_pkgfile_deporigins(pkgfile)
@@ -2022,7 +2022,11 @@ def install_pkg(pkgname, origin, logfile = nil, is_new = false, *teardown_procs)
   end
 
   if $pkgdb.with_pkgng?
-    cmdargs << PkgDB::command(:pkg) << 'add' << pkgfile
+    cmdargs << PkgDB::command(:pkg) << 'add'
+    if orphan
+      cmdargs << "-A"
+    end
+    cmdargs << pkgfile
   else
     cmdargs << PkgDB::command(:pkg_add) << '-f' << pkgfile
   end
@@ -2216,12 +2220,16 @@ def extract_pkgfile_deporigins(pkgfile)
 
   deporigins = []
 
-  raise PkgDB::NeedsPkgNGSupport, "PKGNG support needed: #{__FILE__}:#{__LINE__}" if $pkgdb.with_pkgng?
-  IO.popen("cd #{dir} && #{PkgDB::command(:pkg_info)} -qfo #{file}") do |r|
-    r.each do |line|
-      case line
-      when /^@comment\s+DEPORIGIN:(\S*)/
-	deporigins << $1
+  if $pkgdb.with_pkgng?
+    pkgdep = backquote!(PkgDB::command(:pkg), 'query', '-F', "#{dir}/#{file}",
+                        '%do').split("\n")
+  else
+    IO.popen("cd #{dir} && #{PkgDB::command(:pkg_info)} -qfo #{file}") do |r|
+      r.each do |line|
+        case line
+        when /^@comment\s+DEPORIGIN:(\S*)/
+          deporigins << $1
+        end
       end
     end
   end
