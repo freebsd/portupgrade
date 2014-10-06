@@ -1234,8 +1234,7 @@ def get_afterinstall_command(origin)
 end
 
 def process_old_package(pkgfile)
-  pkg_backup_dir = ENV['PKG_BACKUP_DIR']
-  pkg_backup_dir ||= ENV['PKG_PATH']
+  pkg_backup_dir = ENV['PKG_BACKUP_DIR'] || $pkg_path
 
   if $backup_packages
     progress_message "Keeping old package in '#{pkg_backup_dir}'" if $verbose
