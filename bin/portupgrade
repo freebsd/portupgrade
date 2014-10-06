@@ -209,7 +209,7 @@ def init_global
   $recursive = false
   $resultsfile = nil
   $sanity_check = true
-  $tmpdir = ""
+  $tempdir = ""
   $uninstall_extra_flags = 'P'
   $upward_recursive = false
   $use_packages = false
