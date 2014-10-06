@@ -1273,15 +1273,15 @@ module PkgConfig
   end
 
   def cmd_start_rc(origin)
-    enabled_rc_scripts(origin).map { |file| "#{file} start" }.join("; ")
+    enabled_rc_scripts(origin).map { |file| "/usr/sbin/service #{File.basename(file)} start" }.join("; ")
   end
 
   def cmd_stop_rc(origin)
-    enabled_rc_scripts(origin).map { |file| "#{file} stop" }.join("; ")
+    enabled_rc_scripts(origin).map { |file| "/usr/sbin/service #{File.basename(file)} stop" }.join("; ")
   end
 
   def cmd_restart_rc(origin)
-    enabled_rc_scripts(origin).map { |file| "#{file} stop; sleep 3; #{file} start" }.join("; ")
+    enabled_rc_scripts(origin).map { |file| "/usr/sbin/service #{File.basename(file)} stop; sleep 3; /usr/sbin/service #{File.basename(file)} start" }.join("; ")
   end
 
   def cmd_disable_rc(origin)
