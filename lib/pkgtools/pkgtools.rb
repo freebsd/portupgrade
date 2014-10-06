@@ -1274,14 +1274,17 @@ module PkgConfig
   end
 
   def cmd_start_rc(origin)
+    STDERR.puts("cmd_start_rc is deprecated. pkg(8) supports HANDLE_RC_SCRIPTS: true in /usr/local/etc/pkg.conf")
     enabled_rc_scripts(origin).map { |file| "/usr/sbin/service #{File.basename(file)} start" }.join("; ")
   end
 
   def cmd_stop_rc(origin)
+    STDERR.puts("cmd_stop_rc is deprecated. pkg(8) supports HANDLE_RC_SCRIPTS: true in /usr/local/etc/pkg.conf")
     enabled_rc_scripts(origin).map { |file| "/usr/sbin/service #{File.basename(file)} stop" }.join("; ")
   end
 
   def cmd_restart_rc(origin)
+    STDERR.puts("cmd_restart_rc is deprecated. pkg(8) supports HANDLE_RC_SCRIPTS: true in /usr/local/etc/pkg.conf")
     enabled_rc_scripts(origin).map { |file| "/usr/sbin/service #{File.basename(file)} stop; sleep 3; /usr/sbin/service #{File.basename(file)} start" }.join("; ")
   end
 
