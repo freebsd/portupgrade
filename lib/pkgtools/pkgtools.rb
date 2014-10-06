@@ -852,7 +852,7 @@ end
 def modify_origin(pkgname, origin)
   if $pkgdb.with_pkgng?
     oldorigin = $pkgdb.origin(pkgname)
-    str = backquote!(PkgDB::command(:pkg), 'set', '-yo' "#{oldorigin}:#{origin}")
+    str = backquote!(PkgDB::command(:pkg), 'set', '-yo', "#{oldorigin}:#{origin}")
   else
     contents_file = $pkgdb.pkg_contents(pkgname)
 
