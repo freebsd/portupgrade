@@ -311,6 +311,8 @@ def libclean()
 
   libtable = {}
 
+  $pkgdb.load_which if $pkgdb.with_pkgng?
+
   `/sbin/ldconfig -elf -r`.each_line do |line|
     line.strip!
 

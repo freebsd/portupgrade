@@ -647,6 +647,21 @@ class PkgDB
     @db
   end
 
+  def load_which
+    # Load the entire DB for quicker lookups.
+    if $pkgdb_which_db.nil?
+      $pkgdb_which_db = {}
+      IO.popen("#{PkgDB::command(:pkg)} query '%n-%v %Fp'") do |r|
+        r.each do |line|
+          space = line.index(" ")
+          pkgname = line[0, space]
+          path = line[(space + 1)..-1].chomp
+          $pkgdb_which_db[path] = pkgname
+        end
+      end
+    end
+  end
+
   def which_m(path)
     which(path, true)
   end
@@ -655,9 +670,13 @@ class PkgDB
     path = File.expand_path(path)
 
     if with_pkgng?
-      pkgname = xbackquote(PkgDB::command(:pkg), 'which', '-q', path).chomp
-      return nil unless pkgname.length
-      pkgnames = [pkgname]
+      if $pkgdb_which_db
+        pkgnames = [$pkgdb_which_db[path]]
+      else
+        pkgname = xbackquote(PkgDB::command(:pkg), 'which', '-q', path).chomp
+        return nil unless pkgname.length
+        pkgnames = [pkgname]
+      end
       return m ? pkgnames : pkgnames.last
     end
 
