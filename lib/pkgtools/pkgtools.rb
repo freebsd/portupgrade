@@ -611,6 +611,7 @@ def __backquote(x, sudo, *args)
     progress_message "[Executing a command as root: " + cmdline + "]"
   else
     cmdline = shelljoin(*args)
+    STDERR.puts "Executing: #{cmdline}" if $verbose
   end
 
   str = `#{cmdline}` and return str
