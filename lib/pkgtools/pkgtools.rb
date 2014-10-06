@@ -480,6 +480,7 @@ end
 
 # xsystem
 def __system(x, *args)
+  progress_message "[Executing: #{args.join(" ")}]" if ENV['PORTUPGRADE_DEBUG']
   system(*args) and return true
 
   if x
@@ -611,7 +612,7 @@ def __backquote(x, sudo, *args)
     progress_message "[Executing a command as root: " + cmdline + "]"
   else
     cmdline = shelljoin(*args)
-    STDERR.puts "Executing: #{cmdline}" if $verbose
+    progress_message "[Executing: #{cmdline}]" if ENV['PORTUPGRADE_DEBUG']
   end
 
   str = `#{cmdline}` and return str
