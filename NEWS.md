@@ -4,6 +4,17 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.13 (released 2014-10-06)
+
+* portinstall/upgrade -P[P] now supported with pkgng
+* pkg_fetch now supports pkgng
+* Fixed pkg-1.3 delete support to not recurse
+* Fixed portupgrade -b support with pkgng
+* Improved portsclean performance with pkgng (#59)
+* Use service(8) for rc script restarting
+* Show command executions with PORTUPGRADE_DEBUG in environment
+* Deprecate rc script handling in lieu of pkg's HANDLE_RC_SCRIPTS in pkg.conf
+
 portupgrade 2.4.12 (released 2013-12-12):
 
 * Fixed TSort name clash when using bundler
