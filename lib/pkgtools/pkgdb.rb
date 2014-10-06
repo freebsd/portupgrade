@@ -656,7 +656,9 @@ class PkgDB
 
     if with_pkgng?
       pkgname = xbackquote(PkgDB::command(:pkg), 'which', '-q', path).chomp
-      return pkgname.length ? [pkgname] : nil
+      return nil unless pkgname.length
+      pkgnames = [pkgname]
+      return m ? pkgnames : pkgnames.last
     end
 
     open_db
