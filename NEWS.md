@@ -7,6 +7,7 @@
 portupgrade 2.4.14
 
 * portupgrde -p: Fix new dependencies not getting installed. (#58)
+* Support security vulnerabilities as a build failure reason.
 
 portupgrade 2.4.13 (released 2014-10-06)
 

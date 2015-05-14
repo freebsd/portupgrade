@@ -84,6 +84,7 @@ REASON_COMMENT = {
   :usexlib => "X libraries missing",
 #  :wrkdir => "WRKDIR error",
   :values_h => "reference to values.h",
+  :vulnerabilities => "security vulnerabilities",
   :xfree4man => "X manpage error",
 }
 
@@ -2337,6 +2338,8 @@ def guess_reason(logfile)
     reason = :struct
   elsif grep_q_file(/Permission denied/, logfile)
     reason = :perm
+  elsif grep_q_file(/has known vulnerabilities/, logfile)
+    reason = :vulnerabilities
   else
     reason = :unknown
   end
