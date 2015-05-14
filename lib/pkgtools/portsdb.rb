@@ -39,7 +39,7 @@ class PortsDB
   include Enumerable
   include PkgDBTools
 
-  DB_VERSION = [:FreeBSD, 3]
+  DB_VERSION = [:FreeBSD, 4]
 
   LANGUAGE_SPECIFIC_CATEGORIES = {
     "arabic"		=> "ar-",
