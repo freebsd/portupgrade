@@ -6,7 +6,7 @@
 
 portupgrade 2.4.14
 
-* Fixed portupgrade -p support with staged ports (#58)
+* portupgrde -p: Fix new dependencies not getting installed. (#58)
 
 portupgrade 2.4.13 (released 2014-10-06)
 
