@@ -4,6 +4,10 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.14
+
+* Fixed portupgrade -p support with staged ports (#58)
+
 portupgrade 2.4.13 (released 2014-10-06)
 
 * portinstall/upgrade -P[P] now supported with pkgng
