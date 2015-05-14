@@ -141,6 +141,10 @@ class PortInfo
     build_depends | run_depends | extract_depends | patch_depends | fetch_depends
   end
 
+  def required_depends()
+    build_depends | run_depends
+  end
+
   def self.match?(pattern, origin)
     if pattern.is_a?(String)
       File.fnmatch?(pattern, origin, File::FNM_PATHNAME)

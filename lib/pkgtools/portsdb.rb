@@ -918,7 +918,7 @@ class PortsDB
     portinfo or return list
 
     if recurse_up
-      portinfo.all_depends.map do |name|
+      portinfo.required_depends.map do |name|
 	i = port(name)
 
 	list << i if i
@@ -932,7 +932,7 @@ class PortsDB
       pkgname = portinfo.pkgname.fullname
 
       glob do |i|
-	list << i if i.all_depends.include?(pkgname)
+	list << i if i.required_depends.include?(pkgname)
       end
     end
 
