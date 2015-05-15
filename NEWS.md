@@ -9,6 +9,10 @@ portupgrade 2.4.14
 * portupgrde -p: Fix new dependencies not getting installed. (#58)
 * Support security vulnerabilities as a build failure reason.
 * Fix ordering of build based on FETCH/PATCH/EXTRACT dependencies. [ports/177365]
+* Don't install missing dependencies which are already satisfied (#62).
+  Note that this purposely causes these missing dependencies to not show
+  in the job (-n) and final results output which is a compromise to at least
+  avoid the wrong packages being installed. The logging issue is in #30.
 
 portupgrade 2.4.13 (released 2014-10-06)
 

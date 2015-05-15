@@ -674,7 +674,7 @@ Environment Variables [default]:
 		  not_need_upgrade << task
 		  next
 		end
-		# XXX It makes more problems than solves
+		# XXX: See #30 and #62
 		#install_tasks |= get_notinstalled_depends(origin)
 	      end
 	    end
@@ -805,10 +805,11 @@ Environment Variables [default]:
 	    install_tasks << origin
             install_tasks_orphans[origin] = false
 	    # Track all not installed
-	    get_notinstalled_depends(origin).each do |dep|
-	      install_tasks << dep
-              install_tasks_orphans[dep] = true
-	    end
+            # XXX: See #30 and #62
+	    #get_notinstalled_depends(origin).each do |dep|
+	    #  install_tasks << dep
+            #  install_tasks_orphans[dep] = true
+	    #end
 	  end
 	end
       end	# Arguments parsing done
