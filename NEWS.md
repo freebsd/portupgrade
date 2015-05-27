@@ -4,7 +4,7 @@
 
 ------------------------------------------------------------------------
 
-portupgrade 2.4.14
+portupgrade 2.4.14 (release 2015-05-27)
 
 * portupgrde -p: Fix new dependencies not getting installed. (#58)
 * Support security vulnerabilities as a build failure reason.
