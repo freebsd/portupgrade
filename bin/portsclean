@@ -329,8 +329,6 @@ def libclean()
 
       dir, prefix, libname, ver = $~[1..-1]
 
-      pkgname = $pkgdb.which(path)
-
       if libtable.key?(libname)
 	hash = libtable[libname]
 
@@ -355,11 +353,15 @@ def libclean()
 
 	    if delete_file(prev_path)
 	      ldconfig_m(compatlibdir)
-	      hash[ver] = [path, dir, prefix, pkgname]
+	      hash[ver] = [path, dir, prefix, $pkgdb.which(path)]
 	    end
 
 	    puts ""
 	  elsif prefix
+	    if !prev_pkgname
+	      prev_pkgname = $pkgdb.which(prev_path)
+	    end
+	    pkgname = $pkgdb.which(path)
 	    puts "\t#{prev_path}\t<- #{prev_pkgname || '?'}"
 	    puts "\t#{path}\t<- #{pkgname || '?'}"
 
@@ -387,10 +389,10 @@ def libclean()
 	    puts ""
 	  end
 	else
-	  hash[ver] = [path, dir, prefix, pkgname]
+	  hash[ver] = [path, dir, prefix, false]
 	end
       else
-	libtable[libname] = { ver => [path, dir, prefix, pkgname] }
+	libtable[libname] = { ver => [path, dir, prefix, false] }
       end
     end
   end
@@ -411,6 +413,9 @@ def libclean()
     n = size
 
     hash.each do |ver, (path, dir, prefix, pkgname)|
+      if !pkgname
+	pkgname = $pkgdb.which(path)
+      end
       if pkgname
 	pkgnames[ver] = pkgname
 	n -= 1
