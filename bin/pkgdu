@@ -238,7 +238,6 @@ def pkgs_size(pkgs)
       end
     rescue => e
       warning_message "Package PLIST error: "+e.message
-      next
     end
   else
     pkgs.each do |pkg|
