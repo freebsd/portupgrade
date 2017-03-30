@@ -4,6 +4,9 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.15 (release 2017-03-30)
+* pkgdu: Fix syntax error with Ruby 2.3 (invalid next)
+
 portupgrade 2.4.14 (release 2015-05-27)
 
 * portupgrde -p: Fix new dependencies not getting installed. (#58)
