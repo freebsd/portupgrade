@@ -385,7 +385,12 @@ def deinstall_pkg(pkgname)
 
 	pipe.puts(file)
 
-	next if /\bELF\b.*\bshared object\b.*\bFreeBSD\b/ !~ pipe.gets
+	filetype = pipe.gets
+
+	if /\bELF\b.*\bshared object\b.*\bFreeBSD\b/ !~ filetype and
+	   /\bsymbolic link to\b/ !~ filetype
+		next
+	end
 
 	dest = File.join($compatlibdir, base)
 
@@ -393,7 +398,7 @@ def deinstall_pkg(pkgname)
 
 	next if $noexecute
 
-	if system('/bin/cp', '-pf', file, dest)
+	if system('/bin/cp', '-Rpf', file, dest)
 	  preserved_files << dest
 	else
 	  STDERR.puts "Copy failed!"

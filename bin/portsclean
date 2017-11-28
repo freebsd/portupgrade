@@ -673,12 +673,18 @@ def check_distinfo(origin, lazy = false)
 end
 
 def delete_file(file, yes_by_default = true)
+  file_is_symlink = File.symlink?(file)
+  if file_is_symlink
+    real_file = File.realpath(file)
+  end
   if $noexecute
     if yes_by_default
       puts 'Delete ' + file
+      puts 'Delete ' + real_file if file_is_symlink
       return true
     else
       puts "Leave #{file} (specify -i to ask on this)"
+      puts "Leave #{real_file} (specify -i to ask on this)" if file_is_symlink
       return false
     end
   end
@@ -695,6 +701,9 @@ def delete_file(file, yes_by_default = true)
     end
   end
 
+  if file_is_symlink
+    File.unlink(real_file)
+  end
   File.unlink(file)
 
   true
