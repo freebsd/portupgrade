@@ -4,6 +4,9 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.16 (release 2018-03-09)
+* shlib saving: Preserve symlinks and remove them as needed as well.
+
 portupgrade 2.4.15 (release 2017-03-30)
 * pkgdu: Fix syntax error with Ruby 2.3 (invalid next)
 
