@@ -203,6 +203,10 @@ def config_ignore_moved?(p)
   config_include?(:IGNORE_MOVED, p)
 end
 
+def config_ignore_libs?(p)
+  config_include?(:IGNORE_LIBS, p)
+end
+
 def config_include?(key, p)
   if $config_include_table.key?(key)
     set = $config_include_table[key]
