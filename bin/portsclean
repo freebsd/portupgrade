@@ -177,13 +177,13 @@ def workclean()
   wrkdirprefix.gsub!(%r"/(?=/|$)", '')
 
   if wrkdirprefix.empty?
-    puts "Cleaning out #{$ports_dir}/*/*/work..."
+    puts "Cleaning out #{$ports_dir}/*/*/work*..."
 
     # Ruby's glob yields the given block everytime a new matching
     # entry is found, so it doesn't overflow, and we don't have to
     # wait until everything is found.
 
-    Dir.glob(File.join($ports_dir, "*/*/work")) do |dir|
+    Dir.glob(File.join($ports_dir, "*/*/work*")) do |dir|
       delete_dir dir
     end
 

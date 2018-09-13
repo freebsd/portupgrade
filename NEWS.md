@@ -4,6 +4,9 @@
 
 ------------------------------------------------------------------------
 
+portupgrade 2.4.17
+* portclean: remove FLAVOR WRKDIRs as well.
+
 portupgrade 2.4.16 (release 2018-03-09)
 * shlib saving: Preserve symlinks and remove them as needed as well.
 
