@@ -325,6 +325,7 @@ class PortsDB
   end
 
   def portdir(port)
+    port = port.sub(/@.*$/, '')
     File.join(ports_dir, port)
   end
 

@@ -425,10 +425,20 @@ class PkgDB
       @installed_pkgs = []
       @installed_ports = []
       @db = {}
+
+      flavors = {}
+      pkg_flavors = xbackquote(PkgDB::command(:pkg), 'annotate', '-Sa',
+                               'flavor').split("\n")
+      pkg_flavors.each do |line|
+        pkg, flavor = line.sub(/: Tag: flavor Value: /, ':').split(':')
+        flavors[pkg] = flavor
+      end
+
       pkg_origins = xbackquote(PkgDB::command(:pkg), 'query', '%n-%v %o').split("\n")
       pkg_origins.each do |line|
         pkg, origin = line.split(' ')
         @installed_pkgs << pkg
+        origin << '@' + flavors[pkg] if flavors[pkg]
         add_origin(pkg, origin)
       end
       @installed_pkgs.freeze
