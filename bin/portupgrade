@@ -1147,6 +1147,11 @@ def get_make_args(origin, pkgname = nil)
   else
     args = $make_args.split(' ')
   end
+
+  if flavor = origin[/@(.+)$/, 1]
+    args << 'FLAVOR=' + flavor
+  end
+
   quoted = 0
   n = 0
   is_quoted = false
